@@ -13,7 +13,7 @@ defined( 'ABSPATH' ) || exit;
  *                           using the same range and filters as the screen.
  *
  * Tables: summary, timeseries, pnl, products, categories, customers, cohorts, locations,
- * channels, campaigns, low_stock, out_of_stock, days_of_cover, dead_stock, tax.
+ * channels, campaigns, adspend, low_stock, out_of_stock, days_of_cover, dead_stock, tax.
  * Product costs are exported from /costs/export.
  */
 class KDNA_EcommerceInsights_Rest_Export extends KDNA_EcommerceInsights_Rest_Report_Base {
@@ -21,7 +21,7 @@ class KDNA_EcommerceInsights_Rest_Export extends KDNA_EcommerceInsights_Rest_Rep
 	/**
 	 * Tables that can be exported.
 	 */
-	const TABLES = array( 'summary', 'timeseries', 'pnl', 'products', 'categories', 'customers', 'cohorts', 'locations', 'channels', 'campaigns', 'low_stock', 'out_of_stock', 'days_of_cover', 'dead_stock', 'tax' );
+	const TABLES = array( 'summary', 'timeseries', 'pnl', 'products', 'categories', 'customers', 'cohorts', 'locations', 'channels', 'campaigns', 'adspend', 'low_stock', 'out_of_stock', 'days_of_cover', 'dead_stock', 'tax' );
 
 	/**
 	 * Registers the route.
@@ -188,6 +188,11 @@ class KDNA_EcommerceInsights_Rest_Export extends KDNA_EcommerceInsights_Rest_Rep
 				$data = KDNA_EcommerceInsights_Report::marketing( $range, null );
 				$rows = array_map( static fn( $c ) => array( $c['label'], $c['campaign_name'] ?? '', $money( $c['spend'] ), $c['impressions'], $c['clicks'], $c['conversions'], $money( $c['conversion_value'] ), $c['roas'] ), $data[ $table ] );
 				return array( array( __( 'Channel', 'kdna-ecommerce-insights' ), __( 'Campaign', 'kdna-ecommerce-insights' ), __( 'Spend', 'kdna-ecommerce-insights' ), __( 'Impressions', 'kdna-ecommerce-insights' ), __( 'Clicks', 'kdna-ecommerce-insights' ), __( 'Conversions', 'kdna-ecommerce-insights' ), __( 'Conversion value', 'kdna-ecommerce-insights' ), __( 'ROAS', 'kdna-ecommerce-insights' ) ), $rows );
+
+			case 'adspend':
+				$labels = KDNA_EcommerceInsights_Report::channel_labels();
+				$rows   = array_map( static fn( $e ) => array( $e['start'], $e['end'], $labels[ $e['channel'] ] ?? $e['channel'], $e['campaigns'] > 1 ? $e['campaigns'] . ' ' . __( 'campaigns', 'kdna-ecommerce-insights' ) : $e['campaign_name'], $money( $e['amount'] ), $e['includes_gst'] ? __( 'Yes', 'kdna-ecommerce-insights' ) : __( 'No', 'kdna-ecommerce-insights' ), $e['source'] ), KDNA_EcommerceInsights_Ad_Spend::entries( $range['start'], $range['end'] ) );
+				return array( array( __( 'From', 'kdna-ecommerce-insights' ), __( 'To', 'kdna-ecommerce-insights' ), __( 'Channel', 'kdna-ecommerce-insights' ), __( 'Campaign', 'kdna-ecommerce-insights' ), __( 'Amount', 'kdna-ecommerce-insights' ), __( 'Includes GST', 'kdna-ecommerce-insights' ), __( 'Source', 'kdna-ecommerce-insights' ) ), $rows );
 
 			case 'tax':
 				$data = KDNA_EcommerceInsights_Report::tax( $range );

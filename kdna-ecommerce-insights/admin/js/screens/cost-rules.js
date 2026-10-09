@@ -14,16 +14,14 @@
 	var api = window.KDNAEI.api;
 
 	/**
-	 * Replaces %s or %d in text with values, in order.
+	 * Fills in placeholders such as %s or %1$s, using the shared helper
+	 * in kdna-ei-format.js.
 	 *
-	 * @param {string} text Text with placeholders.
+	 * @param {string} text Text containing placeholders.
 	 * @return {string}
 	 */
 	function sprintf( text ) {
-		var values = Array.prototype.slice.call( arguments, 1 );
-		return String( text || '' ).replace( /%%|%[sd]/g, function ( token ) {
-			return token === '%%' ? '%' : ( values.length ? values.shift() : '' );
-		} );
+		return window.KDNAEI.sprintf.apply( null, arguments );
 	}
 
 	/**

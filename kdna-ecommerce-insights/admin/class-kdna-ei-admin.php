@@ -249,7 +249,7 @@ class KDNA_EcommerceInsights_Admin {
 
 		// One script per built screen, each registering its Alpine component.
 		$screen_scripts = array( 'kdna-ei-app' );
-		foreach ( array( 'overview', 'profit', 'products', 'customers', 'inventory', 'costs', 'cost-rules', 'overheads', 'settings-hero' ) as $screen_id ) {
+		foreach ( array( 'overview', 'profit', 'products', 'customers', 'inventory', 'marketing', 'costs', 'cost-rules', 'overheads', 'settings-hero' ) as $screen_id ) {
 			$path   = 'admin/js/screens/' . $screen_id . '.js';
 			$handle = 'kdna-ei-screen-' . $screen_id;
 			wp_enqueue_script( $handle, KDNA_EI_URL . $path, array( 'kdna-ei-app', 'kdna-ei-chart-theme' ), $this->asset_version( $path ), true );
@@ -317,6 +317,7 @@ class KDNA_EcommerceInsights_Admin {
 					'products'      => self::products_strings(),
 					'customers'     => self::customers_strings(),
 					'inventory'     => self::inventory_strings(),
+					'marketing'     => self::marketing_strings(),
 					'heroSettings'  => array(
 						'saved'       => __( 'Saved. The Overview has been updated.', 'kdna-ecommerce-insights' ),
 						'amountError' => __( 'Enter an amount of zero or more, for example 25000.', 'kdna-ecommerce-insights' ),
@@ -399,6 +400,119 @@ class KDNA_EcommerceInsights_Admin {
 			'cogsIncomplete'    => __( 'Incomplete: %s of %s orders include products with no cost, so this is lower than it should be and profit is overstated.', 'kdna-ecommerce-insights' ),
 			/* translators: %s: month, for example Oct 2026. */
 			'partMonth'         => __( '%s (part)', 'kdna-ecommerce-insights' ),
+		);
+	}
+
+	/**
+	 * Text used by the Marketing screen script.
+	 *
+	 * @return array
+	 */
+	private static function marketing_strings(): array {
+		return array(
+			'intro'             => __( 'Ad spend comes off net profit everywhere in Insights. Add it by hand or import a report from your ad platform.', 'kdna-ecommerce-insights' ),
+			'emptyTitle'        => __( 'No ad spend in these dates', 'kdna-ecommerce-insights' ),
+			'emptyText'         => __( 'Add what you spent on Meta, Google or anything else, or import the report your ad platform gives you. Net profit, ROAS and cost per new customer then fill in everywhere.', 'kdna-ecommerce-insights' ),
+			'exGst'             => __( 'Excluding GST you can claim back.', 'kdna-ecommerce-insights' ),
+			'asEntered'         => __( 'As entered.', 'kdna-ecommerce-insights' ),
+			'roasHelp'          => __( 'Return on ad spend: the purchase value the platform says it brought in, divided by what you spent.', 'kdna-ecommerce-insights' ),
+			'noValueHelp'       => __( 'No purchase value for this channel. Import a report with purchase value to see its ROAS.', 'kdna-ecommerce-insights' ),
+			'campaignsNote'     => __( 'Purchases and value are as reported by each platform.', 'kdna-ecommerce-insights' ),
+			'noCampaign'        => __( 'No campaign given', 'kdna-ecommerce-insights' ),
+			'noMatches'         => __( 'No campaigns match that search.', 'kdna-ecommerce-insights' ),
+			'noCampaigns'       => __( 'No campaigns in these dates.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: number of rows. */
+			'showAll'           => __( 'Show all %s', 'kdna-ecommerce-insights' ),
+			'showFewer'         => __( 'Show fewer', 'kdna-ecommerce-insights' ),
+			'entriesNote'       => __( 'Everything added by hand or imported that overlaps these dates. A spend covering several days is spread evenly across them.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: number of campaigns. */
+			'campaignCount'     => __( '%s campaigns', 'kdna-ecommerce-insights' ),
+			'sources'           => array(
+				'manual' => __( 'By hand', 'kdna-ecommerce-insights' ),
+				'csv'    => __( 'CSV import', 'kdna-ecommerce-insights' ),
+				'api'    => __( 'Live sync', 'kdna-ecommerce-insights' ),
+			),
+			'inclGst'           => __( 'incl. GST', 'kdna-ecommerce-insights' ),
+			/* translators: 1: channel, 2: dates. */
+			'editEntry'         => __( 'Edit %1$s spend, %2$s', 'kdna-ecommerce-insights' ),
+			/* translators: 1: channel, 2: dates. */
+			'deleteEntry'       => __( 'Delete %1$s spend, %2$s', 'kdna-ecommerce-insights' ),
+			'confirmEntry'      => __( 'Delete this spend?', 'kdna-ecommerce-insights' ),
+			'confirmImport'     => __( 'Delete everything from this import?', 'kdna-ecommerce-insights' ),
+			'noEntries'         => __( 'Nothing added for these dates yet.', 'kdna-ecommerce-insights' ),
+			'addTitle'          => __( 'Add ad spend', 'kdna-ecommerce-insights' ),
+			'editTitle'         => __( 'Change ad spend', 'kdna-ecommerce-insights' ),
+			'date'              => __( 'Date', 'kdna-ecommerce-insights' ),
+			'from'              => __( 'From', 'kdna-ecommerce-insights' ),
+			'to'                => __( 'To', 'kdna-ecommerce-insights' ),
+			'month'             => __( 'Month', 'kdna-ecommerce-insights' ),
+			'saving'            => __( 'Saving...', 'kdna-ecommerce-insights' ),
+			'saveChanges'       => __( 'Save changes', 'kdna-ecommerce-insights' ),
+			'addSpend'          => __( 'Add spend', 'kdna-ecommerce-insights' ),
+			/* translators: 1: amount per day, 2: number of days. */
+			'perDay'            => __( 'That is %1$s a day over %2$s days.', 'kdna-ecommerce-insights' ),
+			'gstNotSetUp'       => __( 'Your store is not set up to report GST (Settings > Tax), so the full amount counts as ad spend either way.', 'kdna-ecommerce-insights' ),
+			'gstNo'             => __( 'Tick this if the amount includes GST. Meta and Google usually show amounts before GST.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: GST rate. */
+			'gstYesNoAmount'    => __( 'The %s%% GST will be taken off, as you can claim it back.', 'kdna-ecommerce-insights' ),
+			/* translators: 1: GST amount, 2: amount counted. */
+			'gstYes'            => __( '%1$s of GST will be taken off, as you can claim it back, so %2$s counts as ad spend.', 'kdna-ecommerce-insights' ),
+			'amountError'       => __( 'Enter an amount of zero or more, for example 1500.', 'kdna-ecommerce-insights' ),
+			'dateError'         => __( 'Choose the date this spend starts.', 'kdna-ecommerce-insights' ),
+			'endError'          => __( 'The end date must be on or after the start date.', 'kdna-ecommerce-insights' ),
+			'channelError'      => __( 'Type a name for the new channel.', 'kdna-ecommerce-insights' ),
+			'checkFields'       => __( 'Please check the highlighted fields.', 'kdna-ecommerce-insights' ),
+			/* translators: 1: amount, 2: channel. */
+			'added'             => __( 'Added %1$s of %2$s spend. Net profit has been updated everywhere.', 'kdna-ecommerce-insights' ),
+			/* translators: 1: amount, 2: channel. */
+			'updated'           => __( 'Changed to %1$s of %2$s spend. Net profit has been updated everywhere.', 'kdna-ecommerce-insights' ),
+			/* translators: 1: amount, 2: channel. */
+			'deleted'           => __( 'Deleted %1$s of %2$s spend.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: channels and amounts. */
+			'chartSummary'      => __( 'Ad spend by channel over the chosen dates: %s.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: total. */
+			'dayTotal'          => __( 'Total %s', 'kdna-ecommerce-insights' ),
+			'importIntro'       => __( 'Export a report from your ad platform and import it here. You will see exactly what will be added before anything is saved.', 'kdna-ecommerce-insights' ),
+			'tipMeta'           => __( 'Meta Ads Manager: Reports, choose your dates, break down by Day, then Export as CSV.', 'kdna-ecommerce-insights' ),
+			'tipGoogle'         => __( 'Google Ads: Campaigns, add the Day segment, then Download as CSV.', 'kdna-ecommerce-insights' ),
+			'tipOther'          => __( 'Anything else: a spreadsheet with a date column and an amount column is enough.', 'kdna-ecommerce-insights' ),
+			'tooLarge'          => __( 'That file is larger than 5 MB. Please export fewer dates at a time.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: file name. */
+			'reading'           => __( 'Reading %s...', 'kdna-ecommerce-insights' ),
+			/* translators: %s: preset name. */
+			'detected'          => __( 'Recognised as a %s, so the columns are matched for you.', 'kdna-ecommerce-insights' ),
+			'checkColumns'      => __( 'Check which column is which', 'kdna-ecommerce-insights' ),
+			'chooseColumn'      => __( 'Choose a column', 'kdna-ecommerce-insights' ),
+			'notInFile'         => __( 'Not in this file', 'kdna-ecommerce-insights' ),
+			/* translators: 1: file currency, 2: store currency. */
+			'rateLabel'         => __( '1 %1$s is worth how many %2$s?', 'kdna-ecommerce-insights' ),
+			/* translators: 1: file currency, 2: store currency. */
+			'rateHelp'          => __( 'This report is in %1$s but your store reports in %2$s, so amounts are converted with this rate.', 'kdna-ecommerce-insights' ),
+			'totalSpend'        => __( 'Total spend', 'kdna-ecommerce-insights' ),
+			'dates'             => __( 'Dates', 'kdna-ecommerce-insights' ),
+			'rows'              => __( 'Rows', 'kdna-ecommerce-insights' ),
+			'campaigns'         => __( 'Campaigns', 'kdna-ecommerce-insights' ),
+			/* translators: 1: amount, 2: channel, 3: dates. */
+			'replaces'          => __( '%1$s of %2$s spend was already imported for %3$s. Importing replaces it, so nothing is counted twice. Spend added by hand is kept.', 'kdna-ecommerce-insights' ),
+			'problemOne'        => __( '1 row could not be read and will be skipped:', 'kdna-ecommerce-insights' ),
+			/* translators: %s: number of rows. */
+			'problems'          => __( '%s rows could not be read and will be skipped:', 'kdna-ecommerce-insights' ),
+			/* translators: 1: rows shown, 2: all rows. */
+			'firstRows'         => __( 'Showing the first %1$s of %2$s rows.', 'kdna-ecommerce-insights' ),
+			'presetPlaceholder' => __( 'Preset name, for example "Meta, main account"', 'kdna-ecommerce-insights' ),
+			'presetNameError'   => __( 'Give the preset a name, or untick "Remember these columns".', 'kdna-ecommerce-insights' ),
+			/* translators: %s: amount. */
+			'importButton'      => __( 'Import %s', 'kdna-ecommerce-insights' ),
+			'importPlain'       => __( 'Import', 'kdna-ecommerce-insights' ),
+			'importing'         => __( 'Importing...', 'kdna-ecommerce-insights' ),
+			/* translators: %s: amount. */
+			'importedTitle'     => __( '%s of ad spend imported', 'kdna-ecommerce-insights' ),
+			/* translators: 1: rows, 2: channel, 3: dates. */
+			'importedText'      => __( '%1$s rows of %2$s spend for %3$s. Net profit has been updated everywhere.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: amount. */
+			'importedReplaced'  => __( 'This replaced %s imported earlier for the same dates.', 'kdna-ecommerce-insights' ),
+			'done'              => __( 'Done', 'kdna-ecommerce-insights' ),
+			'cancel'            => __( 'Cancel', 'kdna-ecommerce-insights' ),
 		);
 	}
 

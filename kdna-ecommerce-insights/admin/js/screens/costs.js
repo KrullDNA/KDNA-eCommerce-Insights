@@ -20,20 +20,14 @@
 	var SAVE_BATCH = 100;
 
 	/**
-	 * Replaces %s or %d in a translated string with values, in order.
+	 * Fills in placeholders such as %s or %1$s, using the shared helper
+	 * in kdna-ei-format.js.
 	 *
-	 * @param {string} text   Text containing placeholders.
-	 * @param {...*}   values Values to insert.
+	 * @param {string} text Text containing placeholders.
 	 * @return {string}
 	 */
 	function sprintf( text ) {
-		var values = Array.prototype.slice.call( arguments, 1 );
-		return String( text || '' ).replace( /%%|%[sd]/g, function ( token ) {
-			if ( token === '%%' ) {
-				return '%';
-			}
-			return values.length ? values.shift() : '';
-		} );
+		return window.KDNAEI.sprintf.apply( null, arguments );
 	}
 
 	document.addEventListener( 'alpine:init', function () {

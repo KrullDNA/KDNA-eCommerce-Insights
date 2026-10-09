@@ -1,0 +1,7 @@
+Campaign name,Day,Reporting starts,Reporting ends,Campaign delivery,Attribution setting,Results,Result indicator,Reach,Impressions,Cost per result,Amount spent (AUD),Link clicks,Purchases,Purchases conversion value
+Spring Serum Launch,2021-09-01,2021-09-01,2021-09-01,active,7-day click or 1-day view,4,actions:offsite_conversion.fb_pixel_purchase,1820,2410,21.25,85.00,61,4,356.00
+Spring Serum Launch,2021-09-02,2021-09-02,2021-09-02,active,7-day click or 1-day view,3,actions:offsite_conversion.fb_pixel_purchase,1702,2255,30.17,90.50,58,3,267.00
+Spring Serum Launch,2021-09-03,2021-09-03,2021-09-03,active,7-day click or 1-day view,5,actions:offsite_conversion.fb_pixel_purchase,1955,2601,17.62,88.10,66,5,445.00
+Retargeting - Cart,2021-09-01,2021-09-01,2021-09-01,active,7-day click or 1-day view,2,actions:offsite_conversion.fb_pixel_purchase,640,1110,12.50,25.00,22,2,178.00
+Retargeting - Cart,2021-09-02,2021-09-02,2021-09-02,active,7-day click or 1-day view,,,580,980,,24.40,19,,
+Retargeting - Cart,2021-09-03,2021-09-03,2021-09-03,active,7-day click or 1-day view,1,actions:offsite_conversion.fb_pixel_purchase,602,1012,26.90,26.90,20,1,89.00

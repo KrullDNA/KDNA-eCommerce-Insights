@@ -2529,3 +2529,280 @@ th[aria-sort="ascending"] .kdna-ei-sort__icon {
 			"dead dead dead dead dead dead";
 	}
 }
+
+/* ==========================================================================
+   Marketing screen (Stage 9)
+   ========================================================================== */
+
+.kdna-ei-screen--marketing {
+	display: block;
+}
+
+.kdna-ei-marketing__bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 12px;
+	margin-bottom: var(--kdna-ei-gap);
+}
+
+.kdna-ei-marketing__bar p {
+	margin: 0;
+	max-width: 640px;
+}
+
+.kdna-ei-marketing > .kdna-ei-notice {
+	margin-bottom: var(--kdna-ei-gap);
+}
+
+.kdna-ei-marketing .kdna-ei-empty-state .kdna-ei-toolbar__actions {
+	margin-top: 8px;
+}
+
+.kdna-ei-marketing__grid {
+	display: grid;
+	gap: var(--kdna-ei-gap);
+	grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr);
+	grid-template-areas:
+		"kpis kpis"
+		"chart side"
+		"campaigns campaigns"
+		"entries entries";
+}
+
+.kdna-ei-area-campaigns { grid-area: campaigns; }
+.kdna-ei-area-entries { grid-area: entries; }
+
+.kdna-ei-marketing .kdna-ei-kpi:first-of-type {
+	border-left: 0;
+}
+
+.kdna-ei-marketing .kdna-ei-kpi {
+	gap: 16px;
+	padding: 0 24px;
+}
+
+@media (max-width: 1100px) {
+	.kdna-ei-marketing__grid {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-areas: "kpis" "chart" "side" "campaigns" "entries";
+	}
+}
+
+.kdna-ei-marketing .kdna-ei-chart-legend {
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	max-width: 50%;
+}
+
+.kdna-ei-channel-table tbody th {
+	width: 60%;
+	font-size: var(--kdna-ei-fs-body);
+	font-weight: 400;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-root .kdna-ei-nowrap {
+	white-space: nowrap;
+}
+
+.kdna-ei-entry-gst {
+	display: block;
+	font-size: var(--kdna-ei-fs-small);
+}
+
+.kdna-ei-row-actions {
+	white-space: nowrap;
+	text-align: right;
+}
+
+.kdna-ei-root .kdna-ei-row-actions .kdna-ei-link + .kdna-ei-link,
+.kdna-ei-root .kdna-ei-row-actions .kdna-ei-link + .kdna-ei-confirm,
+.kdna-ei-root .kdna-ei-confirm .kdna-ei-link {
+	margin-left: 12px;
+}
+
+.kdna-ei-confirm {
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-search--small .kdna-ei-input {
+	width: 220px;
+}
+
+/* Add spend form. */
+.kdna-ei-spend-form {
+	display: grid;
+	gap: 20px;
+}
+
+.kdna-ei-spend-form .kdna-ei-input,
+.kdna-ei-spend-form .kdna-ei-select {
+	width: 100%;
+}
+
+.kdna-ei-spend-form__row {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 12px;
+}
+
+.kdna-ei-root .kdna-ei-spend-form__period {
+	display: grid;
+	gap: 12px;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+.kdna-ei-spend-form__period .kdna-ei-segmented {
+	justify-self: start;
+}
+
+.kdna-ei-spend-form__gst {
+	margin-top: -12px;
+}
+
+.kdna-ei-spend-form .kdna-ei-help {
+	margin-top: 6px;
+}
+
+/* CSV import. */
+.kdna-ei-root .kdna-ei-import-tips {
+	margin: 12px 0 20px;
+	padding-left: 18px;
+	color: var(--kdna-ei-text-muted);
+	font-size: var(--kdna-ei-fs-small);
+	line-height: 1.6;
+	list-style: disc;
+}
+
+.kdna-ei-import-map {
+	display: grid;
+	gap: 18px;
+}
+
+.kdna-ei-import-map__top {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 12px;
+	align-items: end;
+}
+
+.kdna-ei-import-map__top .kdna-ei-select {
+	width: 100%;
+}
+
+.kdna-ei-import-map__file {
+	display: grid;
+	min-width: 0;
+}
+
+.kdna-ei-import-map__name {
+	overflow: hidden;
+	padding: 10px 0;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.kdna-ei-root .kdna-ei-import-detected {
+	margin: 0;
+}
+
+.kdna-ei-import-columns {
+	padding: 14px 16px;
+	background: var(--kdna-ei-bg);
+	border: 1px solid var(--kdna-ei-border);
+	border-radius: var(--kdna-ei-radius-md);
+}
+
+.kdna-ei-import-columns summary {
+	font-weight: 500;
+	cursor: pointer;
+}
+
+.kdna-ei-import-columns__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 12px;
+	margin-top: 14px;
+}
+
+.kdna-ei-import-column .kdna-ei-select {
+	width: 100%;
+}
+
+.kdna-ei-required {
+	color: var(--kdna-ei-negative);
+}
+
+.kdna-ei-import-options {
+	display: grid;
+	gap: 12px;
+}
+
+.kdna-ei-import-rate {
+	max-width: 320px;
+}
+
+.kdna-ei-import-summary {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 12px;
+}
+
+.kdna-ei-import-summary > div {
+	display: grid;
+	gap: 4px;
+	padding: 12px 14px;
+	background: var(--kdna-ei-bg);
+	border: 1px solid var(--kdna-ei-border);
+	border-radius: var(--kdna-ei-radius-md);
+}
+
+.kdna-ei-import-summary .kdna-ei-muted {
+	font-size: var(--kdna-ei-fs-small);
+}
+
+.kdna-ei-import-preset-save {
+	display: grid;
+	gap: 10px;
+	max-width: 420px;
+}
+
+.kdna-ei-import-done {
+	display: grid;
+	justify-items: center;
+	gap: 10px;
+	padding: 24px 0;
+	text-align: center;
+}
+
+.kdna-ei-import-done .kdna-ei-empty-state__icon {
+	color: var(--kdna-ei-positive);
+	background: color-mix(in srgb, var(--kdna-ei-positive) 15%, transparent);
+}
+
+@media (max-width: 700px) {
+	.kdna-ei-import-map__top,
+	.kdna-ei-import-summary,
+	.kdna-ei-spend-form__row {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+/* Card headers keep their buttons on one line where there is room. */
+.kdna-ei-card__header > .kdna-ei-toolbar__actions {
+	flex: none;
+	flex-wrap: nowrap;
+}
+
+@media (max-width: 800px) {
+	.kdna-ei-card__header > .kdna-ei-toolbar__actions {
+		flex-wrap: wrap;
+	}
+}

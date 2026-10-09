@@ -260,15 +260,22 @@
 	};
 
 	/**
-	 * Replaces %s or %d in text with values, in order. %% becomes %.
+	 * Replaces placeholders in text with values: %s or %d in order, or
+	 * numbered ones such as %1$s and %2$s (which translations may reorder).
+	 * %% becomes %.
 	 *
 	 * @param {string} text Text with placeholders.
 	 * @return {string}
 	 */
 	function sprintf( text ) {
 		var values = Array.prototype.slice.call( arguments, 1 );
-		return String( text || '' ).replace( /%%|%[sd]/g, function ( token ) {
-			return token === '%%' ? '%' : ( values.length ? values.shift() : '' );
+		var next = 0;
+		return String( text || '' ).replace( /%%|%(\d+)\$[sd]|%[sd]/g, function ( token, position ) {
+			if ( token === '%%' ) {
+				return '%';
+			}
+			var value = position ? values[ Number( position ) - 1 ] : values[ next++ ];
+			return value === undefined ? '' : value;
 		} );
 	}
 

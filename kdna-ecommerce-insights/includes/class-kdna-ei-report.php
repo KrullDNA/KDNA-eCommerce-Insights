@@ -1096,8 +1096,9 @@ class KDNA_EcommerceInsights_Report {
 	 */
 
 	/**
-	 * Ad spend by channel and campaign, with ROAS per channel and the
-	 * blended marketing metrics.
+	 * Ad spend by channel and campaign, with ROAS per channel, the blended
+	 * marketing metrics and spend by channel over time. Spend is always
+	 * shown with claimable GST taken off, the same as in net profit.
 	 *
 	 * @param array      $range   Range.
 	 * @param array|null $compare Comparison range.
@@ -1106,29 +1107,28 @@ class KDNA_EcommerceInsights_Report {
 	public static function marketing( array $range, ?array $compare ): array {
 		global $wpdb;
 		$table = self::t( 'ad_spend' );
+		$net   = KDNA_EcommerceInsights_Ad_Spend::net_spend_sql();
+		$sums  = "SUM( {$net} ) AS spend, SUM( impressions ) AS impressions, SUM( clicks ) AS clicks, SUM( conversions ) AS conversions, SUM( conversion_value ) AS conversion_value";
 
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$channels  = KDNA_EcommerceInsights_Cache::timed(
 			'Ad spend by channel',
-			static fn() => $wpdb->get_results( $wpdb->prepare( "SELECT channel, SUM( spend ) AS spend, SUM( impressions ) AS impressions, SUM( clicks ) AS clicks, SUM( conversions ) AS conversions, SUM( conversion_value ) AS conversion_value FROM {$table} WHERE spend_date BETWEEN %s AND %s GROUP BY channel ORDER BY spend DESC", $range['start'], $range['end'] ), ARRAY_A )
+			static fn() => $wpdb->get_results( $wpdb->prepare( "SELECT channel, {$sums} FROM {$table} WHERE spend_date BETWEEN %s AND %s GROUP BY channel ORDER BY spend DESC", $range['start'], $range['end'] ), ARRAY_A )
 		);
 		$campaigns = KDNA_EcommerceInsights_Cache::timed(
 			'Ad spend by campaign',
-			static fn() => $wpdb->get_results( $wpdb->prepare( "SELECT channel, campaign_id, campaign_name, SUM( spend ) AS spend, SUM( impressions ) AS impressions, SUM( clicks ) AS clicks, SUM( conversions ) AS conversions, SUM( conversion_value ) AS conversion_value FROM {$table} WHERE spend_date BETWEEN %s AND %s GROUP BY channel, campaign_id, campaign_name ORDER BY spend DESC LIMIT 100", $range['start'], $range['end'] ), ARRAY_A )
+			static fn() => $wpdb->get_results( $wpdb->prepare( "SELECT channel, campaign_id, campaign_name, {$sums} FROM {$table} WHERE spend_date BETWEEN %s AND %s GROUP BY channel, campaign_id, campaign_name ORDER BY spend DESC LIMIT 200", $range['start'], $range['end'] ), ARRAY_A )
 		);
 		$daily     = KDNA_EcommerceInsights_Cache::timed(
 			'Ad spend by day and channel',
-			static fn() => $wpdb->get_results( $wpdb->prepare( "SELECT spend_date AS day, channel, SUM( spend ) AS spend FROM {$table} WHERE spend_date BETWEEN %s AND %s GROUP BY spend_date, channel", $range['start'], $range['end'] ), ARRAY_A )
+			static fn() => $wpdb->get_results( $wpdb->prepare( "SELECT spend_date AS day, channel, SUM( {$net} ) AS spend FROM {$table} WHERE spend_date BETWEEN %s AND %s GROUP BY spend_date, channel", $range['start'], $range['end'] ), ARRAY_A )
 		);
 		// phpcs:enable
 
-		$labels = array();
-		foreach ( (array) KDNA_EcommerceInsights_Settings::get( 'marketing.channels', array() ) as $channel ) {
-			$labels[ $channel['key'] ] = $channel['label'];
-		}
-
-		$shape = static function ( $row ) use ( $labels ) {
+		$labels = self::channel_labels();
+		$shape  = static function ( $row ) use ( $labels ) {
 			$spend = (float) $row['spend'];
+			$value = (float) $row['conversion_value'];
 			return array_merge(
 				$row,
 				array(
@@ -1137,9 +1137,10 @@ class KDNA_EcommerceInsights_Report {
 					'impressions'      => (int) $row['impressions'],
 					'clicks'           => (int) $row['clicks'],
 					'conversions'      => round( (float) $row['conversions'], 2 ),
-					'conversion_value' => round( (float) $row['conversion_value'], 2 ),
-					'roas'             => null === KDNA_EcommerceInsights_Metrics::divide( (float) $row['conversion_value'], $spend ) ? null : round( (float) $row['conversion_value'] / $spend, 2 ),
-					'cpc'              => null === KDNA_EcommerceInsights_Metrics::divide( $spend, (float) $row['clicks'] ) ? null : round( $spend / (float) $row['clicks'], 2 ),
+					'conversion_value' => round( $value, 2 ),
+					'roas'             => $spend > 0 && $value > 0 ? round( $value / $spend, 2 ) : null,
+					'cpc'              => $spend > 0 && (float) $row['clicks'] > 0 ? round( $spend / (float) $row['clicks'], 2 ) : null,
+					'cpa'              => $spend > 0 && (float) $row['conversions'] > 0 ? round( $spend / (float) $row['conversions'], 2 ) : null,
 				)
 			);
 		};
@@ -1147,21 +1148,55 @@ class KDNA_EcommerceInsights_Report {
 		$totals   = self::totals( $range );
 		$previous = $compare ? self::totals( $compare ) : null;
 		$metrics  = array();
-		foreach ( array( 'ad_spend', 'roas', 'mer', 'cpa', 'profit_after_ads', 'new_customers' ) as $key ) {
+		foreach ( array( 'ad_spend', 'roas', 'mer', 'cpa', 'profit_after_ads', 'new_customers', 'net_revenue', 'net_profit' ) as $key ) {
 			$metrics[] = KDNA_EcommerceInsights_Metrics::evaluate( $key, $totals, $previous );
 		}
 
+		// Spend per channel in each day, week or month of the range.
+		$granularity = KDNA_EcommerceInsights_Dates::auto_granularity( $range );
+		$buckets     = KDNA_EcommerceInsights_Dates::buckets( $range, $granularity );
+		$day_bucket  = array();
+		foreach ( $buckets as $index => $bucket ) {
+			$day = new DateTimeImmutable( $bucket['start'] );
+			$end = new DateTimeImmutable( $bucket['end'] );
+			while ( $day <= $end ) {
+				$day_bucket[ $day->format( 'Y-m-d' ) ] = $index;
+				$day                                    = $day->modify( '+1 day' );
+			}
+		}
 		$series = array();
 		foreach ( (array) $daily as $row ) {
-			$series[ $row['channel'] ][ $row['day'] ] = round( (float) $row['spend'], 2 );
+			if ( ! isset( $series[ $row['channel'] ] ) ) {
+				$series[ $row['channel'] ] = array_fill( 0, count( $buckets ), 0.0 );
+			}
+			if ( isset( $day_bucket[ $row['day'] ] ) ) {
+				$series[ $row['channel'] ][ $day_bucket[ $row['day'] ] ] += (float) $row['spend'];
+			}
 		}
+		$series = array_map( static fn( $values ) => array_map( static fn( $v ) => round( $v, 2 ), $values ), $series );
 
 		return array(
-			'metrics'   => $metrics,
-			'channels'  => array_map( $shape, (array) $channels ),
-			'campaigns' => array_map( $shape, (array) $campaigns ),
-			'daily'     => $series,
+			'metrics'     => $metrics,
+			'channels'    => array_map( $shape, (array) $channels ),
+			'campaigns'   => array_map( $shape, (array) $campaigns ),
+			'granularity' => $granularity,
+			'buckets'     => $buckets,
+			'series'      => $series,
+			'gst_rate'    => KDNA_EcommerceInsights_Ad_Spend::claimable_tax_rate(),
 		);
+	}
+
+	/**
+	 * Channel names from Settings > Marketing, keyed by channel key.
+	 *
+	 * @return array<string, string>
+	 */
+	public static function channel_labels(): array {
+		$labels = array();
+		foreach ( (array) KDNA_EcommerceInsights_Settings::get( 'marketing.channels', array() ) as $channel ) {
+			$labels[ $channel['key'] ] = $channel['label'];
+		}
+		return $labels;
 	}
 
 	/*

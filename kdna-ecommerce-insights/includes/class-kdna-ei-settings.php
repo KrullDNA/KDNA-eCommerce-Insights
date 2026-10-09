@@ -446,10 +446,15 @@ class KDNA_EcommerceInsights_Settings {
 			foreach ( (array) ( $preset['mapping'] ?? array() ) as $field => $column ) {
 				$mapping[ sanitize_key( (string) $field ) ] = sanitize_text_field( (string) $column );
 			}
+			$name = sanitize_text_field( (string) ( $preset['name'] ?? '' ) );
+			if ( '' === $name ) {
+				continue;
+			}
 			$presets[] = array(
-				'name'     => sanitize_text_field( (string) ( $preset['name'] ?? '' ) ),
-				'platform' => sanitize_key( (string) ( $preset['platform'] ?? '' ) ),
-				'mapping'  => $mapping,
+				'name'         => mb_substr( $name, 0, 80 ),
+				'channel'      => sanitize_key( (string) ( $preset['channel'] ?? $preset['platform'] ?? '' ) ),
+				'mapping'      => $mapping,
+				'includes_gst' => ! empty( $preset['includes_gst'] ),
 			);
 		}
 

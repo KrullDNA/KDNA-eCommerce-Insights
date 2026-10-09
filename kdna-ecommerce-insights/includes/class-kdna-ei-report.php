@@ -1206,66 +1206,14 @@ class KDNA_EcommerceInsights_Report {
 	 */
 
 	/**
-	 * GST or VAT summary by month or quarter (Settings > Tax), with the
-	 * BAS-style lines for Australian stores.
+	 * GST, VAT or sales tax summary by month or quarter. The work is done
+	 * by KDNA_EcommerceInsights_Tax; this stays for older callers.
 	 *
-	 * @param array $range Range.
+	 * @param array  $range  Range.
+	 * @param string $period monthly or quarterly. Empty uses Settings > Tax.
 	 * @return array
 	 */
-	public static function tax( array $range ): array {
-		$period  = (string) KDNA_EcommerceInsights_Settings::get( 'tax.reporting_period', 'quarterly' );
-		$buckets = 'monthly' === $period ? KDNA_EcommerceInsights_Dates::buckets( $range, 'month' ) : self::quarters( $range );
-		$keys    = array( 'bas_g1', 'bas_1a', 'bas_1b', 'net_gst' );
-		$rows    = array();
-
-		foreach ( $buckets as $bucket ) {
-			$totals = self::totals( $bucket );
-			$line   = array(
-				'start' => $bucket['start'],
-				'end'   => $bucket['end'],
-			);
-			foreach ( $keys as $key ) {
-				$line[ $key ] = round( (float) KDNA_EcommerceInsights_Metrics::value( $key, $totals ), 2 );
-			}
-			$rows[] = $line;
-		}
-
-		$totals = self::totals( $range );
-		$sum    = array();
-		foreach ( $keys as $key ) {
-			$sum[ $key ] = round( (float) KDNA_EcommerceInsights_Metrics::value( $key, $totals ), 2 );
-		}
-
-		return array(
-			'system'  => KDNA_EcommerceInsights_Settings::get( 'tax.system', 'none' ),
-			'rate'    => (float) KDNA_EcommerceInsights_Settings::get( 'tax.rate', 0 ),
-			'period'  => $period,
-			'periods' => $rows,
-			'totals'  => $sum,
-			'note'    => __( 'A guide for your bookkeeper, not a lodgement. GST paid on costs is an estimate from overheads and ad spend marked as including GST.', 'kdna-ecommerce-insights' ),
-		);
-	}
-
-	/**
-	 * Splits a range into calendar quarters, trimmed to the range.
-	 *
-	 * @param array $range Range.
-	 * @return array[]
-	 */
-	private static function quarters( array $range ): array {
-		$quarters = array();
-		$cursor   = new DateTimeImmutable( $range['start'] );
-		$end      = new DateTimeImmutable( $range['end'] );
-		while ( $cursor <= $end ) {
-			$month       = (int) floor( ( (int) $cursor->format( 'n' ) - 1 ) / 3 ) * 3 + 1;
-			$q_end       = $cursor->setDate( (int) $cursor->format( 'Y' ), $month, 1 )->modify( '+3 months -1 day' );
-			$q_end       = min( $q_end, $end );
-			$quarters[]  = array(
-				'start' => $cursor->format( 'Y-m-d' ),
-				'end'   => $q_end->format( 'Y-m-d' ),
-			);
-			$cursor      = $q_end->modify( '+1 day' );
-		}
-		return $quarters;
+	public static function tax( array $range, string $period = '' ): array {
+		return KDNA_EcommerceInsights_Tax::summary( $range, $period );
 	}
 }

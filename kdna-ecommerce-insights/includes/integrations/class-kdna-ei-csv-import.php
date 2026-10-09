@@ -220,12 +220,12 @@ class KDNA_EcommerceInsights_Csv_Import {
 	 */
 
 	/**
-	 * Builds the product cost CSV: every product and variation with its
-	 * price and cost, ready to edit and import again.
+	 * The product cost list: every product and variation with its price and
+	 * cost, ready to edit and import again.
 	 *
-	 * @return string
+	 * @return array{0: string[], 1: array[]} Header and rows.
 	 */
-	public static function export_costs(): string {
+	public static function cost_rows(): array {
 		$header = array( 'id', 'parent_id', 'type', 'sku', 'name', 'variation', 'price', 'cost', 'cost_used' );
 		$rows   = array();
 
@@ -245,6 +245,16 @@ class KDNA_EcommerceInsights_Csv_Import {
 			}
 		}
 
+		return array( $header, $rows );
+	}
+
+	/**
+	 * Builds the product cost CSV file (see cost_rows()).
+	 *
+	 * @return string
+	 */
+	public static function export_costs(): string {
+		list( $header, $rows ) = self::cost_rows();
 		return self::build( $header, $rows );
 	}
 

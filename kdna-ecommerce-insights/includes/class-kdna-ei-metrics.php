@@ -651,6 +651,55 @@ class KDNA_EcommerceInsights_Metrics {
 	}
 
 	/**
+	 * Formats a metric value for emails and the printable report, for
+	 * example "$1,234.50", "32.4%", "2.10x" or "12 days". A missing value
+	 * shows as "n/a".
+	 *
+	 * @param float|null $value    Value.
+	 * @param string     $format   currency, percent, ratio, days or number.
+	 * @param int|null   $decimals Decimal places, or null for the default.
+	 * @return string
+	 */
+	public static function display( ?float $value, string $format, ?int $decimals = null ): string {
+		if ( null === $value ) {
+			return __( 'n/a', 'kdna-ecommerce-insights' );
+		}
+		switch ( $format ) {
+			case 'currency':
+				$places = null === $decimals ? ( abs( $value ) >= 1000 ? 0 : wc_get_price_decimals() ) : $decimals;
+				return html_entity_decode( wp_strip_all_tags( wc_price( $value, array( 'decimals' => $places ) ) ), ENT_QUOTES, 'UTF-8' );
+			case 'percent':
+				return number_format_i18n( $value, null === $decimals ? 1 : $decimals ) . '%';
+			case 'ratio':
+				return number_format_i18n( $value, null === $decimals ? 2 : $decimals ) . 'x';
+			case 'days':
+				/* translators: %s: number of days. */
+				return sprintf( __( '%s days', 'kdna-ecommerce-insights' ), number_format_i18n( $value, null === $decimals ? 0 : $decimals ) );
+			default:
+				return number_format_i18n( $value, null === $decimals ? 0 : $decimals );
+		}
+	}
+
+	/**
+	 * The change line for a metric result, such as "12.5%" or "1.2 pts",
+	 * with an up or down arrow. Empty when there is nothing to compare.
+	 *
+	 * @param array $result Result from evaluate().
+	 * @return string
+	 */
+	public static function change_text( array $result ): string {
+		if ( null === $result['change'] ) {
+			return '';
+		}
+		$arrow  = 'up' === $result['direction'] ? "\u{25B2}" : ( 'down' === $result['direction'] ? "\u{25BC}" : '' );
+		$amount = 'points' === $result['change_type']
+			/* translators: %s: change in percentage points. */
+			? sprintf( __( '%s pts', 'kdna-ecommerce-insights' ), number_format_i18n( abs( $result['change'] ), 1 ) )
+			: number_format_i18n( abs( $result['change'] ), abs( $result['change'] ) >= 100 ? 0 : 1 ) . '%';
+		return trim( $arrow . ' ' . $amount );
+	}
+
+	/**
 	 * Whether revenue figures should include tax (Settings > General).
 	 * Profit maths always excludes tax.
 	 *

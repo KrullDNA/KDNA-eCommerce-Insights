@@ -343,7 +343,12 @@ $kdna_ei_columns = array(
 
 			<template x-if="detail && detail.variations.length">
 				<section class="kdna-ei-drawer__section" aria-labelledby="kdna-ei-drawer-variations-title">
-					<h3 id="kdna-ei-drawer-variations-title" class="kdna-ei-drawer__subtitle" x-text="t.byVariation"></h3>
+					<div class="kdna-ei-card__header">
+						<h3 id="kdna-ei-drawer-variations-title" class="kdna-ei-drawer__subtitle" x-text="t.byVariation"></h3>
+						<button type="button" class="kdna-ei-btn kdna-ei-btn--icon kdna-ei-btn--ghost" @click="exportVariations()" :disabled="exporting" aria-label="<?php esc_attr_e( 'Export variations as CSV', 'kdna-ecommerce-insights' ); ?>" title="<?php esc_attr_e( 'Export variations as CSV', 'kdna-ecommerce-insights' ); ?>">
+							<?php Admin::icon( 'download', 'kdna-ei-icon--sm' ); ?>
+						</button>
+					</div>
 					<table class="kdna-ei-table kdna-ei-table--hover kdna-ei-table--compact">
 						<thead>
 							<tr>

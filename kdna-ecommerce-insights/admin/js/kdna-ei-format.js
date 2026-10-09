@@ -377,6 +377,22 @@
 	};
 
 	/**
+	 * Opens the printable report (Overview, P&L and top products) for a date
+	 * range in a new tab, where the print window opens straight away so it
+	 * can be saved as a PDF.
+	 *
+	 * @param {Object} query Range query: preset, compare, and start and end for custom ranges.
+	 */
+	window.KDNAEI.printReport = function ( query ) {
+		var base = ( window.kdnaEiApp && window.kdnaEiApp.printUrl ) || '';
+		if ( ! base ) {
+			return;
+		}
+		var params = new window.URLSearchParams( Object.assign( {}, query, { autoprint: 1 } ) );
+		window.open( base + ( base.indexOf( '?' ) === -1 ? '?' : '&' ) + params.toString(), '_blank', 'noopener' );
+	};
+
+	/**
 	 * Shared helpers for KPI strips on every report screen: icons, change
 	 * text such as "12%" or "3.0 pts", and the comparison sentence.
 	 */

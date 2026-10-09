@@ -56,12 +56,14 @@ class KDNA_EcommerceInsights_Plugin {
 		new KDNA_EcommerceInsights_Summary();
 		new KDNA_EcommerceInsights_Inventory();
 		new KDNA_EcommerceInsights_Ad_Sync();
+		new KDNA_EcommerceInsights_Digest();
 
 		// Report cache, cleared whenever figures change.
 		new KDNA_EcommerceInsights_Cache();
 
 		if ( is_admin() ) {
 			new KDNA_EcommerceInsights_Admin();
+			new KDNA_EcommerceInsights_Print_Report();
 		}
 	}
 
@@ -83,6 +85,7 @@ class KDNA_EcommerceInsights_Plugin {
 		( new KDNA_EcommerceInsights_Rest_Overheads() )->register_routes();
 		( new KDNA_EcommerceInsights_Rest_Jobs() )->register_routes();
 		( new KDNA_EcommerceInsights_Rest_Connections() )->register_routes();
+		( new KDNA_EcommerceInsights_Rest_Digest() )->register_routes();
 
 		// Report routes from section 10.4 of the brief.
 		$reports = array( 'Summary', 'Timeseries', 'Profit', 'Products', 'Customers', 'Inventory', 'Marketing', 'Tax', 'Export', 'Adspend' );

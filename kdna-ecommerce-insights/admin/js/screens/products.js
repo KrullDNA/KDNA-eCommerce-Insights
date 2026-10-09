@@ -394,6 +394,19 @@
 				},
 
 				/**
+				 * Downloads the drawer's variation table as CSV.
+				 */
+				exportVariations: function () {
+					var self = this;
+					this.exporting = true;
+					window.KDNAEI.exportCsv( 'variations', Object.assign( {}, this.rangeQuery, { product: this.drawerItem.product_id } ) ).catch( function ( error ) {
+						self.detailError = error.message;
+					} ).finally( function () {
+						self.exporting = false;
+					} );
+				},
+
+				/**
 				 * CSS class for a margin: red below zero, amber when thin.
 				 *
 				 * @param {number|null} value Margin.

@@ -272,7 +272,7 @@ kdna_ei_r( 'Customers include lifetime metrics, top customers, cohorts and locat
 $inventory = kdna_ei_r_call( 'GET', '/inventory' )->get_data()['data'];
 kdna_ei_r( 'Inventory includes stock status counts and stock values', isset( $inventory['status']['in_stock'] ) && ! empty( $inventory['metrics'] ) );
 $tax = kdna_ei_r_call( 'GET', '/tax', array( 'preset' => 'last_year' ) )->get_data()['data'];
-kdna_ei_r( 'Tax summary has BAS lines and a guide-only note', isset( $tax['totals']['bas_g1'], $tax['note'] ) );
+kdna_ei_r( 'Tax summary has BAS lines and a guide-only note', isset( $tax['totals']['sales'], $tax['totals']['on_sales'], $tax['labels']['sales'], $tax['note'] ) );
 
 /*
  * -------------------------------------------------------------------------

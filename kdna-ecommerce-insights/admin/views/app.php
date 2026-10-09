@@ -143,6 +143,46 @@ $layouts       = array( 'overview', 'report', 'table', 'settings' );
 					</div>
 				</div>
 
+				<?php // Export menu: every table on the current screen, plus the printable report. ?>
+				<div class="kdna-ei-dropdown kdna-ei-export-menu" @click.outside="exportOpen = false">
+					<button
+						type="button"
+						class="kdna-ei-btn kdna-ei-dropdown__trigger"
+						x-ref="exportTrigger"
+						aria-haspopup="menu"
+						:aria-expanded="exportOpen ? 'true' : 'false'"
+						aria-expanded="false"
+						aria-controls="kdna-ei-export-menu"
+						@click="toggleExportMenu()"
+					>
+						<?php KDNA_EcommerceInsights_Admin::icon( 'download', 'kdna-ei-icon--sm kdna-ei-dropdown__lead' ); ?>
+						<span class="kdna-ei-export-menu__label"><?php esc_html_e( 'Export', 'kdna-ecommerce-insights' ); ?></span>
+						<?php KDNA_EcommerceInsights_Admin::icon( 'chevron-down' ); ?>
+					</button>
+
+					<div id="kdna-ei-export-menu" class="kdna-ei-dropdown__menu kdna-ei-export-menu__list" role="menu" x-show="exportOpen" x-cloak x-transition.opacity.duration.150ms>
+						<div class="kdna-ei-dropdown__group" role="group" aria-labelledby="kdna-ei-export-heading" x-show="exportList.length">
+							<p id="kdna-ei-export-heading" class="kdna-ei-dropdown__heading"><?php esc_html_e( 'Download as CSV', 'kdna-ecommerce-insights' ); ?></p>
+							<template x-for="table in exportList" :key="table.key">
+								<button type="button" class="kdna-ei-dropdown__item" role="menuitem" @click="exportTable( table.key )" :disabled="exportBusy !== ''">
+									<span x-text="table.label"></span>
+									<span class="kdna-ei-muted kdna-ei-export-menu__busy" x-show="exportBusy === table.key"><?php esc_html_e( 'Preparing', 'kdna-ecommerce-insights' ); ?></span>
+								</button>
+							</template>
+						</div>
+						<div class="kdna-ei-dropdown__group" role="group" aria-labelledby="kdna-ei-print-heading">
+							<p id="kdna-ei-print-heading" class="kdna-ei-dropdown__heading"><?php esc_html_e( 'Report', 'kdna-ecommerce-insights' ); ?></p>
+							<button type="button" class="kdna-ei-dropdown__item" role="menuitem" @click="printReport()">
+								<span><?php esc_html_e( 'Printable report (save as PDF)', 'kdna-ecommerce-insights' ); ?></span>
+							</button>
+							<a href="#/reports" class="kdna-ei-dropdown__item" role="menuitem" @click="exportOpen = false" x-show="route !== 'reports'">
+								<span><?php esc_html_e( 'Every export, on Tax & Reports', 'kdna-ecommerce-insights' ); ?></span>
+							</a>
+						</div>
+						<p class="kdna-ei-field-error kdna-ei-export-menu__error" role="alert" x-show="exportError" x-text="exportError"></p>
+					</div>
+				</div>
+
 				<button
 					type="button"
 					class="kdna-ei-btn kdna-ei-btn--icon"

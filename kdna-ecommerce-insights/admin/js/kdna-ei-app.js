@@ -99,6 +99,10 @@
 				range: prefs.range || 'this_month',
 				comparison: prefs.comparison || 'previous_period',
 				rangeOpen: false,
+				exportOpen: false,
+				exportBusy: '',
+				exportError: '',
+				exportTables: config.exports || {},
 				customOpen: false,
 				customStart: prefs.start || '',
 				customEnd: prefs.end || '',
@@ -129,6 +133,8 @@
 					router.onChange( function ( id ) {
 						self.route = id;
 						self.rangeOpen = false;
+						self.exportOpen = false;
+						self.exportError = '';
 						self.updateDocumentTitle();
 						window.scrollTo( 0, 0 );
 						self.$nextTick( function () {
@@ -234,6 +240,7 @@
 				 */
 				toggleRangeMenu: function () {
 					this.rangeOpen = ! this.rangeOpen;
+					this.exportOpen = false;
 					this.customOpen = this.rangeOpen && this.range === 'custom';
 				},
 
@@ -244,7 +251,64 @@
 					if ( this.rangeOpen && this.$refs.rangeTrigger ) {
 						this.$refs.rangeTrigger.focus();
 					}
+					if ( this.exportOpen && this.$refs.exportTrigger ) {
+						this.$refs.exportTrigger.focus();
+					}
 					this.rangeOpen = false;
+					this.exportOpen = false;
+				},
+
+				/*
+				 * -------------------------------------------------------------
+				 * Export menu
+				 * -------------------------------------------------------------
+				 */
+
+				/**
+				 * The tables on the screen showing, for the Export menu.
+				 *
+				 * @return {Object[]} Each: key, label.
+				 */
+				get exportList() {
+					var tables = this.exportTables[ this.route ] || {};
+					return Object.keys( tables ).map( function ( key ) {
+						return { key: key, label: tables[ key ] };
+					} );
+				},
+
+				/**
+				 * Opens or closes the Export menu.
+				 */
+				toggleExportMenu: function () {
+					this.exportOpen = ! this.exportOpen;
+					this.rangeOpen = false;
+					this.exportError = '';
+				},
+
+				/**
+				 * Downloads one table as a CSV file for the chosen dates.
+				 *
+				 * @param {string} table Table key.
+				 */
+				exportTable: function ( table ) {
+					var self = this;
+					this.exportBusy = table;
+					this.exportError = '';
+					window.KDNAEI.exportCsv( table, this.rangeQuery ).then( function () {
+						self.exportOpen = false;
+					} ).catch( function ( error ) {
+						self.exportError = error.message;
+					} ).finally( function () {
+						self.exportBusy = '';
+					} );
+				},
+
+				/**
+				 * Opens the printable report for the chosen dates.
+				 */
+				printReport: function () {
+					this.exportOpen = false;
+					window.KDNAEI.printReport( this.rangeQuery );
 				},
 
 				/**

@@ -2967,3 +2967,491 @@ th[aria-sort="ascending"] .kdna-ei-sort__icon {
 	padding-top: 16px;
 	border-top: 1px solid var(--kdna-ei-border);
 }
+
+/* ==========================================================================
+   Top bar Export menu
+   ========================================================================== */
+
+.kdna-ei-export-menu .kdna-ei-dropdown__trigger {
+	min-width: 0;
+	gap: 8px;
+}
+
+.kdna-ei-export-menu__list {
+	min-width: 260px;
+	max-height: min(70vh, 520px);
+	overflow-y: auto;
+}
+
+.kdna-ei-export-menu .kdna-ei-dropdown__item {
+	text-decoration: none;
+}
+
+.kdna-ei-export-menu__busy {
+	font-size: var(--kdna-ei-fs-small);
+}
+
+.kdna-ei-export-menu__error {
+	padding: 6px 12px 4px;
+}
+
+@media (max-width: 782px) {
+	.kdna-ei-export-menu__label {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
+	}
+}
+
+/* ==========================================================================
+   Tax & Reports screen
+   ========================================================================== */
+
+.kdna-ei-reports__grid {
+	display: grid;
+	gap: var(--kdna-ei-gap);
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+	grid-template-areas:
+		"tax tax"
+		"print digest"
+		"exports exports";
+}
+
+.kdna-ei-area-tax { grid-area: tax; }
+.kdna-ei-area-print { grid-area: print; }
+.kdna-ei-area-digest { grid-area: digest; }
+.kdna-ei-area-exports { grid-area: exports; }
+
+@media (max-width: 1100px) {
+	.kdna-ei-reports__grid {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-areas: "tax" "print" "digest" "exports";
+	}
+}
+
+/* Tax summary */
+
+.kdna-ei-tax__header {
+	flex-wrap: wrap;
+	align-items: flex-start;
+}
+
+.kdna-ei-tax__controls {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+}
+
+.kdna-ei-tax__guide {
+	align-items: center;
+	justify-content: flex-start;
+	flex-wrap: nowrap;
+	padding-right: 18px;
+	border-left-color: var(--kdna-ei-accent);
+}
+
+.kdna-ei-tax__guide .kdna-ei-icon {
+	flex: none;
+	color: var(--kdna-ei-accent);
+}
+
+.kdna-ei-tax__guide p {
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-tax__guide strong {
+	color: var(--kdna-ei-text);
+	font-weight: 600;
+}
+
+.kdna-ei-tax__tiles {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 12px;
+	margin-bottom: 20px;
+}
+
+.kdna-ei-tax__tiles--three {
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.kdna-ei-tax__tile {
+	display: grid;
+	align-content: start;
+	gap: 6px;
+	padding: 16px 18px;
+	background: var(--kdna-ei-bg);
+	border: 1px solid var(--kdna-ei-border);
+	border-radius: var(--kdna-ei-radius-md);
+}
+
+.kdna-ei-tax__tile--net {
+	border-color: color-mix(in srgb, var(--kdna-ei-accent) 45%, transparent);
+}
+
+.kdna-ei-tax__tile .kdna-ei-badge {
+	justify-self: start;
+}
+
+.kdna-ei-tax__tile-label {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-tax__code {
+	display: inline-grid;
+	place-items: center;
+	min-width: 28px;
+	height: 22px;
+	padding: 0 6px;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--kdna-ei-accent);
+	background: color-mix(in srgb, var(--kdna-ei-accent) 14%, transparent);
+	border-radius: 6px;
+}
+
+.kdna-ei-tax__tile-value {
+	font-size: 26px;
+	font-weight: 500;
+	line-height: 1.2;
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-root .kdna-ei-tax__table tbody th,
+.kdna-ei-root .kdna-ei-tax__table tfoot th {
+	padding-top: 14px;
+	padding-bottom: 14px;
+	font-size: var(--kdna-ei-fs-body);
+	font-weight: 500;
+	letter-spacing: normal;
+	text-transform: none;
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-tax__badge {
+	margin-left: 8px;
+}
+
+.kdna-ei-tax__table tfoot th,
+.kdna-ei-tax__table tfoot td {
+	font-weight: 600;
+	border-top: 1px solid var(--kdna-ei-border);
+}
+
+.kdna-ei-tax__badge {
+	padding: 2px 10px;
+	font-size: 12px;
+}
+
+.kdna-ei-tax__badge::before {
+	display: none;
+}
+
+.kdna-ei-text-positive {
+	color: var(--kdna-ei-positive);
+}
+
+.kdna-ei-tax__basis {
+	margin-top: 12px;
+}
+
+.kdna-ei-tax__off .kdna-ei-empty__title {
+	padding: 0;
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-tax__off .kdna-ei-muted {
+	max-width: 520px;
+}
+
+@media (max-width: 900px) {
+	.kdna-ei-tax__tiles,
+	.kdna-ei-tax__tiles--three {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 520px) {
+	.kdna-ei-tax__tiles,
+	.kdna-ei-tax__tiles--three {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+/* Tax settings window */
+
+.kdna-ei-modal__dialog--narrow {
+	max-width: 440px;
+}
+
+.kdna-ei-tax-form fieldset {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+.kdna-ei-tax-form .kdna-ei-select,
+.kdna-ei-tax-form .kdna-ei-input {
+	width: 100%;
+}
+
+.kdna-ei-root .kdna-ei-input--short {
+	max-width: 120px;
+}
+
+.kdna-ei-modal__footer--inline {
+	justify-content: flex-end;
+	margin: 0 -24px -24px;
+}
+
+/* Printable report card */
+
+.kdna-ei-print-card {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+
+.kdna-ei-print-card .kdna-ei-btn--primary {
+	align-self: flex-start;
+}
+
+.kdna-ei-print-card__preview {
+	display: flex;
+	gap: 12px;
+	padding: 18px;
+	background: var(--kdna-ei-bg);
+	border-radius: var(--kdna-ei-radius-md);
+}
+
+.kdna-ei-print-card__sheet {
+	display: grid;
+	align-content: start;
+	gap: 7px;
+	width: 74px;
+	height: 104px;
+	padding: 10px 9px;
+	background: #ffffff;
+	border-radius: 4px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+}
+
+.kdna-ei-print-card__sheet span {
+	display: block;
+	height: 6px;
+	background: #e4e5ea;
+	border-radius: 3px;
+}
+
+.kdna-ei-print-card__sheet span:first-child {
+	width: 60%;
+	background: var(--kdna-ei-accent);
+}
+
+.kdna-ei-print-card__sheet span:nth-child(3) {
+	height: 26px;
+	background: color-mix(in srgb, var(--kdna-ei-accent) 18%, #ffffff);
+}
+
+.kdna-ei-print-card__range {
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-print-card__range strong {
+	color: var(--kdna-ei-text);
+	font-weight: 500;
+}
+
+/* Digest */
+
+.kdna-ei-digest__form {
+	display: grid;
+	gap: 18px;
+}
+
+.kdna-ei-digest__field {
+	display: grid;
+	gap: 8px;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+.kdna-ei-digest__field .kdna-ei-segmented {
+	justify-self: start;
+}
+
+.kdna-ei-digest__sections {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 8px 16px;
+}
+
+.kdna-ei-check {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	font-size: var(--kdna-ei-fs-body);
+	color: var(--kdna-ei-text);
+	cursor: pointer;
+}
+
+.kdna-ei-root .kdna-ei-check input[type="checkbox"] {
+	width: 18px;
+	height: 18px;
+	margin: 0;
+	accent-color: var(--kdna-ei-accent);
+}
+
+.kdna-ei-digest__status {
+	display: grid;
+	gap: 2px;
+	padding: 12px 14px;
+	font-size: var(--kdna-ei-fs-small);
+	background: var(--kdna-ei-bg);
+	border-radius: var(--kdna-ei-radius-sm);
+}
+
+.kdna-ei-digest__status span:empty {
+	display: none;
+}
+
+.kdna-ei-digest__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+@media (max-width: 520px) {
+	.kdna-ei-digest__sections {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+/* Digest preview window */
+
+.kdna-ei-preview {
+	height: calc(100vh - 48px);
+}
+
+.kdna-ei-preview__tools {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.kdna-ei-preview__body {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+	background: var(--kdna-ei-bg);
+}
+
+.kdna-ei-preview__note {
+	margin: 0;
+}
+
+.kdna-ei-preview__skeleton {
+	flex: 1;
+	min-height: 320px;
+}
+
+.kdna-ei-preview__frame {
+	align-self: center;
+	flex: 1 1 auto;
+	width: 100%;
+	min-height: 360px;
+	overflow: hidden;
+	background: #f4f5f7;
+	border: 1px solid var(--kdna-ei-border);
+	border-radius: var(--kdna-ei-radius-md);
+	transition: max-width var(--kdna-ei-duration-fast) ease;
+}
+
+.kdna-ei-preview__frame--desktop {
+	max-width: 720px;
+}
+
+.kdna-ei-preview__frame--phone {
+	max-width: 390px;
+}
+
+.kdna-ei-preview__frame iframe {
+	display: block;
+	width: 100%;
+	height: 100%;
+	border: 0;
+}
+
+@media (max-width: 640px) {
+	.kdna-ei-preview .kdna-ei-modal__header {
+		flex-wrap: wrap;
+	}
+}
+
+/* Every export */
+
+.kdna-ei-exports__groups {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: 20px 24px;
+}
+
+.kdna-ei-exports__heading {
+	margin: 0 0 6px;
+	font-size: var(--kdna-ei-fs-eyebrow);
+	font-weight: 500;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-exports__list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.kdna-ei-root .kdna-ei-exports__item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	padding: 7px 8px;
+	margin-left: -8px;
+	font: inherit;
+	font-size: var(--kdna-ei-fs-body);
+	text-align: left;
+	color: var(--kdna-ei-text);
+	background: transparent;
+	border: 0;
+	border-radius: var(--kdna-ei-radius-sm);
+	cursor: pointer;
+}
+
+.kdna-ei-root .kdna-ei-exports__item:hover:not(:disabled) {
+	background: var(--kdna-ei-surface-raised);
+}
+
+.kdna-ei-root .kdna-ei-exports__item:disabled {
+	cursor: progress;
+}
+
+.kdna-ei-exports__item .kdna-ei-icon {
+	flex: none;
+	color: var(--kdna-ei-accent);
+}
+
+.kdna-ei-exports__item .kdna-ei-muted {
+	margin-left: auto;
+	font-size: var(--kdna-ei-fs-small);
+}

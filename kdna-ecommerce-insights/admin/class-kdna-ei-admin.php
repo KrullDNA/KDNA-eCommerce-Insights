@@ -249,7 +249,7 @@ class KDNA_EcommerceInsights_Admin {
 
 		// One script per built screen, each registering its Alpine component.
 		$screen_scripts = array( 'kdna-ei-app' );
-		foreach ( array( 'overview', 'profit', 'products', 'customers', 'inventory', 'marketing', 'costs', 'cost-rules', 'overheads', 'settings-hero' ) as $screen_id ) {
+		foreach ( array( 'overview', 'profit', 'products', 'customers', 'inventory', 'marketing', 'costs', 'cost-rules', 'overheads', 'reports', 'settings-hero' ) as $screen_id ) {
 			$path   = 'admin/js/screens/' . $screen_id . '.js';
 			$handle = 'kdna-ei-screen-' . $screen_id;
 			wp_enqueue_script( $handle, KDNA_EI_URL . $path, array( 'kdna-ei-app', 'kdna-ei-chart-theme' ), $this->asset_version( $path ), true );
@@ -292,6 +292,11 @@ class KDNA_EcommerceInsights_Admin {
 				'hero'         => KDNA_EcommerceInsights_Settings::get( 'hero', array() ),
 				'kpiOptions'   => self::kpi_options(),
 				'alerts'       => KDNA_EcommerceInsights_Settings::get( 'alerts', array() ),
+				'tax'          => KDNA_EcommerceInsights_Settings::get( 'tax', array() ),
+				'taxSystems'   => KDNA_EcommerceInsights_Tax::systems(),
+				'taxSpans'     => KDNA_EcommerceInsights_Tax::spans(),
+				'exports'      => KDNA_EcommerceInsights_Rest_Export::catalogue(),
+				'printUrl'     => KDNA_EcommerceInsights_Print_Report::base_url(),
 				'currency'     => array(
 					'symbol'   => html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUOTES, 'UTF-8' ),
 					'position' => (string) get_option( 'woocommerce_currency_pos', 'left' ),
@@ -318,6 +323,7 @@ class KDNA_EcommerceInsights_Admin {
 					'customers'     => self::customers_strings(),
 					'inventory'     => self::inventory_strings(),
 					'marketing'     => self::marketing_strings(),
+					'reports'       => self::reports_strings(),
 					'heroSettings'  => array(
 						'saved'       => __( 'Saved. The Overview has been updated.', 'kdna-ecommerce-insights' ),
 						'amountError' => __( 'Enter an amount of zero or more, for example 25000.', 'kdna-ecommerce-insights' ),
@@ -595,6 +601,47 @@ class KDNA_EcommerceInsights_Admin {
 			'syncReplaced'      => __( 'This replaced %s added by hand or by CSV for the same dates, so nothing is counted twice.', 'kdna-ecommerce-insights' ),
 			/* translators: %s: platform. */
 			'disconnected'      => __( '%s disconnected. Spend already synced has been kept.', 'kdna-ecommerce-insights' ),
+		);
+	}
+
+	/**
+	 * Text used by the Tax & Reports screen script.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function reports_strings(): array {
+		return array(
+			'gstTitle'       => __( 'GST summary', 'kdna-ecommerce-insights' ),
+			'taxTitle'       => __( 'Tax summary', 'kdna-ecommerce-insights' ),
+			'lastMonth'      => __( 'Last full month', 'kdna-ecommerce-insights' ),
+			'lastQuarter'    => __( 'Last full quarter', 'kdna-ecommerce-insights' ),
+			/* translators: 1: first day, 2: last day. */
+			'covers'         => __( '%1$s to %2$s', 'kdna-ecommerce-insights' ),
+			'salesNote'      => __( 'Everything customers paid, including tax and shipping, less refunds.', 'kdna-ecommerce-insights' ),
+			'onSalesNote'    => __( 'Tax charged on orders, less tax refunded.', 'kdna-ecommerce-insights' ),
+			/* translators: 1: tax on overheads, 2: tax on ad spend. */
+			'onCostsNote'    => __( 'Estimate: %1$s from overheads and %2$s from ad spend marked as including tax.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: GST, VAT, Tax or Sales tax. */
+			'toPay'          => __( '%s to pay', 'kdna-ecommerce-insights' ),
+			/* translators: %s: GST, VAT, Tax or Sales tax. */
+			'refundDue'      => __( '%s refund due', 'kdna-ecommerce-insights' ),
+			'nothingDue'     => __( 'Nothing to pay or claim', 'kdna-ecommerce-insights' ),
+			'inProgress'     => __( 'Still running', 'kdna-ecommerce-insights' ),
+			'inProgressHelp' => __( 'This period has not finished yet, so its figures will change.', 'kdna-ecommerce-insights' ),
+			'partial'        => __( 'Part period', 'kdna-ecommerce-insights' ),
+			/* translators: 1: first day, 2: last day. */
+			'partialHelp'    => __( 'Only %1$s to %2$s is included, because the chosen dates cover part of this period.', 'kdna-ecommerce-insights' ),
+			'rateError'      => __( 'Enter a rate between 0 and 100, for example 10.', 'kdna-ecommerce-insights' ),
+			'saved'          => __( 'Saved. The digest is scheduled.', 'kdna-ecommerce-insights' ),
+			'savedOff'       => __( 'Saved. Digest emails are switched off.', 'kdna-ecommerce-insights' ),
+			'digestOff'      => __( 'Digest emails are switched off.', 'kdna-ecommerce-insights' ),
+			'notScheduled'   => __( 'Not scheduled yet. It will be scheduled within a minute or two.', 'kdna-ecommerce-insights' ),
+			/* translators: 1: date and time, 2: first day covered, 3: last day covered. */
+			'nextSend'       => __( 'Next one goes out %1$s, covering %2$s to %3$s.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: date and time. */
+			'lastSent'       => __( 'Last sent %s.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: date and time. */
+			'lastFailed'     => __( 'The last digest, due %s, could not be sent. Check that this site can send email.', 'kdna-ecommerce-insights' ),
 		);
 	}
 

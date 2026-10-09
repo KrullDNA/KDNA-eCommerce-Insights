@@ -245,7 +245,7 @@ class KDNA_EcommerceInsights_Admin {
 
 		// One script per built screen, each registering its Alpine component.
 		$screen_scripts = array( 'kdna-ei-app' );
-		foreach ( array( 'costs' ) as $screen_id ) {
+		foreach ( array( 'costs', 'cost-rules', 'overheads' ) as $screen_id ) {
 			$path   = 'admin/js/screens/' . $screen_id . '.js';
 			$handle = 'kdna-ei-screen-' . $screen_id;
 			wp_enqueue_script( $handle, KDNA_EI_URL . $path, array( 'kdna-ei-app' ), $this->asset_version( $path ), true );
@@ -281,6 +281,7 @@ class KDNA_EcommerceInsights_Admin {
 				'ranges'       => KDNA_EcommerceInsights_Settings::range_presets(),
 				'comparisons'  => KDNA_EcommerceInsights_Settings::comparison_modes(),
 				'storeName'    => KDNA_EcommerceInsights_Settings::store_name(),
+				'locale'       => str_replace( '_', '-', get_user_locale() ),
 				'status'       => KDNA_EcommerceInsights_Rest_Status::data(),
 				'currency'     => array(
 					'symbol'   => html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUOTES, 'UTF-8' ),
@@ -297,6 +298,8 @@ class KDNA_EcommerceInsights_Admin {
 					'pageTitle'     => __( 'Insights', 'kdna-ecommerce-insights' ),
 					'requestFailed' => __( 'Something went wrong talking to the server. Please try again.', 'kdna-ecommerce-insights' ),
 					'costs'         => self::costs_strings(),
+					'rules'         => self::rules_strings(),
+					'overheads'     => self::overheads_strings(),
 				),
 			)
 		);
@@ -369,6 +372,89 @@ class KDNA_EcommerceInsights_Admin {
 				'private' => __( 'Private', 'kdna-ecommerce-insights' ),
 				'future'  => __( 'Scheduled', 'kdna-ecommerce-insights' ),
 			),
+		);
+	}
+
+	/**
+	 * Text used by the payment fee, shipping and extra cost tabs.
+	 *
+	 * @return array
+	 */
+	private static function rules_strings(): array {
+		return array(
+			'disabled'          => __( 'Switched off', 'kdna-ecommerce-insights' ),
+			'readsActual'       => __( 'Reads actual fee', 'kdna-ecommerce-insights' ),
+			'estimatedOnly'     => __( 'Uses your rule', 'kdna-ecommerce-insights' ),
+			/* translators: %s: payment method name. */
+			'percentFor'        => __( 'Percentage fee for %s', 'kdna-ecommerce-insights' ),
+			/* translators: %s: payment method name. */
+			'fixedFor'          => __( 'Fixed fee per order for %s', 'kdna-ecommerce-insights' ),
+			/* translators: %s: shipping method name. */
+			'ruleTypeFor'       => __( 'How to work out the cost for %s', 'kdna-ecommerce-insights' ),
+			/* translators: %s: shipping method name. */
+			'amountFor'         => __( 'Amount for %s', 'kdna-ecommerce-insights' ),
+			/* translators: %s: shipping method name. */
+			'perKgFor'          => __( 'Cost per kg for %s', 'kdna-ecommerce-insights' ),
+			'otherMethods'      => __( 'All other shipping methods', 'kdna-ecommerce-insights' ),
+			'otherMethodsNote'  => __( 'Used when a method has no rule of its own', 'kdna-ecommerce-insights' ),
+			'sameAsChargedNote' => __( 'Uses what the customer paid', 'kdna-ecommerce-insights' ),
+			'shippingTypes'     => array(
+				'none'            => __( 'No cost', 'kdna-ecommerce-insights' ),
+				'fixed'           => __( 'Fixed amount', 'kdna-ecommerce-insights' ),
+				'percent'         => __( 'Percentage of order', 'kdna-ecommerce-insights' ),
+				'per_item'        => __( 'Per item', 'kdna-ecommerce-insights' ),
+				'same_as_charged' => __( 'Same as charged', 'kdna-ecommerce-insights' ),
+			),
+			/* translators: 1: example order value, 2: extra costs total. */
+			'extrasExample'     => __( 'On a %s order these add %s.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: cost name. */
+			'removeCost'        => __( 'Remove %s', 'kdna-ecommerce-insights' ),
+			'thisCost'          => __( 'this cost', 'kdna-ecommerce-insights' ),
+			'saving'            => __( 'Saving', 'kdna-ecommerce-insights' ),
+			'saveFees'          => __( 'Save payment fees', 'kdna-ecommerce-insights' ),
+			'saveShipping'      => __( 'Save shipping costs', 'kdna-ecommerce-insights' ),
+			'saveExtras'        => __( 'Save extra costs', 'kdna-ecommerce-insights' ),
+			'saved'             => __( 'Saved. New orders use these rules straight away.', 'kdna-ecommerce-insights' ),
+		);
+	}
+
+	/**
+	 * Text used by the Overheads tab.
+	 *
+	 * @return array
+	 */
+	private static function overheads_strings(): array {
+		return array(
+			'frequencies'      => KDNA_EcommerceInsights_Overheads::frequency_labels(),
+			'includesTax'      => __( 'Includes tax', 'kdna-ecommerce-insights' ),
+			/* translators: %s: tax amount. */
+			'taxExcluded'      => __( 'Excludes %s of GST you can claim back.', 'kdna-ecommerce-insights' ),
+			'edit'             => __( 'Edit', 'kdna-ecommerce-insights' ),
+			'addTitle'         => __( 'Add an overhead', 'kdna-ecommerce-insights' ),
+			'editTitle'        => __( 'Edit overhead', 'kdna-ecommerce-insights' ),
+			'paidOn'           => __( 'Date paid', 'kdna-ecommerce-insights' ),
+			'startsOn'         => __( 'Starts on', 'kdna-ecommerce-insights' ),
+			/* translators: %s: date. */
+			'paidDate'         => __( 'Paid %s', 'kdna-ecommerce-insights' ),
+			/* translators: %s: date. */
+			'from'             => __( 'From %s', 'kdna-ecommerce-insights' ),
+			/* translators: 1: start date, 2: end date. */
+			'fromTo'           => __( '%s to %s', 'kdna-ecommerce-insights' ),
+			/* translators: %s: amount. */
+			'previewOneOff'    => __( 'The full %s counts on the date paid.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: amount per day. */
+			'previewRecurring' => __( 'Works out to about %s a day, spread across every day it runs.', 'kdna-ecommerce-insights' ),
+			'delete'           => __( 'Delete', 'kdna-ecommerce-insights' ),
+			'deleteConfirm'    => __( 'Delete this overhead?', 'kdna-ecommerce-insights' ),
+			'deleteYes'        => __( 'Yes, delete', 'kdna-ecommerce-insights' ),
+			'keep'             => __( 'Keep it', 'kdna-ecommerce-insights' ),
+			'cancel'           => __( 'Cancel', 'kdna-ecommerce-insights' ),
+			'saving'           => __( 'Saving', 'kdna-ecommerce-insights' ),
+			'saveChanges'      => __( 'Save changes', 'kdna-ecommerce-insights' ),
+			'add'              => __( 'Add overhead', 'kdna-ecommerce-insights' ),
+			'added'            => __( 'Overhead added.', 'kdna-ecommerce-insights' ),
+			'updated'          => __( 'Overhead updated.', 'kdna-ecommerce-insights' ),
+			'deleted'          => __( 'Overhead deleted.', 'kdna-ecommerce-insights' ),
 		);
 	}
 

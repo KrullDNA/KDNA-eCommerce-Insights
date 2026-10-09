@@ -161,6 +161,7 @@
 				if ( ! response.ok ) {
 					var error = new Error( ( data && data.message ) || ( config.i18n && config.i18n.requestFailed ) || 'Request failed.' );
 					error.status = response.status;
+					error.fields = ( data && data.data && data.data.fields ) || {};
 					throw error;
 				}
 				return data;

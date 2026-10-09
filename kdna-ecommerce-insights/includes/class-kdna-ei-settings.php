@@ -383,18 +383,26 @@ class KDNA_EcommerceInsights_Settings {
 			}
 		}
 
+		// Shipping rules are keyed by method: "flat_rate:3" (method ID and its
+		// instance in a zone) or "*" for the rule used by every other method.
 		$shipping_rules = array();
 		foreach ( (array) ( $c['shipping_rules'] ?? array() ) as $rule ) {
-			if ( is_array( $rule ) ) {
-				$shipping_rules[] = array(
-					'zone_id'   => absint( $rule['zone_id'] ?? 0 ),
-					'method_id' => sanitize_text_field( (string) ( $rule['method_id'] ?? '' ) ),
-					'type'      => self::choice( $rule['type'] ?? '', array( 'fixed', 'percent', 'per_item', 'same_as_charged' ), 'fixed' ),
-					'amount'    => self::number( $rule['amount'] ?? 0, 0 ),
-					'per_kg'    => self::number( $rule['per_kg'] ?? 0, 0 ),
-				);
+			if ( ! is_array( $rule ) ) {
+				continue;
 			}
+			$method = (string) ( $rule['method'] ?? '' );
+			$method = '*' === $method ? '*' : preg_replace( '/[^a-z0-9_\-:]/', '', strtolower( $method ) );
+			if ( '' === $method ) {
+				continue;
+			}
+			$shipping_rules[ $method ] = array(
+				'method' => $method,
+				'type'   => self::choice( $rule['type'] ?? '', array( 'none', 'fixed', 'percent', 'per_item', 'same_as_charged' ), 'none' ),
+				'amount' => self::number( $rule['amount'] ?? 0, 0 ),
+				'per_kg' => self::number( $rule['per_kg'] ?? 0, 0 ),
+			);
 		}
+		$shipping_rules = array_values( $shipping_rules );
 
 		$extra_costs = array();
 		foreach ( (array) ( $c['extra_costs'] ?? array() ) as $cost ) {
@@ -519,6 +527,73 @@ class KDNA_EcommerceInsights_Settings {
 		);
 
 		return $out;
+	}
+
+	/*
+	 * ---------------------------------------------------------------------
+	 * Validation with plain-English messages
+	 * ---------------------------------------------------------------------
+	 */
+
+	/**
+	 * Checks submitted changes before they are saved and explains, in plain
+	 * English, anything that needs fixing. sanitise() would quietly correct
+	 * bad values; this tells the person instead, so nothing surprises them.
+	 *
+	 * Only the Costs tab is checked in detail so far. Stage 12 adds the rest.
+	 *
+	 * @param array $changes Settings changes, grouped by tab.
+	 * @return array<string, string> Problems keyed by field path. Empty when all is well.
+	 */
+	public static function validate( array $changes ): array {
+		$errors = array();
+		$costs  = $changes['costs'] ?? null;
+
+		if ( ! is_array( $costs ) ) {
+			return $errors;
+		}
+
+		foreach ( (array) ( $costs['gateway_fees'] ?? array() ) as $gateway => $rule ) {
+			$percent = $rule['percent'] ?? 0;
+			$fixed   = $rule['fixed'] ?? 0;
+			if ( '' !== $percent && ( ! is_numeric( $percent ) || $percent < 0 || $percent > 100 ) ) {
+				$errors[ "costs.gateway_fees.$gateway.percent" ] = __( 'The percentage must be a number between 0 and 100.', 'kdna-ecommerce-insights' );
+			}
+			if ( '' !== $fixed && ( ! is_numeric( $fixed ) || $fixed < 0 ) ) {
+				$errors[ "costs.gateway_fees.$gateway.fixed" ] = __( 'The fixed fee must be a number of zero or more.', 'kdna-ecommerce-insights' );
+			}
+		}
+
+		foreach ( (array) ( $costs['shipping_rules'] ?? array() ) as $i => $rule ) {
+			$method = (string) ( $rule['method'] ?? $i );
+			foreach ( array( 'amount', 'per_kg' ) as $field ) {
+				$value = $rule[ $field ] ?? 0;
+				if ( '' !== $value && ( ! is_numeric( $value ) || $value < 0 ) ) {
+					$errors[ "costs.shipping_rules.$method.$field" ] = __( 'Enter a number of zero or more.', 'kdna-ecommerce-insights' );
+				}
+			}
+			if ( 'percent' === ( $rule['type'] ?? '' ) && is_numeric( $rule['amount'] ?? 0 ) && $rule['amount'] > 100 ) {
+				$errors[ "costs.shipping_rules.$method.amount" ] = __( 'A percentage cannot be more than 100.', 'kdna-ecommerce-insights' );
+			}
+		}
+
+		if ( isset( $costs['shipping_cost_meta_key'] ) && '' !== $costs['shipping_cost_meta_key'] && ! preg_match( '/^[A-Za-z0-9_\-]{1,191}$/', (string) $costs['shipping_cost_meta_key'] ) ) {
+			$errors['costs.shipping_cost_meta_key'] = __( 'A meta key can only contain letters, numbers, underscores and hyphens, with no spaces.', 'kdna-ecommerce-insights' );
+		}
+
+		foreach ( (array) ( $costs['extra_costs'] ?? array() ) as $i => $cost ) {
+			if ( '' === trim( (string) ( $cost['label'] ?? '' ) ) ) {
+				$errors[ "costs.extra_costs.$i.label" ] = __( 'Give this cost a name, for example "Packaging".', 'kdna-ecommerce-insights' );
+			}
+			$amount = $cost['amount'] ?? '';
+			if ( ! is_numeric( $amount ) || $amount < 0 ) {
+				$errors[ "costs.extra_costs.$i.amount" ] = __( 'Enter an amount of zero or more.', 'kdna-ecommerce-insights' );
+			} elseif ( 'percent' === ( $cost['type'] ?? '' ) && $amount > 100 ) {
+				$errors[ "costs.extra_costs.$i.amount" ] = __( 'A percentage cannot be more than 100.', 'kdna-ecommerce-insights' );
+			}
+		}
+
+		return $errors;
 	}
 
 	/*

@@ -397,6 +397,41 @@ tr.is-error .kdna-ei-csv-note {
 	color: var(--kdna-ei-negative);
 }
 
+/* Tabs across the top of the Costs screen. */
+.kdna-ei-costs-screen {
+	display: grid;
+	gap: var(--kdna-ei-gap);
+}
+
+.kdna-ei-tabs--screen {
+	margin-bottom: 0;
+}
+
+.kdna-ei-overheads {
+	display: grid;
+	gap: var(--kdna-ei-gap);
+}
+
+.kdna-ei-rules-table td {
+	vertical-align: top;
+}
+
+.kdna-ei-rules-table .kdna-ei-affix {
+	max-width: 160px;
+}
+
+.kdna-ei-rules-table .kdna-ei-select {
+	min-width: 190px;
+}
+
+.kdna-ei-rules-table tr.is-fallback td {
+	border-top: 1px solid var(--kdna-ei-border-strong);
+}
+
+tr.is-ended td {
+	opacity: 0.55;
+}
+
 /* Bar fixed to the bottom of the screen while there are unsaved changes. */
 .kdna-ei-savebar {
 	position: fixed;

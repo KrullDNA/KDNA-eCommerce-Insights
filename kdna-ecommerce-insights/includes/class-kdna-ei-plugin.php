@@ -47,6 +47,9 @@ class KDNA_EcommerceInsights_Plugin {
 		new KDNA_EcommerceInsights_Costs();
 		new KDNA_EcommerceInsights_Cost_Catalogue();
 
+		// Shipping costs, including the Insights box on the order screen.
+		new KDNA_EcommerceInsights_Shipping();
+
 		if ( is_admin() ) {
 			new KDNA_EcommerceInsights_Admin();
 		}
@@ -66,6 +69,8 @@ class KDNA_EcommerceInsights_Plugin {
 		( new KDNA_EcommerceInsights_Rest_Preferences() )->register_routes();
 		( new KDNA_EcommerceInsights_Rest_Status() )->register_routes();
 		( new KDNA_EcommerceInsights_Rest_Costs() )->register_routes();
+		( new KDNA_EcommerceInsights_Rest_Settings() )->register_routes();
+		( new KDNA_EcommerceInsights_Rest_Overheads() )->register_routes();
 	}
 
 	/**

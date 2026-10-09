@@ -1258,6 +1258,195 @@
 }
 
 /* ==========================================================================
+   Forms: labels, help, errors and inputs with a symbol inside
+   ========================================================================== */
+
+.kdna-ei-field-label {
+	display: block;
+	margin-bottom: 6px;
+	font-size: var(--kdna-ei-fs-small);
+	font-weight: 500;
+	letter-spacing: 0.02em;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-help {
+	margin-top: 12px;
+	font-size: var(--kdna-ei-fs-small);
+	line-height: 1.5;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-field-error {
+	display: block;
+	margin-top: 6px;
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-negative);
+}
+
+.kdna-ei-root .kdna-ei-input.is-invalid,
+.kdna-ei-root .kdna-ei-select.is-invalid,
+.kdna-ei-root .is-invalid > .kdna-ei-input {
+	border-color: var(--kdna-ei-negative);
+}
+
+.kdna-ei-affix {
+	position: relative;
+	display: block;
+}
+
+.kdna-ei-affix__before,
+.kdna-ei-affix__after {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	font-size: var(--kdna-ei-fs-body);
+	color: var(--kdna-ei-text-muted);
+	pointer-events: none;
+}
+
+.kdna-ei-affix__before {
+	left: 14px;
+}
+
+.kdna-ei-affix__after {
+	right: 14px;
+}
+
+.kdna-ei-root .kdna-ei-affix .kdna-ei-input {
+	padding-right: 32px;
+	font-variant-numeric: tabular-nums;
+}
+
+.kdna-ei-root .kdna-ei-affix--before .kdna-ei-input {
+	padding-left: 30px;
+	padding-right: 14px;
+}
+
+.kdna-ei-root input[type="date"].kdna-ei-input {
+	padding-right: 10px;
+}
+
+.kdna-ei-root input[type="date"].kdna-ei-input::-webkit-calendar-picker-indicator {
+	opacity: 0.6;
+	cursor: pointer;
+}
+
+.kdna-ei-form {
+	gap: 18px;
+}
+
+.kdna-ei-form__row {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 16px;
+}
+
+.kdna-ei-form__field {
+	display: block;
+	min-width: 0;
+}
+
+.kdna-ei-form .kdna-ei-select {
+	width: 100%;
+}
+
+/* A setting with its explanation on the left and the control on the right. */
+.kdna-ei-field-row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	gap: 16px 32px;
+	align-items: start;
+	padding: 4px 0 24px;
+	margin-bottom: 8px;
+	border-bottom: 1px solid var(--kdna-ei-border);
+}
+
+.kdna-ei-field-row label {
+	font-weight: 500;
+}
+
+.kdna-ei-field-row .kdna-ei-help {
+	margin-top: 4px;
+}
+
+.kdna-ei-subheading {
+	margin: 16px 0 8px;
+	font-size: 16px;
+	font-weight: 500;
+}
+
+.kdna-ei-card__footer {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	flex-wrap: wrap;
+	gap: 12px 20px;
+	margin-top: 20px;
+	padding-top: 20px;
+	border-top: 1px solid var(--kdna-ei-border);
+}
+
+.kdna-ei-card__footer > p {
+	margin-right: auto;
+	font-size: var(--kdna-ei-fs-body);
+}
+
+/* Rows that can be added and removed. */
+.kdna-ei-repeater {
+	display: grid;
+	gap: 14px;
+}
+
+.kdna-ei-repeater__row {
+	display: grid;
+	grid-template-columns: minmax(0, 2fr) minmax(0, 1.3fr) minmax(0, 1fr) auto;
+	gap: 14px;
+	align-items: start;
+	padding: 16px;
+	background: var(--kdna-ei-bg);
+	border: 1px solid var(--kdna-ei-border);
+	border-radius: var(--kdna-ei-radius-md);
+}
+
+.kdna-ei-repeater__row .kdna-ei-select {
+	width: 100%;
+}
+
+.kdna-ei-root .kdna-ei-repeater__remove {
+	align-self: end;
+	font-size: 20px;
+	border-color: transparent;
+}
+
+/* Delete buttons and confirmations. */
+.kdna-ei-root .kdna-ei-link--danger {
+	color: var(--kdna-ei-negative);
+}
+
+.kdna-ei-root .kdna-ei-btn--danger {
+	color: var(--kdna-ei-on-status);
+	background: var(--kdna-ei-negative);
+	border-color: var(--kdna-ei-negative);
+}
+
+.kdna-ei-confirm {
+	display: inline-flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 10px;
+	font-size: var(--kdna-ei-fs-body);
+}
+
+@media (max-width: 782px) {
+	.kdna-ei-form__row,
+	.kdna-ei-field-row,
+	.kdna-ei-repeater__row {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+/* ==========================================================================
    Reduced motion
    ========================================================================== */
 

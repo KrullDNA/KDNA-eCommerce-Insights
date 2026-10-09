@@ -274,6 +274,171 @@ body.kdna-ei-focus .kdna-ei-app {
 }
 
 /* ==========================================================================
+   Costs screen
+   ========================================================================== */
+
+.kdna-ei-screen--costs {
+	display: block;
+}
+
+.kdna-ei-costs {
+	display: grid;
+	gap: var(--kdna-ei-gap);
+	padding-bottom: 80px;
+}
+
+.kdna-ei-stat-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: var(--kdna-ei-gap);
+}
+
+.kdna-ei-cost-editor__header {
+	align-items: flex-start;
+	flex-wrap: wrap;
+}
+
+.kdna-ei-cost-table td {
+	padding-top: 10px;
+	padding-bottom: 10px;
+}
+
+.kdna-ei-cost-table .kdna-ei-cost-table__product {
+	min-width: 240px;
+}
+
+.kdna-ei-cost-table .kdna-ei-cost-table__cost {
+	width: 190px;
+}
+
+.kdna-ei-cost-table tr.is-variation .kdna-ei-cost-table__product {
+	padding-left: 54px;
+}
+
+.kdna-ei-cost-table tr.is-variation .kdna-ei-product__name {
+	font-weight: 400;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-cost-table tr.is-parent td {
+	border-bottom-color: transparent;
+}
+
+.kdna-ei-cost-table tr.is-dirty td {
+	background: color-mix(in srgb, var(--kdna-ei-accent) 7%, transparent);
+}
+
+.kdna-ei-table-wrap.is-loading {
+	opacity: 0.55;
+	transition: opacity var(--kdna-ei-duration-fast) ease;
+}
+
+/* Cost input with the currency symbol inside the box. */
+.kdna-ei-cost-field {
+	position: relative;
+	display: block;
+}
+
+.kdna-ei-cost-field__symbol {
+	position: absolute;
+	left: 14px;
+	top: 50%;
+	transform: translateY(-50%);
+	font-size: var(--kdna-ei-fs-body);
+	color: var(--kdna-ei-text-muted);
+	pointer-events: none;
+}
+
+.kdna-ei-root .kdna-ei-cost-field .kdna-ei-input {
+	height: 38px;
+	min-height: 38px;
+	padding-left: 30px;
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+	border-radius: var(--kdna-ei-radius-sm);
+}
+
+.kdna-ei-root .kdna-ei-cost-field.is-inherited .kdna-ei-input::placeholder,
+.kdna-ei-root tr.is-variation .kdna-ei-cost-field .kdna-ei-input::placeholder {
+	text-align: right;
+}
+
+.kdna-ei-root tr.is-missing .kdna-ei-cost-field .kdna-ei-input {
+	border-color: color-mix(in srgb, var(--kdna-ei-warning) 60%, transparent);
+}
+
+.kdna-ei-root .kdna-ei-cost-field.is-invalid .kdna-ei-input {
+	border-color: var(--kdna-ei-negative);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--kdna-ei-negative) 20%, transparent);
+}
+
+.kdna-ei-margin {
+	font-weight: 500;
+}
+
+.kdna-ei-margin.is-thin {
+	color: var(--kdna-ei-warning);
+}
+
+.kdna-ei-margin.kdna-ei-change--neutral {
+	font-weight: 400;
+}
+
+tr.is-missing .kdna-ei-margin.kdna-ei-change--neutral {
+	color: var(--kdna-ei-warning);
+}
+
+.kdna-ei-csv-note {
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-text-muted);
+}
+
+tr.is-error .kdna-ei-csv-note {
+	color: var(--kdna-ei-negative);
+}
+
+/* Bar fixed to the bottom of the screen while there are unsaved changes. */
+.kdna-ei-savebar {
+	position: fixed;
+	left: calc(var(--kdna-ei-wp-menu, 160px) + var(--kdna-ei-sidebar-width) + 32px);
+	right: 32px;
+	bottom: 24px;
+	z-index: 50;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 12px 20px;
+	padding: 12px 12px 12px 24px;
+	background: var(--kdna-ei-surface-raised);
+	border: 1px solid var(--kdna-ei-border-strong);
+	border-radius: var(--kdna-ei-radius-pill);
+	box-shadow: var(--kdna-ei-popover-shadow);
+}
+
+body.folded .kdna-ei-savebar {
+	--kdna-ei-wp-menu: 36px;
+}
+
+body.kdna-ei-focus .kdna-ei-savebar {
+	--kdna-ei-wp-menu: 0px;
+}
+
+.kdna-ei-savebar__text {
+	font-size: var(--kdna-ei-fs-body);
+}
+
+.kdna-ei-savebar__error {
+	margin-left: 12px;
+	color: var(--kdna-ei-negative);
+}
+
+.kdna-ei-savebar__actions {
+	display: flex;
+	gap: 10px;
+}
+
+/* ==========================================================================
    Skeleton building blocks for each layout
    ========================================================================== */
 
@@ -398,6 +563,16 @@ body.kdna-ei-focus .kdna-ei-app {
 	.kdna-ei-layout-settings {
 		grid-template-columns: minmax(0, 1fr);
 	}
+
+	.kdna-ei-stat-grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+@media (max-width: 960px) {
+	body:not(.kdna-ei-focus) .kdna-ei-savebar {
+		--kdna-ei-wp-menu: 36px;
+	}
 }
 
 @media (max-width: 782px) {
@@ -455,5 +630,12 @@ body.kdna-ei-focus .kdna-ei-app {
 
 	.kdna-ei-skel-donut .kdna-ei-skeleton--circle {
 		align-self: center;
+	}
+
+	.kdna-ei-root .kdna-ei-savebar {
+		left: 16px;
+		right: 16px;
+		bottom: 16px;
+		border-radius: var(--kdna-ei-radius-md);
 	}
 }

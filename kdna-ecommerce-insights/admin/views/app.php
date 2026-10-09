@@ -159,17 +159,25 @@ $layouts       = array( 'overview', 'report', 'table', 'settings' );
 		</header>
 
 		<?php foreach ( $screens as $id => $screen ) : ?>
-			<?php $layout = in_array( $screen['layout'], $layouts, true ) ? $screen['layout'] : 'report'; ?>
+			<?php
+			$layout      = in_array( $screen['layout'], $layouts, true ) ? $screen['layout'] : 'report';
+			$screen_view = KDNA_EI_PATH . 'admin/views/screens/' . sanitize_key( $id ) . '.php';
+			$is_built    = is_readable( $screen_view );
+			?>
 			<section
 				id="kdna-ei-screen-<?php echo esc_attr( $id ); ?>"
-				class="kdna-ei-screen kdna-ei-layout-<?php echo esc_attr( $layout ); ?>"
+				class="kdna-ei-screen <?php echo $is_built ? 'kdna-ei-screen--' . esc_attr( $id ) : 'kdna-ei-layout-' . esc_attr( $layout ); ?>"
 				aria-label="<?php echo esc_attr( $screen['label'] ); ?>"
-				aria-busy="true"
+				<?php echo $is_built ? '' : 'aria-busy="true"'; ?>
 				x-show="isActive( '<?php echo esc_js( $id ); ?>' )"
 				<?php echo $id !== $first_screen ? 'style="display: none;"' : ''; ?>
 			>
-				<span class="kdna-ei-visually-hidden"><?php esc_html_e( 'Loading', 'kdna-ecommerce-insights' ); ?></span>
-				<?php include KDNA_EI_PATH . 'admin/views/partials/skeleton-' . $layout . '.php'; ?>
+				<?php if ( $is_built ) : ?>
+					<?php include $screen_view; ?>
+				<?php else : ?>
+					<span class="kdna-ei-visually-hidden"><?php esc_html_e( 'Loading', 'kdna-ecommerce-insights' ); ?></span>
+					<?php include KDNA_EI_PATH . 'admin/views/partials/skeleton-' . $layout . '.php'; ?>
+				<?php endif; ?>
 			</section>
 		<?php endforeach; ?>
 	</main>

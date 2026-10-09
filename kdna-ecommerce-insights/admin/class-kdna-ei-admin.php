@@ -240,13 +240,23 @@ class KDNA_EcommerceInsights_Admin {
 		}
 
 		wp_enqueue_script( 'kdna-ei-router', KDNA_EI_URL . 'admin/js/kdna-ei-router.js', array(), $this->asset_version( 'admin/js/kdna-ei-router.js' ), true );
-		wp_enqueue_script( 'kdna-ei-app', KDNA_EI_URL . 'admin/js/kdna-ei-app.js', array( 'kdna-ei-router' ), $this->asset_version( 'admin/js/kdna-ei-app.js' ), true );
+		wp_enqueue_script( 'kdna-ei-format', KDNA_EI_URL . 'admin/js/kdna-ei-format.js', array( 'kdna-ei-router' ), $this->asset_version( 'admin/js/kdna-ei-format.js' ), true );
+		wp_enqueue_script( 'kdna-ei-app', KDNA_EI_URL . 'admin/js/kdna-ei-app.js', array( 'kdna-ei-format' ), $this->asset_version( 'admin/js/kdna-ei-app.js' ), true );
 
-		// Alpine must load after our app script, which registers the app with it.
+		// One script per built screen, each registering its Alpine component.
+		$screen_scripts = array( 'kdna-ei-app' );
+		foreach ( array( 'costs' ) as $screen_id ) {
+			$path   = 'admin/js/screens/' . $screen_id . '.js';
+			$handle = 'kdna-ei-screen-' . $screen_id;
+			wp_enqueue_script( $handle, KDNA_EI_URL . $path, array( 'kdna-ei-app' ), $this->asset_version( $path ), true );
+			$screen_scripts[] = $handle;
+		}
+
+		// Alpine must load after our app and screen scripts, which register themselves with it.
 		wp_enqueue_script(
 			'kdna-ei-alpine',
 			KDNA_EI_URL . 'assets/vendor/alpine/alpine.min.js',
-			array( 'kdna-ei-app' ),
+			$screen_scripts,
 			'3.14.9',
 			array(
 				'in_footer' => true,
@@ -260,7 +270,7 @@ class KDNA_EcommerceInsights_Admin {
 		}
 
 		wp_localize_script(
-			'kdna-ei-app',
+			'kdna-ei-router',
 			'kdnaEiApp',
 			array(
 				'restUrl'      => esc_url_raw( rest_url( KDNA_EI_REST_NAMESPACE . '/' ) ),
@@ -271,14 +281,94 @@ class KDNA_EcommerceInsights_Admin {
 				'ranges'       => KDNA_EcommerceInsights_Settings::range_presets(),
 				'comparisons'  => KDNA_EcommerceInsights_Settings::comparison_modes(),
 				'storeName'    => KDNA_EcommerceInsights_Settings::store_name(),
+				'status'       => KDNA_EcommerceInsights_Rest_Status::data(),
+				'currency'     => array(
+					'symbol'   => html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUOTES, 'UTF-8' ),
+					'position' => (string) get_option( 'woocommerce_currency_pos', 'left' ),
+					'decimals' => wc_get_price_decimals(),
+					'decimal'  => wc_get_price_decimal_separator(),
+					'thousand' => wc_get_price_thousand_separator(),
+				),
 				'i18n'         => array(
 					'switchToLight' => __( 'Switch to light mode', 'kdna-ecommerce-insights' ),
 					'switchToDark'  => __( 'Switch to dark mode', 'kdna-ecommerce-insights' ),
 					'enterFocus'    => __( 'Enter Focus Mode', 'kdna-ecommerce-insights' ),
 					'exitFocus'     => __( 'Exit Focus Mode', 'kdna-ecommerce-insights' ),
 					'pageTitle'     => __( 'Insights', 'kdna-ecommerce-insights' ),
+					'requestFailed' => __( 'Something went wrong talking to the server. Please try again.', 'kdna-ecommerce-insights' ),
+					'costs'         => self::costs_strings(),
 				),
 			)
+		);
+	}
+
+	/**
+	 * Text used by the Costs screen script. %s and %d are replaced with
+	 * numbers or names in the browser.
+	 *
+	 * @return array
+	 */
+	private static function costs_strings(): array {
+		return array(
+			'noCost'               => __( 'No cost set', 'kdna-ecommerce-insights' ),
+			'noCostShort'          => __( 'No cost', 'kdna-ecommerce-insights' ),
+			/* translators: %s: parent product cost. */
+			'parentCost'           => __( 'Parent: %s', 'kdna-ecommerce-insights' ),
+			'defaultForVariations' => __( 'Default for variations', 'kdna-ecommerce-insights' ),
+			/* translators: %s: product name. */
+			'costFor'              => __( 'Cost price for %s', 'kdna-ecommerce-insights' ),
+			'oneVariation'         => __( '%d variation', 'kdna-ecommerce-insights' ),
+			'variations'           => __( '%d variations', 'kdna-ecommerce-insights' ),
+			'oneUnsaved'           => __( '%d unsaved change', 'kdna-ecommerce-insights' ),
+			'unsaved'              => __( '%d unsaved changes', 'kdna-ecommerce-insights' ),
+			'invalidCount'         => __( '%d need fixing: costs must be numbers of zero or more.', 'kdna-ecommerce-insights' ),
+			'fixInvalid'           => __( 'Some costs are not valid numbers. They are outlined in red.', 'kdna-ecommerce-insights' ),
+			/* translators: 1: changes saved so far, 2: total changes. */
+			'saving'               => __( 'Saving %d of %d', 'kdna-ecommerce-insights' ),
+			'saved'                => __( 'Saved %d cost changes.', 'kdna-ecommerce-insights' ),
+			'savedOne'             => __( 'Saved %d cost change.', 'kdna-ecommerce-insights' ),
+			/* translators: 1: changes saved, 2: changes that failed. */
+			'savedWithErrors'      => __( 'Saved %d cost changes. %d could not be saved:', 'kdna-ecommerce-insights' ),
+			/* translators: %s: error message. */
+			'saveFailed'           => __( 'Your changes were not saved. %s', 'kdna-ecommerce-insights' ),
+			/* translators: 1: first row shown, 2: last row shown, 3: total products. */
+			'showing'              => __( '%d to %d of %d products', 'kdna-ecommerce-insights' ),
+			/* translators: 1: current page, 2: total pages. */
+			'pageOf'               => __( 'Page %d of %d', 'kdna-ecommerce-insights' ),
+			/* translators: %s: formatted stock quantity. */
+			'inStockCount'         => __( 'In stock (%s)', 'kdna-ecommerce-insights' ),
+			'noMatches'            => __( 'No products match these filters.', 'kdna-ecommerce-insights' ),
+			'noProducts'           => __( 'No products yet. Products you add in WooCommerce appear here.', 'kdna-ecommerce-insights' ),
+			'fileTooLarge'         => __( 'That file is too large. Please upload a CSV under 5 MB.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: file name. */
+			'checking'             => __( 'Checking %s', 'kdna-ecommerce-insights' ),
+			'apply'                => __( 'Save %d changes', 'kdna-ecommerce-insights' ),
+			'applyOne'             => __( 'Save %d change', 'kdna-ecommerce-insights' ),
+			'problemsNote'         => __( '%d rows have problems and will not be imported. See the Problems tab.', 'kdna-ecommerce-insights' ),
+			'problemsNoteOne'      => __( '%d row has a problem and will not be imported. See the Problems tab.', 'kdna-ecommerce-insights' ),
+			'importDone'           => __( 'Done. %d product costs updated.', 'kdna-ecommerce-insights' ),
+			'importDoneErrors'     => __( '%d could not be saved because the product no longer exists.', 'kdna-ecommerce-insights' ),
+			'close'                => __( 'Close', 'kdna-ecommerce-insights' ),
+			'cancel'               => __( 'Cancel', 'kdna-ecommerce-insights' ),
+			'oneFound'             => __( 'Costs found for %d product', 'kdna-ecommerce-insights' ),
+			'found'                => __( 'Costs found for %d products', 'kdna-ecommerce-insights' ),
+			'noneFound'            => __( 'No costs found on this store', 'kdna-ecommerce-insights' ),
+			'importCosts'          => __( 'Import costs', 'kdna-ecommerce-insights' ),
+			/* translators: %d: percentage complete. */
+			'importing'            => __( 'Importing %d%%', 'kdna-ecommerce-insights' ),
+			/* translators: 1: costs imported, 2: products skipped. */
+			'pluginDone'           => __( 'Imported %d costs. %d products were skipped because they already had a cost in Insights or the saved value was not a number.', 'kdna-ecommerce-insights' ),
+			'stock'                => array(
+				'instock'     => __( 'In stock', 'kdna-ecommerce-insights' ),
+				'outofstock'  => __( 'Out of stock', 'kdna-ecommerce-insights' ),
+				'onbackorder' => __( 'On backorder', 'kdna-ecommerce-insights' ),
+			),
+			'statuses'             => array(
+				'draft'   => __( 'Draft', 'kdna-ecommerce-insights' ),
+				'pending' => __( 'Pending', 'kdna-ecommerce-insights' ),
+				'private' => __( 'Private', 'kdna-ecommerce-insights' ),
+				'future'  => __( 'Scheduled', 'kdna-ecommerce-insights' ),
+			),
 		);
 	}
 

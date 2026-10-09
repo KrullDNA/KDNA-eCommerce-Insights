@@ -43,6 +43,10 @@ class KDNA_EcommerceInsights_Plugin {
 		add_action( 'rest_api_init', array( $this, 'register_rest_routes' ) );
 		add_filter( 'plugin_action_links_' . KDNA_EI_BASENAME, array( $this, 'plugin_action_links' ) );
 
+		// Product costs: Cost price field, native COGS bridge and cost history.
+		new KDNA_EcommerceInsights_Costs();
+		new KDNA_EcommerceInsights_Cost_Catalogue();
+
 		if ( is_admin() ) {
 			new KDNA_EcommerceInsights_Admin();
 		}
@@ -60,6 +64,8 @@ class KDNA_EcommerceInsights_Plugin {
 	 */
 	public function register_rest_routes(): void {
 		( new KDNA_EcommerceInsights_Rest_Preferences() )->register_routes();
+		( new KDNA_EcommerceInsights_Rest_Status() )->register_routes();
+		( new KDNA_EcommerceInsights_Rest_Costs() )->register_routes();
 	}
 
 	/**

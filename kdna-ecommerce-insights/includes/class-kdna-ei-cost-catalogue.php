@@ -105,7 +105,7 @@ class KDNA_EcommerceInsights_Cost_Catalogue {
 					sku.meta_value AS sku, cost.meta_value AS cost, additive.meta_value AS additive,
 					price.meta_value AS price, regular.meta_value AS regular_price,
 					stock_status.meta_value AS stock_status, stock.meta_value AS stock,
-					manage_stock.meta_value AS manage_stock,
+					manage_stock.meta_value AS manage_stock, low_stock.meta_value AS low_stock_amount,
 					tax_status.meta_value AS tax_status, tax_class.meta_value AS tax_class
 				FROM {$wpdb->posts} p
 				LEFT JOIN {$wpdb->posts} parent ON parent.ID = p.post_parent AND p.post_type = 'product_variation'
@@ -121,6 +121,7 @@ class KDNA_EcommerceInsights_Cost_Catalogue {
 				LEFT JOIN {$wpdb->postmeta} stock_status ON stock_status.post_id = p.ID AND stock_status.meta_key = '_stock_status'
 				LEFT JOIN {$wpdb->postmeta} stock ON stock.post_id = p.ID AND stock.meta_key = '_stock'
 				LEFT JOIN {$wpdb->postmeta} manage_stock ON manage_stock.post_id = p.ID AND manage_stock.meta_key = '_manage_stock'
+				LEFT JOIN {$wpdb->postmeta} low_stock ON low_stock.post_id = p.ID AND low_stock.meta_key = '_low_stock_amount'
 				LEFT JOIN {$wpdb->postmeta} tax_status ON tax_status.post_id = p.ID AND tax_status.meta_key = '_tax_status'
 				LEFT JOIN {$wpdb->postmeta} tax_class ON tax_class.post_id = p.ID AND tax_class.meta_key = '_tax_class'
 				WHERE ( p.post_type = 'product' AND p.post_status IN ( $statuses ) )
@@ -205,8 +206,16 @@ class KDNA_EcommerceInsights_Cost_Catalogue {
 		$stock        = '' === (string) $record['stock'] || null === $record['stock'] ? null : (float) $record['stock'];
 
 		// A variation that does not manage its own stock uses the parent's stock level.
+		$stock_owner = 'yes' === $manage_stock ? (int) $record['id'] : 0;
 		if ( $is_variation && 'yes' !== $manage_stock && $parent && $parent['manage_stock'] ) {
-			$stock = $parent['stock'];
+			$stock       = $parent['stock'];
+			$stock_owner = (int) $parent['id'];
+		}
+
+		// Low stock amount set on the product (or variation, falling back to its parent).
+		$low_stock = '' === (string) $record['low_stock_amount'] || null === $record['low_stock_amount'] ? null : (float) $record['low_stock_amount'];
+		if ( null === $low_stock && $is_variation && $parent ) {
+			$low_stock = $parent['low_stock'];
 		}
 
 		$tax_class = (string) $record['tax_class'];
@@ -233,6 +242,8 @@ class KDNA_EcommerceInsights_Cost_Catalogue {
 			'stock_status'  => $record['stock_status'] ? (string) $record['stock_status'] : 'instock',
 			'manage_stock'  => 'yes' === $manage_stock,
 			'stock'         => $stock,
+			'stock_owner'   => $stock_owner,
+			'low_stock'     => $low_stock,
 			'tax_status'    => $tax_status,
 			'tax_class'     => $tax_class,
 			'categories'    => $categories,

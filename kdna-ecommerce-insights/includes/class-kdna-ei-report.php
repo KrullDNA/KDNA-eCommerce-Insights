@@ -113,6 +113,10 @@ class KDNA_EcommerceInsights_Report {
 		$totals              = array_map( 'floatval', (array) $summary );
 		$totals['customers'] = (float) $customers;
 
+		// The daily summary's returning figure counts returning orders. A
+		// customer who orders on three days is still one returning customer.
+		$totals['returning_customers'] = max( 0.0, $totals['customers'] - $totals['new_customers'] );
+
 		return array_merge( $totals, self::ad_spend_totals( $range ), self::overhead_totals( $range ) );
 	}
 
@@ -255,6 +259,9 @@ class KDNA_EcommerceInsights_Report {
 		$buckets   = KDNA_EcommerceInsights_Dates::buckets( $range, $granularity );
 		$series    = array_fill_keys( $metrics, array() );
 
+		// Different customers per bucket, only when a customer metric is asked for.
+		$people = array_intersect( $metrics, array( 'customers', 'returning_customers' ) ) ? self::customers_by_bucket( $range, $buckets ) : array();
+
 		foreach ( $buckets as $bucket ) {
 			$totals = array_fill_keys( self::SUMMARY_COLUMNS, 0.0 );
 			$spend  = 0.0;
@@ -284,6 +291,11 @@ class KDNA_EcommerceInsights_Report {
 			$totals['ad_conversion_value'] = $value;
 			$totals                        = array_merge( $totals, self::overhead_totals( $bucket, $overheads ) );
 
+			if ( $people ) {
+				$totals['customers']           = (float) ( $people[ $bucket['key'] ] ?? 0 );
+				$totals['returning_customers'] = max( 0.0, $totals['customers'] - $totals['new_customers'] );
+			}
+
 			foreach ( $metrics as $metric ) {
 				$series[ $metric ][] = KDNA_EcommerceInsights_Metrics::value( $metric, $totals );
 			}
@@ -293,6 +305,51 @@ class KDNA_EcommerceInsights_Report {
 			'buckets' => $buckets,
 			'series'  => $series,
 		);
+	}
+
+	/**
+	 * The number of different customers who ordered in each bucket. Guests
+	 * are one customer per billing email.
+	 *
+	 * @param array   $range   Range.
+	 * @param array[] $buckets Buckets from KDNA_EcommerceInsights_Dates::buckets().
+	 * @return array<string, int> Keyed by bucket key.
+	 */
+	private static function customers_by_bucket( array $range, array $buckets ): array {
+		global $wpdb;
+		list( $in, $statuses ) = self::statuses();
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+		$rows = KDNA_EcommerceInsights_Cache::timed(
+			'Customers per day',
+			static fn() => $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT DISTINCT report_date, customer_key FROM ' . self::t( 'order_facts' ) . " WHERE report_date BETWEEN %s AND %s AND status IN ( $in )",
+					array_merge( array( $range['start'], $range['end'] ), $statuses )
+				),
+				ARRAY_A
+			)
+		);
+		// phpcs:enable
+
+		// Which bucket each day belongs to, worked out once.
+		$day_bucket = array();
+		foreach ( $buckets as $bucket ) {
+			$day = new DateTimeImmutable( $bucket['start'] );
+			$end = new DateTimeImmutable( $bucket['end'] );
+			while ( $day <= $end ) {
+				$day_bucket[ $day->format( 'Y-m-d' ) ] = $bucket['key'];
+				$day                                    = $day->modify( '+1 day' );
+			}
+		}
+
+		$sets = array();
+		foreach ( (array) $rows as $row ) {
+			if ( isset( $day_bucket[ $row['report_date'] ] ) ) {
+				$sets[ $day_bucket[ $row['report_date'] ] ][ $row['customer_key'] ] = true;
+			}
+		}
+		return array_map( 'count', $sets );
 	}
 
 	/*
@@ -836,13 +893,15 @@ class KDNA_EcommerceInsights_Report {
 		return array(
 			'metrics'       => $metrics,
 			'top_customers' => self::top_customers( $range ),
-			'cohorts'       => self::cohorts(),
+			'cohorts'       => self::cohorts( $range ),
 			'locations'     => self::locations( $range ),
 		);
 	}
 
 	/**
-	 * The ten customers who brought in the most contribution profit in a range.
+	 * The 25 customers who brought in the most contribution profit in a
+	 * range, with their lifetime orders and when they first ordered. Guests
+	 * are matched by billing email, so a repeat guest is one customer.
 	 *
 	 * @param array $range Range.
 	 * @return array[]
@@ -850,47 +909,70 @@ class KDNA_EcommerceInsights_Report {
 	private static function top_customers( array $range ): array {
 		global $wpdb;
 		list( $in, $statuses ) = self::statuses();
+		$facts                 = self::t( 'order_facts' );
 
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 		$rows = KDNA_EcommerceInsights_Cache::timed(
 			'Top customers',
 			static fn() => $wpdb->get_results(
 				$wpdb->prepare(
-					'SELECT customer_key, COUNT(*) AS orders, SUM( net_revenue ) AS revenue, SUM( contribution_profit ) AS profit, MAX( order_id ) AS last_order_id FROM ' . self::t( 'order_facts' ) . " WHERE report_date BETWEEN %s AND %s AND status IN ( $in ) GROUP BY customer_key ORDER BY profit DESC LIMIT 10",
+					"SELECT customer_key, MAX( customer_id ) AS customer_id, COUNT(*) AS orders, SUM( net_revenue ) AS revenue, SUM( contribution_profit ) AS profit, MAX( order_id ) AS last_order_id FROM {$facts} WHERE report_date BETWEEN %s AND %s AND status IN ( $in ) GROUP BY customer_key ORDER BY profit DESC LIMIT 25",
 					array_merge( array( $range['start'], $range['end'] ), $statuses )
 				),
 				ARRAY_A
 			)
 		);
+
+		$keys     = wp_list_pluck( (array) $rows, 'customer_key' );
+		$lifetime = array();
+		if ( $keys ) {
+			$placeholders = implode( ',', array_fill( 0, count( $keys ), '%s' ) );
+			foreach ( (array) $wpdb->get_results( $wpdb->prepare( "SELECT customer_key, COUNT(*) AS orders, SUM( net_revenue ) AS revenue, MIN( report_date ) AS first_day FROM {$facts} WHERE status IN ( $in ) AND customer_key IN ( $placeholders ) GROUP BY customer_key", array_merge( $statuses, $keys ) ), ARRAY_A ) as $row ) {
+				$lifetime[ $row['customer_key'] ] = $row;
+			}
+		}
 		// phpcs:enable
 
 		$list = array();
 		foreach ( (array) $rows as $row ) {
 			$order  = wc_get_order( (int) $row['last_order_id'] );
 			$name   = $order ? trim( $order->get_formatted_billing_full_name() ) : '';
+			$life   = $lifetime[ $row['customer_key'] ] ?? array();
 			$list[] = array(
-				'name'    => '' !== $name ? $name : __( 'Guest', 'kdna-ecommerce-insights' ),
-				'email'   => $order ? (string) $order->get_billing_email() : '',
-				'orders'  => (int) $row['orders'],
-				'revenue' => round( (float) $row['revenue'], 2 ),
-				'profit'  => round( (float) $row['profit'], 2 ),
+				'name'             => '' !== $name ? $name : __( 'Guest', 'kdna-ecommerce-insights' ),
+				'email'            => $order ? (string) $order->get_billing_email() : '',
+				'guest'            => ! (int) $row['customer_id'],
+				'orders'           => (int) $row['orders'],
+				'revenue'          => round( (float) $row['revenue'], 2 ),
+				'profit'           => round( (float) $row['profit'], 2 ),
+				'lifetime_orders'  => (int) ( $life['orders'] ?? $row['orders'] ),
+				'lifetime_revenue' => round( (float) ( $life['revenue'] ?? $row['revenue'] ), 2 ),
+				'first_order'      => (string) ( $life['first_day'] ?? '' ),
+				'profile_url'      => (int) $row['customer_id'] ? (string) get_edit_user_link( (int) $row['customer_id'] ) : '',
+				'last_order_url'   => $order ? (string) $order->get_edit_order_url() : '',
 			);
 		}
 		return $list;
 	}
 
 	/**
-	 * Monthly cohort retention for the last 12 months: of the customers whose
-	 * first order was in a month, the share who ordered again in each
-	 * following month.
+	 * Monthly cohort retention: for customers whose first ever order was in
+	 * a month, the share who ordered in each month after it. Covers the
+	 * months in the chosen range, up to the 12 most recent, and counts
+	 * repeat orders up to the end of the range (or today, if sooner).
 	 *
-	 * @return array[] Each: month (Y-m), size, retention (percentages by months since).
+	 * @param array $range Range.
+	 * @return array[] Each: month (Y-m), size, retention (percentages by
+	 *                 months since, starting with the first month at 100).
 	 */
-	private static function cohorts(): array {
+	public static function cohorts( array $range ): array {
 		global $wpdb;
 		list( $in, $statuses ) = self::statuses();
 		$facts                 = self::t( 'order_facts' );
-		$from                  = ( new DateTimeImmutable( 'first day of this month', wp_timezone() ) )->modify( '-11 months' )->format( 'Y-m-d' );
+
+		$last_month  = substr( min( $range['end'], self::today() ), 0, 7 );
+		$first_month = max( substr( $range['start'], 0, 7 ), ( new DateTimeImmutable( $last_month . '-01' ) )->modify( '-11 months' )->format( 'Y-m' ) );
+		$until       = ( new DateTimeImmutable( $last_month . '-01' ) )->modify( 'last day of this month' )->format( 'Y-m-d' );
 
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 		$rows = KDNA_EcommerceInsights_Cache::timed(
@@ -900,9 +982,9 @@ class KDNA_EcommerceInsights_Report {
 					"SELECT f.customer_key, SUBSTR( f.report_date, 1, 7 ) AS month, firsts.first_month
 					FROM {$facts} f
 					INNER JOIN ( SELECT customer_key, SUBSTR( MIN( report_date ), 1, 7 ) AS first_month FROM {$facts} WHERE status IN ( $in ) GROUP BY customer_key ) firsts ON firsts.customer_key = f.customer_key
-					WHERE f.status IN ( $in ) AND firsts.first_month >= %s
+					WHERE f.status IN ( $in ) AND firsts.first_month BETWEEN %s AND %s AND f.report_date <= %s
 					GROUP BY f.customer_key, SUBSTR( f.report_date, 1, 7 ), firsts.first_month",
-					array_merge( $statuses, $statuses, array( substr( $from, 0, 7 ) ) )
+					array_merge( $statuses, $statuses, array( $first_month, $last_month, $until ) )
 				),
 				ARRAY_A
 			)
@@ -918,11 +1000,10 @@ class KDNA_EcommerceInsights_Report {
 		}
 		ksort( $cohorts );
 
-		$this_month = substr( self::today(), 0, 7 );
-		$result     = array();
+		$result = array();
 		foreach ( $cohorts as $month => $data ) {
 			$size      = count( $data['customers'] );
-			$span      = self::months_between( $month, $this_month );
+			$span      = self::months_between( $month, $last_month );
 			$retention = array();
 			for ( $i = 0; $i <= $span; $i++ ) {
 				$retention[] = $size ? round( count( $data['active'][ $i ] ?? array() ) / $size * 100, 1 ) : 0;
@@ -998,145 +1079,14 @@ class KDNA_EcommerceInsights_Report {
 	 */
 
 	/**
-	 * Stock status counts, stock values, days of stock left based on the
-	 * last 30 days of sales, dead stock and the stock value trend.
+	 * Stock status counts, stock values, days of stock left, dead stock and
+	 * the stock value trend. The work is done by the Inventory class.
 	 *
+	 * @param array|null $range Range for the stock value trend.
 	 * @return array
 	 */
-	public static function inventory(): array {
-		global $wpdb;
-		list( $in, $statuses ) = self::statuses();
-
-		$threshold = (int) KDNA_EcommerceInsights_Settings::get( 'alerts.low_stock_threshold', 0 );
-		$threshold = $threshold > 0 ? $threshold : (int) get_option( 'woocommerce_notify_low_stock_amount', 2 );
-		$dead_days = (int) KDNA_EcommerceInsights_Settings::get( 'alerts.dead_stock_days', 90 );
-		$today     = new DateTimeImmutable( 'today', wp_timezone() );
-
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
-		$sales = KDNA_EcommerceInsights_Cache::timed(
-			'Units sold per product, last 30 days and last sale',
-			static fn() => $wpdb->get_results(
-				$wpdb->prepare(
-					'SELECT CASE WHEN i.variation_id > 0 THEN i.variation_id ELSE i.product_id END AS id,
-						SUM( CASE WHEN f.report_date >= %s THEN i.qty - i.refunded_qty ELSE 0 END ) AS sold_30,
-						MAX( f.report_date ) AS last_sale
-					FROM ' . self::t( 'order_item_facts' ) . ' i INNER JOIN ' . self::t( 'order_facts' ) . " f ON f.order_id = i.order_id
-					WHERE f.status IN ( $in )
-					GROUP BY CASE WHEN i.variation_id > 0 THEN i.variation_id ELSE i.product_id END",
-					array_merge( array( $today->modify( '-29 days' )->format( 'Y-m-d' ) ), $statuses )
-				),
-				ARRAY_A
-			)
-		);
-		$trend = KDNA_EcommerceInsights_Cache::timed(
-			'Stock value trend',
-			static fn() => $wpdb->get_results( $wpdb->prepare( 'SELECT snapshot_date AS day, SUM( value_at_cost ) AS cost, SUM( value_at_retail ) AS retail FROM ' . self::t( 'stock_snapshots' ) . ' WHERE snapshot_date >= %s GROUP BY snapshot_date ORDER BY snapshot_date', $today->modify( '-89 days' )->format( 'Y-m-d' ) ), ARRAY_A )
-		);
-		// phpcs:enable
-
-		$sold = array();
-		foreach ( (array) $sales as $row ) {
-			$sold[ (int) $row['id'] ] = array(
-				'sold_30'   => max( 0, (float) $row['sold_30'] ),
-				'last_sale' => (string) $row['last_sale'],
-			);
-		}
-
-		$totals = array_fill_keys( array( 'units_in_stock', 'stock_value_cost', 'stock_value_retail', 'in_stock', 'low_stock', 'out_of_stock', 'dead_stock', 'on_backorder' ), 0.0 );
-		$low    = array();
-		$out    = array();
-		$cover  = array();
-		$dead   = array();
-
-		$rows = KDNA_EcommerceInsights_Cache::timed( 'Product stock from the catalogue', array( 'KDNA_EcommerceInsights_Cost_Catalogue', 'sellable_rows' ) );
-		foreach ( $rows as $row ) {
-			if ( 'publish' !== $row['status'] ) {
-				continue;
-			}
-
-			$stock   = null === $row['stock'] ? null : (float) $row['stock'];
-			$item    = array(
-				'id'        => $row['id'],
-				'name'      => $row['name'] . ( '' !== $row['attributes'] ? ' (' . $row['attributes'] . ')' : '' ),
-				'sku'       => $row['sku'],
-				'stock'     => $stock,
-				'sold_30'   => $sold[ $row['id'] ]['sold_30'] ?? 0.0,
-				'last_sale' => $sold[ $row['id'] ]['last_sale'] ?? '',
-			);
-
-			if ( 'outofstock' === $row['stock_status'] ) {
-				++$totals['out_of_stock'];
-				$out[] = $item;
-				continue;
-			}
-			if ( 'onbackorder' === $row['stock_status'] ) {
-				++$totals['on_backorder'];
-			}
-
-			if ( null !== $stock && $row['manage_stock'] ) {
-				$units                         = max( 0, $stock );
-				$totals['units_in_stock']     += $units;
-				$totals['stock_value_cost']   += $units * (float) $row['effective_cost'];
-				$totals['stock_value_retail'] += $units * (float) $row['price'];
-
-				if ( $stock <= $threshold ) {
-					++$totals['low_stock'];
-					$low[] = $item;
-				} else {
-					++$totals['in_stock'];
-				}
-
-				// Days of stock left at the last 30 days' selling speed.
-				if ( $item['sold_30'] > 0 && $units > 0 ) {
-					$days            = (int) floor( $units / ( $item['sold_30'] / 30 ) );
-					$item['days']    = $days;
-					$item['runs_out'] = $today->modify( '+' . $days . ' days' )->format( 'Y-m-d' );
-					// Suggest reordering two weeks before stock runs out.
-					$item['reorder'] = $today->modify( '+' . max( 0, $days - 14 ) . ' days' )->format( 'Y-m-d' );
-					$cover[]         = $item;
-				}
-			} else {
-				++$totals['in_stock'];
-			}
-
-			// Dead stock: in stock but no sale within the set number of days.
-			$in_stock = null === $stock ? 'instock' === $row['stock_status'] : $stock > 0;
-			if ( $in_stock && ( '' === $item['last_sale'] || $item['last_sale'] < $today->modify( '-' . $dead_days . ' days' )->format( 'Y-m-d' ) ) ) {
-				++$totals['dead_stock'];
-				$dead[] = $item;
-			}
-		}
-
-		usort( $cover, static fn( $a, $b ) => $a['days'] <=> $b['days'] );
-		usort( $low, static fn( $a, $b ) => $a['stock'] <=> $b['stock'] );
-
-		$metrics = array();
-		foreach ( array( 'units_in_stock', 'stock_value_cost', 'stock_value_retail', 'in_stock', 'low_stock', 'out_of_stock', 'dead_stock' ) as $key ) {
-			$metrics[] = KDNA_EcommerceInsights_Metrics::evaluate( $key, $totals );
-		}
-
-		return array(
-			'metrics'       => $metrics,
-			'status'        => array(
-				'in_stock'     => (int) $totals['in_stock'],
-				'low_stock'    => (int) $totals['low_stock'],
-				'out_of_stock' => (int) $totals['out_of_stock'],
-			),
-			'threshold'     => $threshold,
-			'low_stock'     => array_slice( $low, 0, 50 ),
-			'out_of_stock'  => array_slice( $out, 0, 50 ),
-			'days_of_cover' => array_slice( $cover, 0, 50 ),
-			'dead_stock'    => array_slice( $dead, 0, 50 ),
-			'dead_days'     => $dead_days,
-			'trend'         => array_map(
-				static fn( $row ) => array(
-					'day'    => $row['day'],
-					'cost'   => round( (float) $row['cost'], 2 ),
-					'retail' => round( (float) $row['retail'], 2 ),
-				),
-				(array) $trend
-			),
-		);
+	public static function inventory( ?array $range = null ): array {
+		return KDNA_EcommerceInsights_Inventory::report( $range );
 	}
 
 	/*

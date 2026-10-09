@@ -608,6 +608,87 @@
 	}
 
 	/**
+	 * Builds Chart.js options for stacked bars: the same quiet axes and
+	 * tooltip card as the line charts.
+	 *
+	 * @param {Object} t       Tokens.
+	 * @param {Object} options Options passed to barChart().
+	 * @return {Object}
+	 */
+	function barOptions( t, options ) {
+		var base = lineOptions( t, options );
+		base.scales.x.stacked = options.stacked !== false;
+		base.scales.y.stacked = options.stacked !== false;
+		base.plugins.kdnaLatestPoint = { display: false };
+		base.animation = reduceMotion ? false : { duration: 500, easing: 'easeOutCubic' };
+		return base;
+	}
+
+	/**
+	 * Turns series into bar datasets with their token colours. The top
+	 * series in a stack gets rounded corners.
+	 *
+	 * @param {Object}   t      Tokens.
+	 * @param {Object[]} series Series ({ label, data, colour }).
+	 * @return {Object[]}
+	 */
+	function barDatasets( t, series ) {
+		return series.map( function ( item, index ) {
+			var colour = t[ item.colour ] || item.colour || ( index === 0 ? t.accent : t.accent2 );
+			return {
+				label: item.label,
+				data: item.data,
+				kdnaColour: item.colour,
+				backgroundColor: colour,
+				borderColor: colour,
+				borderWidth: 0,
+				borderRadius: index === series.length - 1 ? { topLeft: 5, topRight: 5 } : 0,
+				borderSkipped: false,
+				maxBarThickness: 28,
+				categoryPercentage: 0.72,
+				barPercentage: 0.9,
+			};
+		} );
+	}
+
+	/**
+	 * Creates a stacked bar chart, for example new and returning customers.
+	 *
+	 * @param {HTMLCanvasElement} canvas  Canvas inside an Insights root.
+	 * @param {Object}            options labels, series ([ { label, data, colour } ]),
+	 *                                    stacked (default true), plus the same
+	 *                                    formatters as lineChart().
+	 * @return {Chart}
+	 */
+	function barChart( canvas, options ) {
+		var t = tokens( canvas );
+		var chart = new Chart( canvas, {
+			type: 'bar',
+			data: { labels: options.labels, datasets: barDatasets( t, options.series ) },
+			options: barOptions( t, options ),
+		} );
+		chart.$kdna = options;
+		chart.$kdnaKind = 'bar';
+		charts.push( chart );
+		return chart;
+	}
+
+	/**
+	 * Replaces a bar chart's data and redraws it.
+	 *
+	 * @param {Chart}  chart   Chart from barChart().
+	 * @param {Object} options Same shape as barChart() options.
+	 */
+	function updateBarChart( chart, options ) {
+		var t = tokens( chart.canvas );
+		chart.$kdna = options;
+		chart.data.labels = options.labels;
+		chart.data.datasets = barDatasets( t, options.series );
+		chart.options = barOptions( t, options );
+		chart.update();
+	}
+
+	/**
 	 * Re-reads the theme colours and redraws every chart, for example after
 	 * switching between light and dark mode.
 	 */
@@ -621,6 +702,9 @@
 			if ( chart.$kdnaKind === 'line' ) {
 				chart.options = lineOptions( t, chart.$kdna );
 				styleLineDatasets( chart, t );
+			} else if ( chart.$kdnaKind === 'bar' ) {
+				chart.options = barOptions( t, chart.$kdna );
+				chart.data.datasets = barDatasets( t, chart.$kdna.series );
 			} else if ( chart.$kdnaKind === 'waterfall' ) {
 				var colours = waterfallColours( t, chart.$kdna.steps );
 				chart.options = waterfallOptions( t, chart.$kdna );
@@ -651,6 +735,8 @@
 		updateLineChart: updateLineChart,
 		donutChart: donutChart,
 		waterfallChart: waterfallChart,
+		barChart: barChart,
+		updateBarChart: updateBarChart,
 		updateWaterfallChart: updateWaterfallChart,
 		refreshAll: refreshAll,
 	};

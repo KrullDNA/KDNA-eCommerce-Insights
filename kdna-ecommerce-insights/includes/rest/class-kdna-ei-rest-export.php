@@ -12,7 +12,7 @@ defined( 'ABSPATH' ) || exit;
  * - GET /export?table=...   Returns { filename, csv } for a report table,
  *                           using the same range and filters as the screen.
  *
- * Tables: summary, timeseries, pnl, products, categories, customers, locations,
+ * Tables: summary, timeseries, pnl, products, categories, customers, cohorts, locations,
  * channels, campaigns, low_stock, out_of_stock, days_of_cover, dead_stock, tax.
  * Product costs are exported from /costs/export.
  */
@@ -21,7 +21,7 @@ class KDNA_EcommerceInsights_Rest_Export extends KDNA_EcommerceInsights_Rest_Rep
 	/**
 	 * Tables that can be exported.
 	 */
-	const TABLES = array( 'summary', 'timeseries', 'pnl', 'products', 'categories', 'customers', 'locations', 'channels', 'campaigns', 'low_stock', 'out_of_stock', 'days_of_cover', 'dead_stock', 'tax' );
+	const TABLES = array( 'summary', 'timeseries', 'pnl', 'products', 'categories', 'customers', 'cohorts', 'locations', 'channels', 'campaigns', 'low_stock', 'out_of_stock', 'days_of_cover', 'dead_stock', 'tax' );
 
 	/**
 	 * Registers the route.
@@ -162,12 +162,23 @@ class KDNA_EcommerceInsights_Rest_Export extends KDNA_EcommerceInsights_Rest_Rep
 				$rows   = array_map( static fn( $c ) => array( $c['name'], $c['units'], $money( $c['revenue'] ), $money( $c['profit'] ), null === $c['margin'] ? '' : round( $c['margin'], 1 ) ), $result['categories'] );
 				return array( array( __( 'Category', 'kdna-ecommerce-insights' ), __( 'Units', 'kdna-ecommerce-insights' ), __( 'Revenue', 'kdna-ecommerce-insights' ), __( 'Profit', 'kdna-ecommerce-insights' ), __( 'Margin %', 'kdna-ecommerce-insights' ) ), $rows );
 
+			case 'cohorts':
+				$cohorts = KDNA_EcommerceInsights_Report::cohorts( $range );
+				$width   = $cohorts ? max( array_map( static fn( $c ) => count( $c['retention'] ), $cohorts ) ) : 0;
+				$header  = array( __( 'First order month', 'kdna-ecommerce-insights' ), __( 'Customers', 'kdna-ecommerce-insights' ) );
+				for ( $i = 0; $i < $width; $i++ ) {
+					/* translators: %d: months after the first order. */
+					$header[] = 0 === $i ? __( 'Month 0 %', 'kdna-ecommerce-insights' ) : sprintf( __( 'Month %d %%', 'kdna-ecommerce-insights' ), $i );
+				}
+				$rows = array_map( static fn( $c ) => array_merge( array( $c['month'], $c['size'] ), $c['retention'] ), $cohorts );
+				return array( $header, $rows );
+
 			case 'customers':
 			case 'locations':
 				$data = KDNA_EcommerceInsights_Report::customers( $range, null );
 				if ( 'customers' === $table ) {
-					$rows = array_map( static fn( $c ) => array( $c['name'], $c['email'], $c['orders'], $money( $c['revenue'] ), $money( $c['profit'] ) ), $data['top_customers'] );
-					return array( array( __( 'Customer', 'kdna-ecommerce-insights' ), __( 'Email', 'kdna-ecommerce-insights' ), __( 'Orders', 'kdna-ecommerce-insights' ), __( 'Revenue', 'kdna-ecommerce-insights' ), __( 'Profit', 'kdna-ecommerce-insights' ) ), $rows );
+					$rows = array_map( static fn( $c ) => array( $c['name'], $c['email'], $c['guest'] ? __( 'Guest', 'kdna-ecommerce-insights' ) : __( 'Account', 'kdna-ecommerce-insights' ), $c['orders'], $money( $c['revenue'] ), $money( $c['profit'] ), $c['lifetime_orders'], $money( $c['lifetime_revenue'] ), $c['first_order'] ), $data['top_customers'] );
+					return array( array( __( 'Customer', 'kdna-ecommerce-insights' ), __( 'Email', 'kdna-ecommerce-insights' ), __( 'Type', 'kdna-ecommerce-insights' ), __( 'Orders', 'kdna-ecommerce-insights' ), __( 'Revenue', 'kdna-ecommerce-insights' ), __( 'Profit', 'kdna-ecommerce-insights' ), __( 'Lifetime orders', 'kdna-ecommerce-insights' ), __( 'Lifetime revenue', 'kdna-ecommerce-insights' ), __( 'First order', 'kdna-ecommerce-insights' ) ), $rows );
 				}
 				$rows = array_map( static fn( $l ) => array( $l['country_name'], $l['state_name'], $l['orders'], $l['customers'], $money( $l['revenue'] ) ), $data['locations'] );
 				return array( array( __( 'Country', 'kdna-ecommerce-insights' ), __( 'State', 'kdna-ecommerce-insights' ), __( 'Orders', 'kdna-ecommerce-insights' ), __( 'Customers', 'kdna-ecommerce-insights' ), __( 'Revenue', 'kdna-ecommerce-insights' ) ), $rows );
@@ -184,12 +195,12 @@ class KDNA_EcommerceInsights_Rest_Export extends KDNA_EcommerceInsights_Rest_Rep
 				return array( array( __( 'From', 'kdna-ecommerce-insights' ), __( 'To', 'kdna-ecommerce-insights' ), __( 'G1 Total sales', 'kdna-ecommerce-insights' ), __( '1A GST on sales', 'kdna-ecommerce-insights' ), __( '1B GST on purchases (estimate)', 'kdna-ecommerce-insights' ), __( 'Net GST', 'kdna-ecommerce-insights' ) ), $rows );
 
 			default:
-				$data = KDNA_EcommerceInsights_Report::inventory();
+				$data = KDNA_EcommerceInsights_Report::inventory( $range );
 				$rows = array_map(
-					static fn( $item ) => array( $item['name'], $item['sku'], $item['stock'], $item['sold_30'], $item['last_sale'], $item['days'] ?? '', $item['runs_out'] ?? '', $item['reorder'] ?? '' ),
+					static fn( $item ) => array( $item['name'], $item['sku'], $item['stock'] ?? '', $item['sold_30'], $item['last_sale'], $item['days'] ?? '', $item['runs_out'] ?? '', $item['reorder'] ?? '', $money( $item['value_cost'] ?? null ), $money( $item['value_retail'] ?? null ) ),
 					$data[ $table ] ?? array()
 				);
-				return array( array( __( 'Product', 'kdna-ecommerce-insights' ), __( 'SKU', 'kdna-ecommerce-insights' ), __( 'Stock', 'kdna-ecommerce-insights' ), __( 'Sold in last 30 days', 'kdna-ecommerce-insights' ), __( 'Last sale', 'kdna-ecommerce-insights' ), __( 'Days of stock left', 'kdna-ecommerce-insights' ), __( 'Runs out', 'kdna-ecommerce-insights' ), __( 'Reorder by', 'kdna-ecommerce-insights' ) ), $rows );
+				return array( array( __( 'Product', 'kdna-ecommerce-insights' ), __( 'SKU', 'kdna-ecommerce-insights' ), __( 'Stock', 'kdna-ecommerce-insights' ), __( 'Sold in last 30 days', 'kdna-ecommerce-insights' ), __( 'Last sale', 'kdna-ecommerce-insights' ), __( 'Days of stock left', 'kdna-ecommerce-insights' ), __( 'Runs out', 'kdna-ecommerce-insights' ), __( 'Reorder by', 'kdna-ecommerce-insights' ), __( 'Value at cost', 'kdna-ecommerce-insights' ), __( 'Value at retail', 'kdna-ecommerce-insights' ) ), $rows );
 		}
 	}
 }

@@ -205,6 +205,7 @@ class KDNA_EcommerceInsights_Settings {
 			'alerts'    => array(
 				'low_stock_threshold' => 0,
 				'dead_stock_days'     => 90,
+				'reorder_lead_days'   => 14,
 				'alert_recipients'    => $admin_email,
 				'low_stock_emails'    => false,
 				'sync_failure_emails' => false,
@@ -513,6 +514,7 @@ class KDNA_EcommerceInsights_Settings {
 		$out['alerts'] = array(
 			'low_stock_threshold' => absint( $a['low_stock_threshold'] ?? 0 ),
 			'dead_stock_days'     => max( 1, absint( $a['dead_stock_days'] ?? $d['alerts']['dead_stock_days'] ) ),
+			'reorder_lead_days'   => min( 365, absint( $a['reorder_lead_days'] ?? $d['alerts']['reorder_lead_days'] ) ),
 			'alert_recipients'    => self::emails( $a['alert_recipients'] ?? '' ),
 			'low_stock_emails'    => ! empty( $a['low_stock_emails'] ),
 			'sync_failure_emails' => ! empty( $a['sync_failure_emails'] ),

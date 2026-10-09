@@ -249,7 +249,7 @@ class KDNA_EcommerceInsights_Admin {
 
 		// One script per built screen, each registering its Alpine component.
 		$screen_scripts = array( 'kdna-ei-app' );
-		foreach ( array( 'overview', 'profit', 'products', 'costs', 'cost-rules', 'overheads', 'settings-hero' ) as $screen_id ) {
+		foreach ( array( 'overview', 'profit', 'products', 'customers', 'inventory', 'costs', 'cost-rules', 'overheads', 'settings-hero' ) as $screen_id ) {
 			$path   = 'admin/js/screens/' . $screen_id . '.js';
 			$handle = 'kdna-ei-screen-' . $screen_id;
 			wp_enqueue_script( $handle, KDNA_EI_URL . $path, array( 'kdna-ei-app', 'kdna-ei-chart-theme' ), $this->asset_version( $path ), true );
@@ -291,6 +291,7 @@ class KDNA_EcommerceInsights_Admin {
 				'status'       => KDNA_EcommerceInsights_Rest_Status::data(),
 				'hero'         => KDNA_EcommerceInsights_Settings::get( 'hero', array() ),
 				'kpiOptions'   => self::kpi_options(),
+				'alerts'       => KDNA_EcommerceInsights_Settings::get( 'alerts', array() ),
 				'currency'     => array(
 					'symbol'   => html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUOTES, 'UTF-8' ),
 					'position' => (string) get_option( 'woocommerce_currency_pos', 'left' ),
@@ -314,6 +315,8 @@ class KDNA_EcommerceInsights_Admin {
 					'overview'      => self::overview_strings(),
 					'profit'        => self::profit_strings(),
 					'products'      => self::products_strings(),
+					'customers'     => self::customers_strings(),
+					'inventory'     => self::inventory_strings(),
 					'heroSettings'  => array(
 						'saved'       => __( 'Saved. The Overview has been updated.', 'kdna-ecommerce-insights' ),
 						'amountError' => __( 'Enter an amount of zero or more, for example 25000.', 'kdna-ecommerce-insights' ),
@@ -396,6 +399,90 @@ class KDNA_EcommerceInsights_Admin {
 			'cogsIncomplete'    => __( 'Incomplete: %s of %s orders include products with no cost, so this is lower than it should be and profit is overstated.', 'kdna-ecommerce-insights' ),
 			/* translators: %s: month, for example Oct 2026. */
 			'partMonth'         => __( '%s (part)', 'kdna-ecommerce-insights' ),
+		);
+	}
+
+	/**
+	 * Text used by the Customers screen script.
+	 *
+	 * @return array
+	 */
+	private static function customers_strings(): array {
+		return array(
+			'allTime'            => __( 'All time', 'kdna-ecommerce-insights' ),
+			'allTimeHelp'        => __( 'Worked out from every order ever placed, so it does not change with the date range.', 'kdna-ecommerce-insights' ),
+			'newCustomers'       => __( 'New customers', 'kdna-ecommerce-insights' ),
+			'returningCustomers' => __( 'Returning customers', 'kdna-ecommerce-insights' ),
+			/* translators: %s: revenue. */
+			'revenueOf'          => __( '%s revenue', 'kdna-ecommerce-insights' ),
+			/* translators: %s: percentage. */
+			'shareOf'            => __( '%s%% of revenue', 'kdna-ecommerce-insights' ),
+			/* translators: 1: new customers, 2: returning customers. */
+			'chartSummary'       => __( 'New and returning customers over the chosen dates: %s new and %s returning.', 'kdna-ecommerce-insights' ),
+			'cohortCaption'      => __( 'Share of customers who ordered again, by the month of their first order and the months since.', 'kdna-ecommerce-insights' ),
+			'firstMonth'         => __( 'First month', 'kdna-ecommerce-insights' ),
+			/* translators: %s: number of months. */
+			'monthN'             => __( 'Month %s', 'kdna-ecommerce-insights' ),
+			/* translators: 1: customers, 2: cohort size, 3: month. */
+			'cellTitle'          => __( '%s of %s customers ordered again in %s', 'kdna-ecommerce-insights' ),
+			/* translators: 1: customers, 2: cohort size, 3: month. */
+			'cellFirst'          => __( '%s of %s customers placed their first order in %s', 'kdna-ecommerce-insights' ),
+			'noCohorts'          => __( 'No customers placed their first order in these dates.', 'kdna-ecommerce-insights' ),
+			'noCustomers'        => __( 'No customers ordered in this period.', 'kdna-ecommerce-insights' ),
+			'guest'              => __( 'Guest', 'kdna-ecommerce-insights' ),
+			'unknownPlace'       => __( 'Not given', 'kdna-ecommerce-insights' ),
+			/* translators: %s: number of rows. */
+			'showAll'            => __( 'Show all %s', 'kdna-ecommerce-insights' ),
+			'showFewer'          => __( 'Show fewer', 'kdna-ecommerce-insights' ),
+		);
+	}
+
+	/**
+	 * Text used by the Inventory screen script.
+	 *
+	 * @return array
+	 */
+	private static function inventory_strings(): array {
+		return array(
+			'stockIsNow'     => __( 'Stock figures are as of right now. The date range only changes the stock value chart.', 'kdna-ecommerce-insights' ),
+			'inStock'        => __( 'In stock', 'kdna-ecommerce-insights' ),
+			'lowStock'       => __( 'Low stock', 'kdna-ecommerce-insights' ),
+			'outOfStock'     => __( 'Out of stock', 'kdna-ecommerce-insights' ),
+			'atCost'         => __( 'At cost', 'kdna-ecommerce-insights' ),
+			'atRetail'       => __( 'At retail', 'kdna-ecommerce-insights' ),
+			'trendNote'      => __( 'Saved every night, excluding tax.', 'kdna-ecommerce-insights' ),
+			'trendEmpty'     => __( 'Insights saves your stock value every night. The chart appears once there are two nights of history.', 'kdna-ecommerce-insights' ),
+			/* translators: 1: value at cost, 2: value at retail. */
+			'trendSummary'   => __( 'Stock value over the chosen dates. Latest: %s at cost and %s at retail.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: units. */
+			'unitsInStock'   => __( '%s units in stock', 'kdna-ecommerce-insights' ),
+			/* translators: %s: number of products. */
+			'noCostHelp'     => __( '%s products in stock have no cost price, so their value at cost is left out.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: lead time in days. */
+			'coverNote'      => __( 'Based on how fast each product sold over the last 30 days, with a %s day supplier lead time.', 'kdna-ecommerce-insights' ),
+			'reorderNow'     => __( 'Reorder now', 'kdna-ecommerce-insights' ),
+			/* translators: %s: threshold. */
+			'thresholdOwn'   => __( 'Products with %s or fewer left (your Insights setting).', 'kdna-ecommerce-insights' ),
+			/* translators: %s: threshold. */
+			'thresholdStore' => __( 'At or below each product\'s low stock amount, or %s for products without one (your WooCommerce setting).', 'kdna-ecommerce-insights' ),
+			'outNote'        => __( 'Busiest sellers first, so you can see what is costing you sales.', 'kdna-ecommerce-insights' ),
+			/* translators: 1: days, 2: value at cost. */
+			'deadNote'       => __( 'In stock with no sale in %s days. %s tied up at cost.', 'kdna-ecommerce-insights' ),
+			'noRecentSales'  => __( 'No recent sales', 'kdna-ecommerce-insights' ),
+			'never'          => __( 'Never', 'kdna-ecommerce-insights' ),
+			'notTracked'     => __( 'Not tracked', 'kdna-ecommerce-insights' ),
+			/* translators: %s: number of rows. */
+			'showAll'        => __( 'Show all %s', 'kdna-ecommerce-insights' ),
+			'showFewer'      => __( 'Show fewer', 'kdna-ecommerce-insights' ),
+			/* translators: %s: WooCommerce threshold. */
+			'useStore'       => __( 'Use WooCommerce (%s)', 'kdna-ecommerce-insights' ),
+			'thresholdHelp'  => __( 'Leave empty to use each product\'s own low stock amount from WooCommerce.', 'kdna-ecommerce-insights' ),
+			'wholeNumber'    => __( 'Enter a whole number, for example 5, or leave it empty.', 'kdna-ecommerce-insights' ),
+			'deadDaysError'  => __( 'Enter a whole number of days, 1 or more, for example 90.', 'kdna-ecommerce-insights' ),
+			'leadDaysError'  => __( 'Enter a whole number of days from 0 to 365, for example 14.', 'kdna-ecommerce-insights' ),
+			'emailError'     => __( 'Enter at least one email address, separating more than one with commas.', 'kdna-ecommerce-insights' ),
+			'saved'          => __( 'Saved. Figures updated.', 'kdna-ecommerce-insights' ),
+			'sending'        => __( 'Sending...', 'kdna-ecommerce-insights' ),
 		);
 	}
 

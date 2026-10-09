@@ -54,6 +54,7 @@ class KDNA_EcommerceInsights_Plugin {
 		new KDNA_EcommerceInsights_Order_Processor();
 		new KDNA_EcommerceInsights_Backfill();
 		new KDNA_EcommerceInsights_Summary();
+		new KDNA_EcommerceInsights_Inventory();
 
 		// Report cache, cleared whenever figures change.
 		new KDNA_EcommerceInsights_Cache();

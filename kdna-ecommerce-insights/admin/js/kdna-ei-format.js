@@ -275,6 +275,87 @@
 	window.KDNAEI.sprintf = sprintf;
 
 	/**
+	 * Date helpers shared by the report screens. Dates arrive as Y-m-d
+	 * strings and are shown in the visitor's own date style.
+	 */
+	window.KDNAEI.dates = {
+		/**
+		 * Turns a Y-m-d (or Y-m) string into a local date.
+		 *
+		 * @param {string} value Date.
+		 * @return {Date}
+		 */
+		toDate: function ( value ) {
+			var parts = String( value ).split( '-' );
+			return new Date( Number( parts[ 0 ] ), Number( parts[ 1 ] ) - 1, Number( parts[ 2 ] || 1 ) );
+		},
+
+		/**
+		 * Formats a date with the visitor's locale.
+		 *
+		 * @param {string} value   Y-m-d or Y-m.
+		 * @param {Object} options Intl date options.
+		 * @return {string}
+		 */
+		text: function ( value, options ) {
+			return window.KDNAEI.dates.toDate( value ).toLocaleDateString( config.locale || undefined, options );
+		},
+
+		/**
+		 * A short date such as "9 Oct 2026".
+		 *
+		 * @param {string} value Y-m-d.
+		 * @return {string}
+		 */
+		short: function ( value ) {
+			return value ? window.KDNAEI.dates.text( value, { day: 'numeric', month: 'short', year: 'numeric' } ) : '';
+		},
+
+		/**
+		 * Short chart axis label for a bucket: "9 Oct" for days and weeks,
+		 * "Oct 26" for months.
+		 *
+		 * @param {Object[]} buckets     Buckets with start.
+		 * @param {number}   index       Bucket position.
+		 * @param {string}   granularity day, week or month.
+		 * @return {string}
+		 */
+		axis: function ( buckets, index, granularity ) {
+			var bucket = buckets[ index ];
+			if ( ! bucket ) {
+				return '';
+			}
+			return 'month' === granularity
+				? window.KDNAEI.dates.text( bucket.start, { month: 'short', year: '2-digit' } )
+				: window.KDNAEI.dates.text( bucket.start, { day: 'numeric', month: 'short' } );
+		},
+
+		/**
+		 * Tooltip title for a bucket: "Thu 9 Oct 2026", "Week of 5 Oct 2026"
+		 * or "October 2026".
+		 *
+		 * @param {Object[]} buckets     Buckets with start.
+		 * @param {number}   index       Bucket position.
+		 * @param {string}   granularity day, week or month.
+		 * @return {string}
+		 */
+		title: function ( buckets, index, granularity ) {
+			var bucket = buckets[ index ];
+			var t = ( config.i18n && config.i18n.overview ) || {};
+			if ( ! bucket ) {
+				return '';
+			}
+			if ( 'month' === granularity ) {
+				return window.KDNAEI.dates.text( bucket.start, { month: 'long', year: 'numeric' } );
+			}
+			if ( 'week' === granularity ) {
+				return sprintf( t.weekOf, window.KDNAEI.dates.short( bucket.start ) );
+			}
+			return window.KDNAEI.dates.text( bucket.start, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' } );
+		},
+	};
+
+	/**
 	 * Fetches a CSV from /export for a table and downloads it.
 	 *
 	 * @param {string} table Table name, for example "pnl" or "products".

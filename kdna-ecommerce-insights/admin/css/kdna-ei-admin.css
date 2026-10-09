@@ -2191,3 +2191,341 @@ th[aria-sort="ascending"] .kdna-ei-sort__icon {
 .kdna-ei-statement td.kdna-ei-statement__total {
 	box-shadow: -10px 0 12px -10px rgba(0, 0, 0, 0.35);
 }
+
+/* ==========================================================================
+   Customers and Inventory screens (Stage 8)
+   ========================================================================== */
+
+.kdna-ei-screen--customers,
+.kdna-ei-screen--inventory {
+	display: block;
+}
+
+.kdna-ei-root .is-warning-text {
+	color: var(--kdna-ei-warning);
+}
+
+.kdna-ei-customers .kdna-ei-kpi:first-of-type,
+.kdna-ei-inventory .kdna-ei-kpi:first-of-type {
+	border-left: 0;
+}
+
+.kdna-ei-kpi__note {
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-text-muted);
+	cursor: help;
+}
+
+.kdna-ei-card__count {
+	display: inline-block;
+	min-width: 24px;
+	margin-left: 8px;
+	padding: 1px 8px;
+	font-size: var(--kdna-ei-fs-small);
+	font-weight: 500;
+	text-align: center;
+	vertical-align: 3px;
+	color: var(--kdna-ei-text-muted);
+	background: var(--kdna-ei-surface-raised);
+	border-radius: var(--kdna-ei-radius-pill);
+}
+
+.kdna-ei-chart__empty {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-content: center;
+	justify-items: center;
+	gap: 10px;
+	max-width: 360px;
+	margin: auto;
+	text-align: center;
+	color: var(--kdna-ei-text-muted);
+}
+
+/* Customers layout. */
+.kdna-ei-customers__grid,
+.kdna-ei-inventory__grid {
+	display: grid;
+	gap: var(--kdna-ei-gap);
+	grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr);
+}
+
+.kdna-ei-customers__grid {
+	grid-template-areas:
+		"kpis kpis"
+		"chart side"
+		"cohorts cohorts"
+		"table locations";
+}
+
+.kdna-ei-area-cohorts { grid-area: cohorts; }
+.kdna-ei-area-locations { grid-area: locations; }
+
+.kdna-ei-customers > .kdna-ei-notice,
+.kdna-ei-inventory > .kdna-ei-notice {
+	margin-bottom: var(--kdna-ei-gap);
+}
+
+@media (max-width: 1100px) {
+	.kdna-ei-customers__grid {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-areas: "kpis" "chart" "side" "cohorts" "table" "locations";
+	}
+}
+
+/* New and returning split. */
+.kdna-ei-split__body {
+	display: grid;
+	gap: 28px;
+}
+
+.kdna-ei-split__row {
+	display: grid;
+	gap: 8px;
+}
+
+.kdna-ei-split__top,
+.kdna-ei-split__meta {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.kdna-ei-split__label {
+	display: inline-flex;
+	align-items: center;
+}
+
+.kdna-ei-split__count {
+	font-size: var(--kdna-ei-fs-kpi);
+	font-weight: var(--kdna-ei-fw-kpi);
+	line-height: 1.1;
+}
+
+.kdna-ei-split__meta {
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-split .kdna-ei-bar {
+	height: 6px;
+}
+
+/* Cohort grid. */
+.kdna-ei-cohort th,
+.kdna-ei-cohort td {
+	padding: 8px 6px;
+	white-space: nowrap;
+}
+
+.kdna-ei-cohort tbody th {
+	font-size: var(--kdna-ei-fs-body);
+	font-weight: 400;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-cohort td.kdna-ei-cohort__cell {
+	min-width: 56px;
+	text-align: center;
+	font-size: var(--kdna-ei-fs-small);
+	border-bottom: 2px solid var(--kdna-ei-surface);
+	border-left: 2px solid var(--kdna-ei-surface);
+	border-radius: 6px;
+	cursor: default;
+}
+
+/* Top customers. */
+.kdna-ei-customer {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-width: 220px;
+}
+
+.kdna-ei-avatar {
+	display: grid;
+	place-items: center;
+	flex: none;
+	width: 36px;
+	height: 36px;
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--kdna-ei-accent);
+	background: color-mix(in srgb, var(--kdna-ei-accent) 15%, transparent);
+	border-radius: 50%;
+}
+
+.kdna-ei-root .kdna-ei-customer a {
+	color: var(--kdna-ei-text);
+	text-decoration: none;
+}
+
+.kdna-ei-root .kdna-ei-customer a:hover {
+	color: var(--kdna-ei-accent);
+}
+
+/* Locations. */
+.kdna-ei-locations__actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.kdna-ei-location-table tbody th {
+	width: 60%;
+	font-size: var(--kdna-ei-fs-body);
+	font-weight: 400;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-location {
+	display: grid;
+	gap: 6px;
+}
+
+.kdna-ei-location .kdna-ei-bar {
+	margin-top: 0;
+}
+
+/* Inventory layout. */
+.kdna-ei-inventory__bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 12px;
+	margin-bottom: var(--kdna-ei-gap);
+}
+
+.kdna-ei-inventory__bar p {
+	margin: 0;
+}
+
+.kdna-ei-inventory__grid {
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+	grid-template-areas:
+		"kpis kpis kpis"
+		"status trend trend"
+		"cover cover cover"
+		"low low out"
+		"dead dead dead";
+}
+
+.kdna-ei-inventory__grid .kdna-ei-area-kpis { grid-column: 1 / -1; }
+.kdna-ei-area-status { grid-area: status; }
+.kdna-ei-area-trend { grid-area: trend; }
+.kdna-ei-area-days-of-cover { grid-area: cover; }
+.kdna-ei-area-low-stock { grid-area: low; }
+.kdna-ei-area-out-of-stock { grid-area: out; }
+.kdna-ei-area-dead-stock { grid-area: dead; }
+
+.kdna-ei-area-trend .kdna-ei-chart {
+	height: 300px;
+}
+
+@media (max-width: 1100px) {
+	.kdna-ei-inventory__grid {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-areas: "kpis" "status" "trend" "cover" "low" "out" "dead";
+	}
+}
+
+.kdna-ei-stock-list .kdna-ei-product__name {
+	white-space: nowrap;
+}
+
+.kdna-ei-stock-list td:first-child {
+	min-width: 200px;
+}
+
+.kdna-ei-days {
+	font-weight: 600;
+}
+
+/* Stock settings panel. */
+.kdna-ei-stock-settings {
+	margin-bottom: var(--kdna-ei-gap);
+}
+
+.kdna-ei-stock-settings__grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 20px;
+}
+
+.kdna-ei-stock-settings__grid .kdna-ei-input,
+.kdna-ei-stock-settings__recipients .kdna-ei-input {
+	width: 100%;
+}
+
+.kdna-ei-stock-settings__alerts {
+	display: grid;
+	gap: 6px;
+	margin-top: 24px;
+	padding-top: 20px;
+	border-top: 1px solid var(--kdna-ei-border);
+}
+
+.kdna-ei-stock-settings__alerts .kdna-ei-help {
+	margin-top: 0;
+}
+
+.kdna-ei-stock-settings__recipients {
+	max-width: 520px;
+	margin-top: 10px;
+}
+
+@media (max-width: 900px) {
+	.kdna-ei-stock-settings__grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+/* KPI labels wrap onto two lines rather than being cut off, and values
+   such as "174 days" stay on one line. */
+.kdna-ei-root .kdna-ei-kpi__label {
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
+	white-space: normal;
+	line-height: 1.3;
+}
+
+.kdna-ei-kpi__value {
+	white-space: nowrap;
+}
+
+.kdna-ei-customers .kdna-ei-kpi,
+.kdna-ei-inventory .kdna-ei-kpi {
+	gap: 16px;
+	padding: 0 24px;
+}
+
+/* Dates and short headings stay on one line in tables. */
+.kdna-ei-stock-list td:not(:first-child),
+.kdna-ei-area-table td:last-child {
+	white-space: nowrap;
+}
+
+.kdna-ei-stock-list {
+	align-self: start;
+}
+
+/* Inventory: six columns so Low stock and Out of stock share a row evenly. */
+@media (min-width: 1101px) {
+	.kdna-ei-inventory__grid {
+		grid-template-columns: repeat(6, minmax(0, 1fr));
+		grid-template-areas:
+			"kpis kpis kpis kpis kpis kpis"
+			"status status trend trend trend trend"
+			"cover cover cover cover cover cover"
+			"low low low out out out"
+			"dead dead dead dead dead dead";
+	}
+}

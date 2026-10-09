@@ -115,7 +115,7 @@ function kdna_ei_t_order( array $lines, array $options = array() ): WC_Order {
 	}
 	$order->calculate_totals( ! empty( $options['taxes'] ) );
 	$order->set_status( $options['status'] ?? 'processing' );
-	$paid = $options['paid'] ?? '2026-09-15 10:00:00';
+	$paid = $options['paid'] ?? '2023-09-15 10:00:00';
 	$order->set_date_created( get_gmt_from_date( $paid, 'U' ) );
 	if ( 'pending' !== ( $options['status'] ?? 'processing' ) ) {
 		$order->set_date_paid( get_gmt_from_date( $paid, 'U' ) );
@@ -199,7 +199,7 @@ $no_cost = kdna_ei_t_product( 'Test no cost', 25, null );
  */
 echo "Every profit line in section 6 (2 x 40.00 serum, 10.00 discount, 10.00 shipping)\n";
 
-$o = kdna_ei_t_order( array( array( 'product' => $serum, 'qty' => 2, 'total' => 70 ) ), array( 'shipping' => 10, 'paid' => '2026-09-15 10:00:00' ) );
+$o = kdna_ei_t_order( array( array( 'product' => $serum, 'qty' => 2, 'total' => 70 ) ), array( 'shipping' => 10, 'paid' => '2023-09-15 10:00:00' ) );
 $f = kdna_ei_t_process( $o );
 
 kdna_ei_t_amount( '1. Gross sales', 80, $f['gross_sales'] );
@@ -214,7 +214,7 @@ kdna_ei_t( '   Fee is labelled estimated', 'estimated' === $f['fee_source'], $f[
 kdna_ei_t_amount( '7. Shipping cost (fixed rule)', 6, $f['shipping_cost'] );
 kdna_ei_t_amount( '8. Extra order costs (box)', 1.5, $f['extra_costs'] );
 kdna_ei_t_amount( '   Contribution profit (60 - 1.70 - 6 - 1.50)', 50.8, $f['contribution_profit'] );
-kdna_ei_t( '   Report date is the paid date', '2026-09-15' === $f['report_date'], $f['report_date'] );
+kdna_ei_t( '   Report date is the paid date', '2023-09-15' === $f['report_date'], $f['report_date'] );
 kdna_ei_t( '   Unit cost 10.00 locked on the order line', 10.0 === (float) $wpdb->get_var( $wpdb->prepare( 'SELECT unit_cost FROM ' . KDNA_EcommerceInsights_Install::table( 'order_item_facts' ) . ' WHERE order_id = %d', $o->get_id() ) ) );
 kdna_ei_t( '   Not flagged for missing costs', 0 === (int) $f['missing_cost_flag'] );
 
@@ -239,7 +239,7 @@ $r     = wc_create_refund(
 		),
 	)
 );
-$r->set_date_created( get_gmt_from_date( '2026-09-20 12:00:00', 'U' ) );
+$r->set_date_created( get_gmt_from_date( '2023-09-20 12:00:00', 'U' ) );
 $r->save();
 $f = kdna_ei_t_process( wc_get_order( $o->get_id() ) );
 
@@ -248,8 +248,8 @@ kdna_ei_t_amount( 'Net revenue (80 - 35)', 45, $f['net_revenue'] );
 kdna_ei_t_amount( 'Cost of goods with the refunded item restocked (20 - 10)', 10, $f['cogs'] );
 kdna_ei_t_amount( 'Gross profit', 35, $f['gross_profit'] );
 
-$d15 = kdna_ei_t_day( '2026-09-15' );
-$d20 = kdna_ei_t_day( '2026-09-20' );
+$d15 = kdna_ei_t_day( '2023-09-15' );
+$d20 = kdna_ei_t_day( '2023-09-20' );
 kdna_ei_t_amount( 'Refund dated on refund day: 15 Sept keeps full net revenue', 80, $d15['net_revenue'] ?? null );
 kdna_ei_t_amount( 'Refund dated on refund day: 20 Sept shows the refund', 35, $d20['refunds'] ?? null );
 kdna_ei_t_amount( 'Refund dated on refund day: 20 Sept net revenue', -35, $d20['net_revenue'] ?? null );
@@ -257,9 +257,9 @@ kdna_ei_t_amount( 'Refund dated on refund day: 20 Sept cost returned', -10, $d20
 
 KDNA_EcommerceInsights_Settings::update( array( 'general' => array( 'refund_dating' => 'order_date' ) ) );
 KDNA_EcommerceInsights_Summary::rebuild_all();
-$d15 = kdna_ei_t_day( '2026-09-15' );
+$d15 = kdna_ei_t_day( '2023-09-15' );
 kdna_ei_t_amount( 'Refund on order date: 15 Sept net revenue', 45, $d15['net_revenue'] ?? null );
-kdna_ei_t( 'Refund on order date: 20 Sept has no row', array() === kdna_ei_t_day( '2026-09-20' ) );
+kdna_ei_t( 'Refund on order date: 20 Sept has no row', array() === kdna_ei_t_day( '2023-09-20' ) );
 
 KDNA_EcommerceInsights_Settings::update( array( 'general' => array( 'refund_dating' => 'refund_date', 'restock_treatment' => 'written_off' ) ) );
 $f = kdna_ei_t_process( wc_get_order( $o->get_id() ) );
@@ -268,7 +268,7 @@ KDNA_EcommerceInsights_Settings::update( array( 'general' => array( 'restock_tre
 KDNA_EcommerceInsights_Backfill::cancel();
 
 echo "\nFull refund\n";
-$o2 = kdna_ei_t_order( array( array( 'product' => $serum, 'qty' => 1 ) ), array( 'shipping' => 5, 'paid' => '2026-09-16 09:00:00', 'email' => 'refund@example.com' ) );
+$o2 = kdna_ei_t_order( array( array( 'product' => $serum, 'qty' => 1 ) ), array( 'shipping' => 5, 'paid' => '2023-09-16 09:00:00', 'email' => 'refund@example.com' ) );
 wc_create_refund(
 	array(
 		'order_id'   => $o2->get_id(),
@@ -294,17 +294,17 @@ kdna_ei_t_amount( 'Fully refunded order: cost of goods', 0, $f['cogs'] );
 echo "\nCosts locked in on the paid date\n";
 $history = KDNA_EcommerceInsights_Install::table( 'cost_history' );
 $changing = kdna_ei_t_product( 'Test changing cost', 30, 5 );
-$wpdb->query( $wpdb->prepare( "UPDATE {$history} SET changed_at = '2026-01-01 00:00:00' WHERE product_id = %d", $changing->get_id() ) );
+$wpdb->query( $wpdb->prepare( "UPDATE {$history} SET changed_at = '2023-01-01 00:00:00' WHERE product_id = %d", $changing->get_id() ) );
 KDNA_EcommerceInsights_Costs::set_cost( $changing, 8 );
-$wpdb->query( $wpdb->prepare( "UPDATE {$history} SET changed_at = '2026-06-01 00:00:00' WHERE product_id = %d AND new_cost = 8", $changing->get_id() ) );
+$wpdb->query( $wpdb->prepare( "UPDATE {$history} SET changed_at = '2023-06-01 00:00:00' WHERE product_id = %d AND new_cost = 8", $changing->get_id() ) );
 KDNA_EcommerceInsights_Costs::forget_history();
 
-$march = kdna_ei_t_process( kdna_ei_t_order( array( array( 'product' => $changing, 'qty' => 1 ) ), array( 'paid' => '2026-03-01 10:00:00', 'email' => 'a@example.com' ) ) );
-$july  = kdna_ei_t_process( kdna_ei_t_order( array( array( 'product' => $changing, 'qty' => 1 ) ), array( 'paid' => '2026-07-01 10:00:00', 'email' => 'a@example.com' ) ) );
+$march = kdna_ei_t_process( kdna_ei_t_order( array( array( 'product' => $changing, 'qty' => 1 ) ), array( 'paid' => '2023-03-01 10:00:00', 'email' => 'a@example.com' ) ) );
+$july  = kdna_ei_t_process( kdna_ei_t_order( array( array( 'product' => $changing, 'qty' => 1 ) ), array( 'paid' => '2023-07-01 10:00:00', 'email' => 'a@example.com' ) ) );
 kdna_ei_t_amount( 'Order paid in March uses the March cost', 5, $march['cogs'] );
 kdna_ei_t_amount( 'Order paid in July uses the new cost', 8, $july['cogs'] );
 
-$late = kdna_ei_t_order( array( array( 'product' => $no_cost, 'qty' => 2 ) ), array( 'paid' => '2026-02-01 10:00:00', 'email' => 'late@example.com' ) );
+$late = kdna_ei_t_order( array( array( 'product' => $no_cost, 'qty' => 2 ) ), array( 'paid' => '2023-02-01 10:00:00', 'email' => 'late@example.com' ) );
 $f    = kdna_ei_t_process( $late );
 kdna_ei_t( 'Product with no cost: order flagged as missing a cost', 1 === (int) $f['missing_cost_flag'] );
 kdna_ei_t_amount( 'Product with no cost: cost of goods is 0 until a cost is entered', 0, $f['cogs'] );
@@ -319,26 +319,26 @@ kdna_ei_t( 'And clears the missing cost flag', 0 === (int) $f['missing_cost_flag
  * -------------------------------------------------------------------------
  */
 echo "\nSection 6.2 rules\n";
-$pending = kdna_ei_t_order( array( array( 'product' => $serum, 'qty' => 1 ) ), array( 'status' => 'pending', 'paid' => '2026-09-17 09:00:00', 'email' => 'pending@example.com' ) );
+$pending = kdna_ei_t_order( array( array( 'product' => $serum, 'qty' => 1 ) ), array( 'status' => 'pending', 'paid' => '2023-09-17 09:00:00', 'email' => 'pending@example.com' ) );
 kdna_ei_t_process( $pending );
-kdna_ei_t( 'A pending order is not counted in the daily summary', array() === kdna_ei_t_day( '2026-09-17' ) );
+kdna_ei_t( 'A pending order is not counted in the daily summary', array() === kdna_ei_t_day( '2023-09-17' ) );
 
-$created_paid = kdna_ei_t_order( array( array( 'product' => $serum, 'qty' => 1 ) ), array( 'paid' => '2026-09-18 23:00:00', 'email' => 'dates@example.com' ) );
-$created_paid->set_date_created( get_gmt_from_date( '2026-09-10 09:00:00', 'U' ) );
+$created_paid = kdna_ei_t_order( array( array( 'product' => $serum, 'qty' => 1 ) ), array( 'paid' => '2023-09-18 23:00:00', 'email' => 'dates@example.com' ) );
+$created_paid->set_date_created( get_gmt_from_date( '2023-09-10 09:00:00', 'U' ) );
 $created_paid->save();
 $f = kdna_ei_t_process( $created_paid );
-kdna_ei_t( 'Paid date basis: order counts on 18 Sept', '2026-09-18' === $f['report_date'], $f['report_date'] );
+kdna_ei_t( 'Paid date basis: order counts on 18 Sept', '2023-09-18' === $f['report_date'], $f['report_date'] );
 KDNA_EcommerceInsights_Settings::update( array( 'general' => array( 'date_basis' => 'created' ) ) );
 KDNA_EcommerceInsights_Summary::rebuild_all();
 $moved = $wpdb->get_var( $wpdb->prepare( 'SELECT report_date FROM ' . KDNA_EcommerceInsights_Install::table( 'order_facts' ) . ' WHERE order_id = %d', $created_paid->get_id() ) );
-kdna_ei_t( 'Switching to created date moves the order to 10 Sept without reprocessing', '2026-09-10' === $moved, $moved );
-kdna_ei_t( 'And the daily summary follows', ! empty( kdna_ei_t_day( '2026-09-10' ) ) );
+kdna_ei_t( 'Switching to created date moves the order to 10 Sept without reprocessing', '2023-09-10' === $moved, $moved );
+kdna_ei_t( 'And the daily summary follows', ! empty( kdna_ei_t_day( '2023-09-10' ) ) );
 KDNA_EcommerceInsights_Settings::update( array( 'general' => array( 'date_basis' => 'paid' ) ) );
 KDNA_EcommerceInsights_Summary::rebuild_all();
 
 echo "\nNew and returning customers\n";
-$first_order  = kdna_ei_t_process( kdna_ei_t_order( array( array( 'product' => $serum, 'qty' => 1 ) ), array( 'paid' => '2026-08-01 09:00:00', 'email' => 'Repeat@Example.com' ) ) );
-$second_order = kdna_ei_t_process( kdna_ei_t_order( array( array( 'product' => $serum, 'qty' => 1 ) ), array( 'paid' => '2026-08-20 09:00:00', 'email' => 'repeat@example.com' ) ) );
+$first_order  = kdna_ei_t_process( kdna_ei_t_order( array( array( 'product' => $serum, 'qty' => 1 ) ), array( 'paid' => '2023-08-01 09:00:00', 'email' => 'Repeat@Example.com' ) ) );
+$second_order = kdna_ei_t_process( kdna_ei_t_order( array( array( 'product' => $serum, 'qty' => 1 ) ), array( 'paid' => '2023-08-20 09:00:00', 'email' => 'repeat@example.com' ) ) );
 kdna_ei_t( 'Guest email is matched regardless of capitals: first order flagged', 1 === (int) $first_order['is_first_order'] );
 $second_order = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . KDNA_EcommerceInsights_Install::table( 'order_facts' ) . ' WHERE order_id = %d', $second_order['order_id'] ), ARRAY_A );
 kdna_ei_t( 'Second order is a returning customer', 0 === (int) $second_order['is_first_order'] );
@@ -406,13 +406,13 @@ kdna_ei_t( 'Recalculate orders missing costs counts only those (' . $missing_cou
 while ( 'running' === KDNA_EcommerceInsights_Backfill::state()['status'] ) {
 	KDNA_EcommerceInsights_Backfill::run_batch();
 }
-$after_count = KDNA_EcommerceInsights_Backfill::count( 'after', '2026-09-15' );
-$state       = KDNA_EcommerceInsights_Backfill::start( 'after', array( 'after' => '2026-09-15' ) );
+$after_count = KDNA_EcommerceInsights_Backfill::count( 'after', '2023-09-15' );
+$state       = KDNA_EcommerceInsights_Backfill::start( 'after', array( 'after' => '2023-09-15' ) );
 kdna_ei_t( 'Recalculate orders after a date counts only those (' . $after_count . ')', $state['total'] === $after_count && $after_count < $total );
 kdna_ei_t( 'A second job cannot start while one is running', is_wp_error( KDNA_EcommerceInsights_Backfill::start( 'all' ) ) );
 KDNA_EcommerceInsights_Backfill::cancel();
 kdna_ei_t( 'A running job can be cancelled', 'cancelled' === KDNA_EcommerceInsights_Backfill::state()['status'] );
-kdna_ei_t( 'A bad date is refused in plain English', is_wp_error( KDNA_EcommerceInsights_Backfill::start( 'after', array( 'after' => '2026-02-30' ) ) ) );
+kdna_ei_t( 'A bad date is refused in plain English', is_wp_error( KDNA_EcommerceInsights_Backfill::start( 'after', array( 'after' => '2023-02-30' ) ) ) );
 
 /*
  * -------------------------------------------------------------------------
@@ -425,7 +425,7 @@ echo "\nLegacy order storage\n";
 $wpdb->update( $wpdb->options, array( 'option_value' => 'no' ), array( 'option_name' => 'woocommerce_custom_orders_table_enabled' ) );
 wp_cache_flush();
 kdna_ei_t( 'Storage switched to legacy for this test', ! KDNA_EcommerceInsights_Backfill::uses_hpos() );
-$legacy = kdna_ei_t_order( array( array( 'product' => $serum, 'qty' => 3 ) ), array( 'email' => 'legacy@example.com', 'paid' => '2026-09-19 09:00:00' ) );
+$legacy = kdna_ei_t_order( array( array( 'product' => $serum, 'qty' => 3 ) ), array( 'email' => 'legacy@example.com', 'paid' => '2023-09-19 09:00:00' ) );
 kdna_ei_t( 'Order is stored as a post', 'shop_order' === get_post_type( $legacy->get_id() ) );
 $f = kdna_ei_t_process( $legacy );
 kdna_ei_t_amount( 'Legacy order processed: gross sales 3 x 40', 120, $f['gross_sales'] ?? null );

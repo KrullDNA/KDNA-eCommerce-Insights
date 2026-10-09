@@ -9,8 +9,9 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * Remembers each administrator's own dashboard choices (light or dark theme,
- * Focus Mode, date range and comparison) in their user meta, so two people
- * sharing a store can each have it their way.
+ * Focus Mode, date range including custom dates, comparison and the fifth
+ * KPI on the Overview) in their user meta, so two people sharing a store
+ * can each have it their way.
  */
 class KDNA_EcommerceInsights_Preferences {
 
@@ -31,6 +32,9 @@ class KDNA_EcommerceInsights_Preferences {
 			'focus'      => false,
 			'range'      => KDNA_EcommerceInsights_Settings::get( 'general.default_range', 'this_month' ),
 			'comparison' => KDNA_EcommerceInsights_Settings::get( 'general.comparison', 'previous_period' ),
+			'start'      => '',
+			'end'        => '',
+			'kpi_fifth'  => 'average_order_value',
 		);
 	}
 
@@ -77,6 +81,21 @@ class KDNA_EcommerceInsights_Preferences {
 			'focus'      => (bool) ( $prefs['focus'] ?? false ),
 			'range'      => array_key_exists( (string) ( $prefs['range'] ?? '' ), KDNA_EcommerceInsights_Settings::range_presets() ) ? $prefs['range'] : $defaults['range'],
 			'comparison' => array_key_exists( (string) ( $prefs['comparison'] ?? '' ), KDNA_EcommerceInsights_Settings::comparison_modes() ) ? $prefs['comparison'] : $defaults['comparison'],
+			'start'      => self::date( $prefs['start'] ?? '' ),
+			'end'        => self::date( $prefs['end'] ?? '' ),
+			'kpi_fifth'  => isset( $prefs['kpi_fifth'] ) && class_exists( 'KDNA_EcommerceInsights_Metrics' ) && KDNA_EcommerceInsights_Metrics::get( (string) $prefs['kpi_fifth'] ) ? (string) $prefs['kpi_fifth'] : $defaults['kpi_fifth'],
 		);
+	}
+
+	/**
+	 * Returns a valid Y-m-d date, or an empty string.
+	 *
+	 * @param mixed $value Submitted date.
+	 * @return string
+	 */
+	private static function date( $value ): string {
+		$value = is_scalar( $value ) ? (string) $value : '';
+		$date  = DateTimeImmutable::createFromFormat( '!Y-m-d', $value );
+		return $date && $date->format( 'Y-m-d' ) === $value ? $value : '';
 	}
 }

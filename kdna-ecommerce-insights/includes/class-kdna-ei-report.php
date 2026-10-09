@@ -187,7 +187,8 @@ class KDNA_EcommerceInsights_Report {
 						COALESCE( SUM( CASE WHEN fee_source = 'estimated' THEN 1 ELSE 0 END ), 0 ) AS fee_orders,
 						COALESCE( SUM( CASE WHEN shipping_source = 'estimated' THEN 1 ELSE 0 END ), 0 ) AS shipping_orders,
 						COALESCE( SUM( missing_cost_flag ), 0 ) AS missing_cost_orders,
-						COALESCE( SUM( currency_flag ), 0 ) AS currency_flag_orders
+						COALESCE( SUM( currency_flag ), 0 ) AS currency_flag_orders,
+						COALESCE( SUM( CASE WHEN contribution_profit < 0 THEN 1 ELSE 0 END ), 0 ) AS loss_orders
 					FROM " . self::t( 'order_facts' ) . " WHERE report_date BETWEEN %s AND %s AND status IN ( $in )",
 					array_merge( array( $range['start'], $range['end'] ), $statuses )
 				),
@@ -205,6 +206,7 @@ class KDNA_EcommerceInsights_Report {
 			'has_estimates'        => ( $row['fee_orders'] ?? 0 ) + ( $row['shipping_orders'] ?? 0 ) > 0,
 			'missing_cost_orders'  => $row['missing_cost_orders'] ?? 0,
 			'currency_flag_orders' => $row['currency_flag_orders'] ?? 0,
+			'loss_orders'          => $row['loss_orders'] ?? 0,
 			'missing_costs'        => KDNA_EcommerceInsights_Cost_Catalogue::missing_count(),
 		);
 	}

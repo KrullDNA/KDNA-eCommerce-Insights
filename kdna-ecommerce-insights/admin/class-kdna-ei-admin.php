@@ -243,12 +243,16 @@ class KDNA_EcommerceInsights_Admin {
 		wp_enqueue_script( 'kdna-ei-format', KDNA_EI_URL . 'admin/js/kdna-ei-format.js', array( 'kdna-ei-router' ), $this->asset_version( 'admin/js/kdna-ei-format.js' ), true );
 		wp_enqueue_script( 'kdna-ei-app', KDNA_EI_URL . 'admin/js/kdna-ei-app.js', array( 'kdna-ei-format' ), $this->asset_version( 'admin/js/kdna-ei-app.js' ), true );
 
+		// Chart.js 4 (bundled, no CDN) and the Insights chart look.
+		wp_enqueue_script( 'kdna-ei-chartjs', KDNA_EI_URL . 'assets/vendor/chartjs/chart.umd.min.js', array(), '4.4.4', true );
+		wp_enqueue_script( 'kdna-ei-chart-theme', KDNA_EI_URL . 'assets/js/kdna-ei-chart-theme.js', array( 'kdna-ei-chartjs', 'kdna-ei-format' ), $this->asset_version( 'assets/js/kdna-ei-chart-theme.js' ), true );
+
 		// One script per built screen, each registering its Alpine component.
 		$screen_scripts = array( 'kdna-ei-app' );
-		foreach ( array( 'costs', 'cost-rules', 'overheads' ) as $screen_id ) {
+		foreach ( array( 'overview', 'costs', 'cost-rules', 'overheads', 'settings-hero' ) as $screen_id ) {
 			$path   = 'admin/js/screens/' . $screen_id . '.js';
 			$handle = 'kdna-ei-screen-' . $screen_id;
-			wp_enqueue_script( $handle, KDNA_EI_URL . $path, array( 'kdna-ei-app' ), $this->asset_version( $path ), true );
+			wp_enqueue_script( $handle, KDNA_EI_URL . $path, array( 'kdna-ei-app', 'kdna-ei-chart-theme' ), $this->asset_version( $path ), true );
 			$screen_scripts[] = $handle;
 		}
 
@@ -285,6 +289,8 @@ class KDNA_EcommerceInsights_Admin {
 				// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only switch, Administrators only.
 				'debug'        => isset( $_GET['kdna_ei_debug'] ) && '1' === $_GET['kdna_ei_debug'] && current_user_can( 'manage_options' ),
 				'status'       => KDNA_EcommerceInsights_Rest_Status::data(),
+				'hero'         => KDNA_EcommerceInsights_Settings::get( 'hero', array() ),
+				'kpiOptions'   => self::kpi_options(),
 				'currency'     => array(
 					'symbol'   => html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUOTES, 'UTF-8' ),
 					'position' => (string) get_option( 'woocommerce_currency_pos', 'left' ),
@@ -299,6 +305,18 @@ class KDNA_EcommerceInsights_Admin {
 					'exitFocus'     => __( 'Exit Focus Mode', 'kdna-ecommerce-insights' ),
 					'pageTitle'     => __( 'Insights', 'kdna-ecommerce-insights' ),
 					'requestFailed' => __( 'Something went wrong talking to the server. Please try again.', 'kdna-ecommerce-insights' ),
+					/* translators: 1: start date, 2: end date. */
+					'rangeTo'       => __( '%1$s to %2$s', 'kdna-ecommerce-insights' ),
+					'customMissing' => __( 'Choose both a start and an end date.', 'kdna-ecommerce-insights' ),
+					'customOrder'   => __( 'The end date must be on or after the start date.', 'kdna-ecommerce-insights' ),
+					/* translators: %s: number of days. */
+					'days'          => __( '%s days', 'kdna-ecommerce-insights' ),
+					'overview'      => self::overview_strings(),
+					'heroSettings'  => array(
+						'saved'       => __( 'Saved. The Overview has been updated.', 'kdna-ecommerce-insights' ),
+						'amountError' => __( 'Enter an amount of zero or more, for example 25000.', 'kdna-ecommerce-insights' ),
+						'ordersError' => __( 'Enter a whole number of orders, for example 300.', 'kdna-ecommerce-insights' ),
+					),
 					'costs'         => self::costs_strings(),
 					'jobs'          => array(
 						'all'      => __( 'Processing your orders', 'kdna-ecommerce-insights' ),
@@ -329,6 +347,119 @@ class KDNA_EcommerceInsights_Admin {
 					'overheads'     => self::overheads_strings(),
 				),
 			)
+		);
+	}
+
+	/**
+	 * Metrics that can be chosen for the fifth KPI on the Overview, as
+	 * key, label and help text. Leaves out raw tax and count lines that make
+	 * poor headline figures.
+	 *
+	 * @return array
+	 */
+	private static function kpi_options(): array {
+		$skip    = array( 'tax_collected', 'tax_refunded', 'shipping_tax', 'ad_spend_tax' );
+		$options = array();
+		foreach ( KDNA_EcommerceInsights_Metrics::describe() as $key => $metric ) {
+			if ( ! in_array( $key, $skip, true ) ) {
+				$options[] = array(
+					'key'   => $key,
+					'label' => $metric['label'],
+				);
+			}
+		}
+		return $options;
+	}
+
+	/**
+	 * Text used by the Overview screen script. %s is replaced with numbers
+	 * or names in the browser.
+	 *
+	 * @return array
+	 */
+	private static function overview_strings(): array {
+		return array(
+			'performance'          => __( 'Performance', 'kdna-ecommerce-insights' ),
+			'showSeries'           => __( 'Show on chart', 'kdna-ecommerce-insights' ),
+			'revenue'              => __( 'Revenue', 'kdna-ecommerce-insights' ),
+			'profit'               => __( 'Profit', 'kdna-ecommerce-insights' ),
+			'orders'               => __( 'Orders', 'kdna-ecommerce-insights' ),
+			'thisPeriod'           => __( 'This period', 'kdna-ecommerce-insights' ),
+			'previousPeriod'       => __( 'Previous period', 'kdna-ecommerce-insights' ),
+			'lastYear'             => __( 'Same period last year', 'kdna-ecommerce-insights' ),
+			/* translators: %s: date. */
+			'weekOf'               => __( 'Week of %s', 'kdna-ecommerce-insights' ),
+			/* translators: 1: series name, 2: total. */
+			'chartSummary'         => __( '%s over the chosen dates, %s in total.', 'kdna-ecommerce-insights' ),
+			'new'                  => __( 'New', 'kdna-ecommerce-insights' ),
+			/* translators: %s: number of percentage points. */
+			'points'               => __( '%s pts', 'kdna-ecommerce-insights' ),
+			/* translators: 1: comparison name, 2: value. */
+			'previousWas'          => __( '%s: %s', 'kdna-ecommerce-insights' ),
+			'changeMetric'         => __( 'Choose which figure to show here', 'kdna-ecommerce-insights' ),
+			'estimated'            => __( 'Est.', 'kdna-ecommerce-insights' ),
+			'estimatedHelp'        => __( 'Includes estimated payment fees or shipping costs, because some orders did not record the real amount.', 'kdna-ecommerce-insights' ),
+			'incomplete'           => __( 'Incomplete', 'kdna-ecommerce-insights' ),
+			'incompleteHelp'       => __( 'Some products sold in this period have no cost, so profit is overstated. Add the missing costs to fix this.', 'kdna-ecommerce-insights' ),
+			'inventory'            => __( 'Inventory', 'kdna-ecommerce-insights' ),
+			'viewInventory'        => __( 'View all', 'kdna-ecommerce-insights' ),
+			'inStock'              => __( 'in stock', 'kdna-ecommerce-insights' ),
+			'inStockLegend'        => __( 'In stock', 'kdna-ecommerce-insights' ),
+			'lowStock'             => __( 'Low stock', 'kdna-ecommerce-insights' ),
+			'outOfStock'           => __( 'Out of stock', 'kdna-ecommerce-insights' ),
+			'heroMenu'             => __( 'Change what this card shows', 'kdna-ecommerce-insights' ),
+			'heroShow'             => __( 'Show', 'kdna-ecommerce-insights' ),
+			'heroTypes'            => array(
+				'top_products'     => __( 'Top products', 'kdna-ecommerce-insights' ),
+				'profit_breakdown' => __( 'Profit breakdown', 'kdna-ecommerce-insights' ),
+				'goals'            => __( 'Goals tracker', 'kdna-ecommerce-insights' ),
+			),
+			'rankBy'               => __( 'Rank products by', 'kdna-ecommerce-insights' ),
+			'byProfit'             => __( 'By profit', 'kdna-ecommerce-insights' ),
+			'byRevenue'            => __( 'By revenue', 'kdna-ecommerce-insights' ),
+			/* translators: %s: number of units. */
+			'unitsSold'            => __( '%s sold', 'kdna-ecommerce-insights' ),
+			/* translators: %s: margin percentage. */
+			'marginOf'             => __( '%s margin', 'kdna-ecommerce-insights' ),
+			'noProducts'           => __( 'No products sold in this period.', 'kdna-ecommerce-insights' ),
+			'goalEmpty'            => __( 'Set a monthly target to see how this month is tracking.', 'kdna-ecommerce-insights' ),
+			'goalSet'              => __( 'Set a target', 'kdna-ecommerce-insights' ),
+			/* translators: %s: percentage. */
+			'goalProgress'         => __( '%s%% of this month\'s target reached', 'kdna-ecommerce-insights' ),
+			'goalMetrics'          => array(
+				'revenue' => __( 'of revenue target', 'kdna-ecommerce-insights' ),
+				'profit'  => __( 'of profit target', 'kdna-ecommerce-insights' ),
+				'orders'  => __( 'of orders target', 'kdna-ecommerce-insights' ),
+			),
+			'onTrack'              => __( 'On track', 'kdna-ecommerce-insights' ),
+			'behind'               => __( 'Behind pace', 'kdna-ecommerce-insights' ),
+			'soFar'                => __( 'So far this month', 'kdna-ecommerce-insights' ),
+			'target'               => __( 'Monthly target', 'kdna-ecommerce-insights' ),
+			'daysLeft'             => __( 'Days left', 'kdna-ecommerce-insights' ),
+			'perDayNeeded'         => __( 'Needed per day', 'kdna-ecommerce-insights' ),
+			'dismiss'              => __( 'Dismiss', 'kdna-ecommerce-insights' ),
+			/* translators: %s: percentage. */
+			'alertProcessing'      => __( 'Your orders are still being processed (%s%%). Figures will fill in as it finishes.', 'kdna-ecommerce-insights' ),
+			'alertMissingOne'      => __( '1 product has no cost, so profit is overstated.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: number of products. */
+			'alertMissing'         => __( '%s products have no cost, so profit is overstated.', 'kdna-ecommerce-insights' ),
+			'addCosts'             => __( 'Add costs', 'kdna-ecommerce-insights' ),
+			/* translators: 1: low stock count, 2: out of stock count. */
+			'alertStock'           => __( 'Stock needs attention: %s low and %s out of stock.', 'kdna-ecommerce-insights' ),
+			'viewStock'            => __( 'View stock', 'kdna-ecommerce-insights' ),
+			'alertLossOne'         => __( '1 order in this period lost money.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: number of orders. */
+			'alertLoss'            => __( '%s orders in this period lost money.', 'kdna-ecommerce-insights' ),
+			'viewProfit'           => __( 'See why', 'kdna-ecommerce-insights' ),
+			/* translators: %s: number of orders. */
+			'alertCurrency'        => __( '%s orders in another currency had no exchange rate, so they were counted at face value.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: number of problems. */
+			'alertErrors'          => __( '%s background tasks had problems in the last 7 days.', 'kdna-ecommerce-insights' ),
+			'viewActivity'         => __( 'View activity', 'kdna-ecommerce-insights' ),
+			'emptyTitle'           => __( 'No orders yet', 'kdna-ecommerce-insights' ),
+			'emptyText'            => __( 'Once your store takes its first order, your revenue, profit and stock figures will appear here. In the meantime, adding your product costs means profit is right from day one.', 'kdna-ecommerce-insights' ),
+			'emptyProcessingTitle' => __( 'Getting your figures ready', 'kdna-ecommerce-insights' ),
+			'emptyProcessingText'  => __( 'Insights is working through your past orders in the background. You can leave this page; it carries on without you.', 'kdna-ecommerce-insights' ),
 		);
 	}
 

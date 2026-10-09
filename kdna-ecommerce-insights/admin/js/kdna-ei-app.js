@@ -53,6 +53,25 @@
 	}
 
 	/**
+	 * Formats a Y-m-d date briefly, for example "9 Oct".
+	 *
+	 * @param {string} value Date.
+	 * @return {string}
+	 */
+	function shortDate( value ) {
+		var parts = String( value ).split( '-' );
+		var date = new Date( Number( parts[ 0 ] ), Number( parts[ 1 ] ) - 1, Number( parts[ 2 ] ) );
+		if ( isNaN( date ) ) {
+			return value;
+		}
+		var options = { day: 'numeric', month: 'short' };
+		if ( date.getFullYear() !== new Date().getFullYear() ) {
+			options.year = 'numeric';
+		}
+		return date.toLocaleDateString( config.locale || undefined, options );
+	}
+
+	/**
 	 * Turns Focus Mode on or off by adding or removing classes on the page.
 	 * The CSS then hides the WordPress menu and admin bar.
 	 *
@@ -80,6 +99,12 @@
 				range: prefs.range || 'this_month',
 				comparison: prefs.comparison || 'previous_period',
 				rangeOpen: false,
+				customOpen: false,
+				customStart: prefs.start || '',
+				customEnd: prefs.end || '',
+				rangeStart: prefs.start || '',
+				rangeEnd: prefs.end || '',
+				customError: '',
 				baseTitle: document.title,
 				status: config.status || {},
 				debug: !! config.debug,
@@ -129,7 +154,24 @@
 				 * @return {string}
 				 */
 				get rangeLabel() {
+					if ( this.range === 'custom' && this.rangeStart && this.rangeEnd ) {
+						return ( i18n.rangeTo || '%1$s to %2$s' ).replace( '%1$s', shortDate( this.rangeStart ) ).replace( '%2$s', shortDate( this.rangeEnd ) );
+					}
 					return this.ranges[ this.range ] || '';
+				},
+
+				/**
+				 * The current range as query parameters for report routes.
+				 *
+				 * @return {Object}
+				 */
+				get rangeQuery() {
+					var query = { preset: this.range, compare: this.comparison };
+					if ( this.range === 'custom' ) {
+						query.start = this.rangeStart;
+						query.end = this.rangeEnd;
+					}
+					return query;
 				},
 
 				/**
@@ -192,6 +234,7 @@
 				 */
 				toggleRangeMenu: function () {
 					this.rangeOpen = ! this.rangeOpen;
+					this.customOpen = this.rangeOpen && this.range === 'custom';
 				},
 
 				/**
@@ -211,10 +254,50 @@
 				 * @param {string} key Preset key such as 'this_month'.
 				 */
 				selectRange: function ( key ) {
+					// Custom opens the two date fields; it applies on Apply.
+					if ( key === 'custom' ) {
+						this.customOpen = true;
+						this.customError = '';
+						return;
+					}
 					this.range = key;
 					this.rangeOpen = false;
+					this.customOpen = false;
 					savePreferences( { range: key } );
-					broadcast( 'kdna:ei-range-change', { range: this.range, comparison: this.comparison } );
+					this.announceRange();
+				},
+
+				/**
+				 * Applies a custom date range after checking both dates.
+				 */
+				applyCustom: function () {
+					if ( ! this.customStart || ! this.customEnd ) {
+						this.customError = i18n.customMissing || '';
+						return;
+					}
+					if ( this.customEnd < this.customStart ) {
+						this.customError = i18n.customOrder || '';
+						return;
+					}
+					this.range = 'custom';
+					this.rangeStart = this.customStart;
+					this.rangeEnd = this.customEnd;
+					this.rangeOpen = false;
+					this.customOpen = false;
+					savePreferences( { range: 'custom', start: this.rangeStart, end: this.rangeEnd } );
+					this.announceRange();
+				},
+
+				/**
+				 * Tells every panel (and, from Stage 13, every widget) the range changed.
+				 */
+				announceRange: function () {
+					broadcast( 'kdna:ei-range-change', {
+						range: this.range,
+						comparison: this.comparison,
+						start: this.rangeStart,
+						end: this.rangeEnd,
+					} );
 				},
 
 				/*
@@ -394,7 +477,7 @@
 				selectComparison: function ( key ) {
 					this.comparison = key;
 					savePreferences( { comparison: key } );
-					broadcast( 'kdna:ei-range-change', { range: this.range, comparison: this.comparison } );
+					this.announceRange();
 				},
 			};
 		} );

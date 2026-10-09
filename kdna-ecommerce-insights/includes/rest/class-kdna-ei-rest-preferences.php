@@ -48,6 +48,17 @@ class KDNA_EcommerceInsights_Rest_Preferences {
 							'type' => 'string',
 							'enum' => array_keys( KDNA_EcommerceInsights_Settings::comparison_modes() ),
 						),
+						'start'      => array(
+							'type'    => 'string',
+							'pattern' => '^(\d{4}-\d{2}-\d{2})?$',
+						),
+						'end'        => array(
+							'type'    => 'string',
+							'pattern' => '^(\d{4}-\d{2}-\d{2})?$',
+						),
+						'kpi_fifth'  => array(
+							'type' => 'string',
+						),
 					),
 				),
 			)
@@ -82,7 +93,7 @@ class KDNA_EcommerceInsights_Rest_Preferences {
 	public function update_preferences( WP_REST_Request $request ): WP_REST_Response {
 		$changes = array();
 
-		foreach ( array( 'theme', 'focus', 'range', 'comparison' ) as $key ) {
+		foreach ( array( 'theme', 'focus', 'range', 'comparison', 'start', 'end', 'kpi_fifth' ) as $key ) {
 			if ( null !== $request->get_param( $key ) ) {
 				$changes[ $key ] = $request->get_param( $key );
 			}

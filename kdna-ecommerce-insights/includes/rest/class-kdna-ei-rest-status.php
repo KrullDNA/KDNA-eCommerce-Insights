@@ -63,6 +63,7 @@ class KDNA_EcommerceInsights_Rest_Status {
 
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$counts = $wpdb->get_row( "SELECT COUNT(*) AS processed, SUM( missing_cost_flag ) AS missing, SUM( currency_flag ) AS currency FROM {$facts}", ARRAY_A );
+		$errors = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . KDNA_EcommerceInsights_Install::table( 'sync_log' ) . " WHERE status = 'error' AND finished_at >= %s", gmdate( 'Y-m-d H:i:s', time() - 7 * DAY_IN_SECONDS ) ) );
 		// phpcs:enable
 
 		return array(
@@ -74,6 +75,7 @@ class KDNA_EcommerceInsights_Rest_Status {
 			'orders_currency_flag'   => (int) ( $counts['currency'] ?? 0 ),
 			'order_storage'          => KDNA_EcommerceInsights_Backfill::uses_hpos() ? 'hpos' : 'legacy',
 			'recent_log'             => KDNA_EcommerceInsights_Log::recent( 8 ),
+			'sync_errors'            => $errors,
 		);
 	}
 }

@@ -138,11 +138,13 @@ abstract class KDNA_EcommerceInsights_Rest_Report_Base {
 		if ( ! $request['preset'] && $request['start'] && $request['end'] ) {
 			$preset = 'custom';
 		}
-		if ( 'custom' === $preset && ( ! $request['start'] || ! $request['end'] ) ) {
+		$start = $request['start'] ? (string) $request['start'] : (string) $prefs['start'];
+		$end   = $request['end'] ? (string) $request['end'] : (string) $prefs['end'];
+		if ( 'custom' === $preset && ( ! $start || ! $end ) ) {
 			$preset = 'this_month';
 		}
 
-		$range = KDNA_EcommerceInsights_Dates::resolve( $preset, $request['start'], $request['end'] );
+		$range = KDNA_EcommerceInsights_Dates::resolve( $preset, $start, $end );
 		if ( is_wp_error( $range ) ) {
 			return $range;
 		}

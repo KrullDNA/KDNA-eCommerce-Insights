@@ -114,10 +114,71 @@
 		return /^-?\d*\.?\d+$/.test( value ) ? Number( value ) : NaN;
 	}
 
+	/**
+	 * Shortens a big number for chart axes, for example 30000 becomes "30K"
+	 * and 1500000 becomes "1.5M", like the reference design.
+	 *
+	 * @param {number} value Number.
+	 * @return {string}
+	 */
+	function compact( value ) {
+		var abs = Math.abs( Number( value ) );
+		var sign = Number( value ) < 0 ? '-' : '';
+		if ( abs >= 1000000 ) {
+			return sign + trimZero( abs / 1000000 ) + 'M';
+		}
+		if ( abs >= 1000 ) {
+			return sign + trimZero( abs / 1000 ) + 'K';
+		}
+		return sign + trimZero( abs );
+	}
+
+	/**
+	 * Rounds to one decimal place and drops a trailing ".0".
+	 *
+	 * @param {number} value Number.
+	 * @return {string}
+	 */
+	function trimZero( value ) {
+		var text = ( Math.round( value * 10 ) / 10 ).toFixed( 1 );
+		text = text.replace( /\.0$/, '' );
+		return currency.decimal === '.' ? text : text.replace( '.', currency.decimal );
+	}
+
+	/**
+	 * Formats a metric value by its format from the metric registry:
+	 * currency, number, percent, ratio (3.2x) or days. Large money amounts
+	 * drop the cents, like the reference design.
+	 *
+	 * @param {number|null} value    Value.
+	 * @param {string}      kind     Format.
+	 * @param {number|null} decimals Decimal places for numbers.
+	 * @return {string}
+	 */
+	function metric( value, kind, decimals ) {
+		if ( value === null || value === undefined || isNaN( Number( value ) ) ) {
+			return '\u2013';
+		}
+		switch ( kind ) {
+			case 'currency':
+				return money( value, Math.abs( value ) >= 1000 ? 0 : currency.decimals );
+			case 'percent':
+				return percent( value );
+			case 'ratio':
+				return number( value, 2 ) + 'x';
+			case 'days':
+				return ( config.i18n && config.i18n.days ? config.i18n.days : '%s days' ).replace( '%s', number( value, 0 ) );
+			default:
+				return number( value, decimals || 0 );
+		}
+	}
+
 	window.KDNAEI.format = {
 		number: number,
 		money: money,
 		percent: percent,
+		compact: compact,
+		metric: metric,
 		inputAmount: inputAmount,
 		parseAmount: parseAmount,
 	};

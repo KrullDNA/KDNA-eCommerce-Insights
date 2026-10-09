@@ -20,7 +20,7 @@ $kdna_ei_settings_tabs = array(
 	'data'      => __( 'Data', 'kdna-ecommerce-insights' ),
 );
 ?>
-<div class="kdna-ei-settings" x-data="{ settingsTab: 'data', confirmRebuild: false }">
+<div class="kdna-ei-settings" x-data="{ settingsTab: 'data', confirmRebuild: false }" @kdna:ei-settings-tab.window="settingsTab = $event.detail">
 	<nav class="kdna-ei-card kdna-ei-settings__nav" aria-label="<?php esc_attr_e( 'Settings tabs', 'kdna-ecommerce-insights' ); ?>">
 		<?php foreach ( $kdna_ei_settings_tabs as $kdna_ei_key => $kdna_ei_label ) : ?>
 			<button
@@ -35,7 +35,7 @@ $kdna_ei_settings_tabs = array(
 
 	<div class="kdna-ei-settings__panel">
 		<?php // Tabs still to be built show placeholders. ?>
-		<div class="kdna-ei-card" x-show="settingsTab !== 'data'" x-cloak aria-hidden="true">
+		<div class="kdna-ei-card" x-show="settingsTab !== 'data' && settingsTab !== 'hero'" x-cloak aria-hidden="true">
 			<div class="kdna-ei-card__header"><span class="kdna-ei-skeleton kdna-ei-skeleton--title"></span></div>
 			<?php for ( $kdna_ei_i = 0; $kdna_ei_i < 5; $kdna_ei_i++ ) : ?>
 				<div class="kdna-ei-skel-field">
@@ -47,6 +47,80 @@ $kdna_ei_settings_tabs = array(
 				</div>
 			<?php endfor; ?>
 		</div>
+
+		<?php // Hero card and Goals tab (section 8.1). ?>
+		<section class="kdna-ei-card kdna-ei-hero-settings" x-show="settingsTab === 'hero'" x-cloak x-data="kdnaEiHeroSettings">
+			<div class="kdna-ei-card__header">
+				<div>
+					<h2 class="kdna-ei-card__title"><?php esc_html_e( 'Hero card', 'kdna-ecommerce-insights' ); ?></h2>
+					<p class="kdna-ei-card__subtitle"><?php esc_html_e( 'The large card on the right of the Overview. Choose what it shows for everyone who uses Insights.', 'kdna-ecommerce-insights' ); ?></p>
+				</div>
+			</div>
+
+			<fieldset class="kdna-ei-choice-list">
+				<legend class="kdna-ei-visually-hidden"><?php esc_html_e( 'Hero card', 'kdna-ecommerce-insights' ); ?></legend>
+				<?php
+				$kdna_ei_hero_types = array(
+					'top_products'     => array( __( 'Top products', 'kdna-ecommerce-insights' ), __( 'Your five best sellers for the chosen dates, ranked by profit or revenue, with their margin.', 'kdna-ecommerce-insights' ) ),
+					'profit_breakdown' => array( __( 'Profit breakdown', 'kdna-ecommerce-insights' ), __( 'How net revenue turns into net profit: product costs, fees, shipping, extra costs, ads and overheads.', 'kdna-ecommerce-insights' ) ),
+					'goals'            => array( __( 'Goals tracker', 'kdna-ecommerce-insights' ), __( 'Progress towards a monthly target, whether you are on track and what is needed each day.', 'kdna-ecommerce-insights' ) ),
+				);
+				foreach ( $kdna_ei_hero_types as $kdna_ei_key => $kdna_ei_type ) :
+					?>
+					<label class="kdna-ei-choice" :class="{ 'is-selected': form.type === '<?php echo esc_js( $kdna_ei_key ); ?>' }">
+						<input type="radio" name="kdna-ei-hero-type" value="<?php echo esc_attr( $kdna_ei_key ); ?>" x-model="form.type" />
+						<span class="kdna-ei-choice__text">
+							<span class="kdna-ei-choice__label"><?php echo esc_html( $kdna_ei_type[0] ); ?></span>
+							<span class="kdna-ei-muted"><?php echo esc_html( $kdna_ei_type[1] ); ?></span>
+						</span>
+					</label>
+				<?php endforeach; ?>
+			</fieldset>
+
+			<h3 class="kdna-ei-card__title kdna-ei-hero-settings__heading"><?php esc_html_e( 'Monthly goals', 'kdna-ecommerce-insights' ); ?></h3>
+			<p class="kdna-ei-card__subtitle"><?php esc_html_e( 'Targets for each calendar month. The Goals tracker follows the one you choose to track.', 'kdna-ecommerce-insights' ); ?></p>
+
+			<div class="kdna-ei-hero-settings__grid">
+				<label>
+					<span class="kdna-ei-field-label"><?php esc_html_e( 'Track', 'kdna-ecommerce-insights' ); ?></span>
+					<select class="kdna-ei-select" x-model="form.goal_metric">
+						<option value="revenue"><?php esc_html_e( 'Net revenue', 'kdna-ecommerce-insights' ); ?></option>
+						<option value="profit"><?php esc_html_e( 'Net profit', 'kdna-ecommerce-insights' ); ?></option>
+						<option value="orders"><?php esc_html_e( 'Orders', 'kdna-ecommerce-insights' ); ?></option>
+					</select>
+				</label>
+				<div>
+					<span class="kdna-ei-field-label"><?php esc_html_e( 'Revenue target', 'kdna-ecommerce-insights' ); ?></span>
+					<label class="kdna-ei-affix kdna-ei-affix--before" :class="{ 'is-invalid': errors.revenue }">
+						<span class="kdna-ei-visually-hidden"><?php esc_html_e( 'Monthly revenue target', 'kdna-ecommerce-insights' ); ?></span>
+						<span class="kdna-ei-affix__before" aria-hidden="true" x-text="symbol"></span>
+						<input type="text" inputmode="decimal" class="kdna-ei-input" placeholder="0" x-model="form.revenue" />
+					</label>
+					<p class="kdna-ei-field-error" x-show="errors.revenue" x-text="errors.revenue"></p>
+				</div>
+				<div>
+					<span class="kdna-ei-field-label"><?php esc_html_e( 'Profit target', 'kdna-ecommerce-insights' ); ?></span>
+					<label class="kdna-ei-affix kdna-ei-affix--before" :class="{ 'is-invalid': errors.profit }">
+						<span class="kdna-ei-visually-hidden"><?php esc_html_e( 'Monthly profit target', 'kdna-ecommerce-insights' ); ?></span>
+						<span class="kdna-ei-affix__before" aria-hidden="true" x-text="symbol"></span>
+						<input type="text" inputmode="decimal" class="kdna-ei-input" placeholder="0" x-model="form.profit" />
+					</label>
+					<p class="kdna-ei-field-error" x-show="errors.profit" x-text="errors.profit"></p>
+				</div>
+				<div>
+					<label>
+						<span class="kdna-ei-field-label"><?php esc_html_e( 'Orders target', 'kdna-ecommerce-insights' ); ?></span>
+						<input type="text" inputmode="numeric" class="kdna-ei-input" :class="{ 'is-invalid': errors.orders }" placeholder="0" x-model="form.orders" />
+					</label>
+					<p class="kdna-ei-field-error" x-show="errors.orders" x-text="errors.orders"></p>
+				</div>
+			</div>
+
+			<div class="kdna-ei-card__footer">
+				<p class="kdna-ei-muted" role="status" x-text="message"></p>
+				<button type="button" class="kdna-ei-btn kdna-ei-btn--primary" @click="save()" :disabled="saving"><?php esc_html_e( 'Save hero card and goals', 'kdna-ecommerce-insights' ); ?></button>
+			</div>
+		</section>
 
 		<?php // Data tab. ?>
 		<div class="kdna-ei-stack" x-show="settingsTab === 'data'">

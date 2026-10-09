@@ -16,9 +16,6 @@
 
 defined( 'ABSPATH' ) || exit;
 
-// The custom range needs the calendar picker, which arrives with the Overview screen build.
-unset( $ranges['custom'] );
-
 $comparisons   = KDNA_EcommerceInsights_Settings::comparison_modes();
 $first_screen  = (string) array_key_first( $screens );
 $current_label = $screens[ $first_screen ]['label'] ?? '';
@@ -92,6 +89,7 @@ $layouts       = array( 'overview', 'report', 'table', 'settings' );
 						aria-controls="kdna-ei-range-menu"
 						@click="toggleRangeMenu()"
 					>
+						<?php KDNA_EcommerceInsights_Admin::icon( 'calendar', 'kdna-ei-icon--sm kdna-ei-dropdown__lead' ); ?>
 						<span x-text="rangeLabel"><?php echo esc_html( $ranges[ $prefs['range'] ] ?? '' ); ?></span>
 						<?php KDNA_EcommerceInsights_Admin::icon( 'chevron-down' ); ?>
 					</button>
@@ -111,6 +109,20 @@ $layouts       = array( 'overview', 'report', 'table', 'settings' );
 									<?php KDNA_EcommerceInsights_Admin::icon( 'check' ); ?>
 								</button>
 							<?php endforeach; ?>
+
+							<?php // Custom range: two dates and Apply. ?>
+							<div class="kdna-ei-custom-range" x-show="customOpen" x-cloak>
+								<label>
+									<span class="kdna-ei-field-label"><?php esc_html_e( 'From', 'kdna-ecommerce-insights' ); ?></span>
+									<input type="date" class="kdna-ei-input" x-model="customStart" :max="customEnd || undefined" />
+								</label>
+								<label>
+									<span class="kdna-ei-field-label"><?php esc_html_e( 'To', 'kdna-ecommerce-insights' ); ?></span>
+									<input type="date" class="kdna-ei-input" x-model="customEnd" :min="customStart || undefined" />
+								</label>
+								<p class="kdna-ei-field-error" x-show="customError" x-text="customError"></p>
+								<button type="button" class="kdna-ei-btn kdna-ei-btn--primary" @click="applyCustom()"><?php esc_html_e( 'Apply', 'kdna-ecommerce-insights' ); ?></button>
+							</div>
 						</div>
 
 						<div class="kdna-ei-dropdown__group" role="group" aria-labelledby="kdna-ei-compare-heading">

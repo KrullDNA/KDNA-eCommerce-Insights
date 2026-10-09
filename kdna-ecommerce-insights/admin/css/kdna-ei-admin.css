@@ -847,3 +847,717 @@ body.kdna-ei-focus .kdna-ei-savebar {
 		border-radius: var(--kdna-ei-radius-md);
 	}
 }
+
+/* ==========================================================================
+   Date range dropdown: calendar icon and custom dates
+   ========================================================================== */
+
+.kdna-ei-dropdown__lead {
+	flex: none;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-custom-range {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 10px;
+	padding: 10px 10px 6px;
+}
+
+.kdna-ei-custom-range label {
+	display: grid;
+	gap: 6px;
+}
+
+.kdna-ei-custom-range .kdna-ei-input {
+	width: 100%;
+	min-width: 0;
+}
+
+.kdna-ei-custom-range .kdna-ei-field-error,
+.kdna-ei-custom-range .kdna-ei-btn {
+	grid-column: 1 / -1;
+}
+
+/* ==========================================================================
+   Overview screen (section 8): laid out like the reference design
+   ========================================================================== */
+
+.kdna-ei-screen--overview {
+	display: block;
+}
+
+.kdna-ei-overview__grid {
+	display: grid;
+	gap: var(--kdna-ei-gap);
+	grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr);
+	grid-template-areas:
+		"alerts alerts"
+		"kpis kpis"
+		"chart hero"
+		"inventory hero";
+}
+
+.kdna-ei-area-alerts { grid-area: alerts; }
+
+@media (max-width: 1100px) {
+	.kdna-ei-overview__grid {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-areas:
+			"alerts"
+			"kpis"
+			"chart"
+			"hero"
+			"inventory";
+	}
+}
+
+/* Alerts strip: slim rows with a tinted icon, text, action and close. */
+.kdna-ei-alerts {
+	display: grid;
+	gap: 8px;
+}
+
+.kdna-ei-alert {
+	--kdna-ei-alert-tone: var(--kdna-ei-accent);
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 10px 12px 10px 14px;
+	font-size: var(--kdna-ei-fs-body);
+	color: var(--kdna-ei-text);
+	background: color-mix(in srgb, var(--kdna-ei-alert-tone) 9%, var(--kdna-ei-surface));
+	border: 1px solid color-mix(in srgb, var(--kdna-ei-alert-tone) 22%, transparent);
+	border-radius: var(--kdna-ei-radius-md);
+	animation: kdna-ei-fade-up var(--kdna-ei-duration) var(--kdna-ei-ease) both;
+}
+
+.kdna-ei-alert--warning { --kdna-ei-alert-tone: var(--kdna-ei-warning); }
+.kdna-ei-alert--negative { --kdna-ei-alert-tone: var(--kdna-ei-negative); }
+.kdna-ei-alert--positive { --kdna-ei-alert-tone: var(--kdna-ei-positive); }
+
+.kdna-ei-alert__icon {
+	display: grid;
+	place-items: center;
+	flex: none;
+	width: 28px;
+	height: 28px;
+	color: var(--kdna-ei-alert-tone);
+	background: color-mix(in srgb, var(--kdna-ei-alert-tone) 16%, transparent);
+	border-radius: 50%;
+}
+
+.kdna-ei-alert__text {
+	flex: 1;
+	min-width: 0;
+}
+
+.kdna-ei-root .kdna-ei-alert__close {
+	flex: none;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	font-size: 18px;
+	line-height: 1;
+	color: var(--kdna-ei-text-muted);
+	background: transparent;
+	border: 0;
+	border-radius: 50%;
+	cursor: pointer;
+}
+
+.kdna-ei-root .kdna-ei-alert__close:hover {
+	color: var(--kdna-ei-text);
+	background: var(--kdna-ei-surface-raised);
+}
+
+@keyframes kdna-ei-fade-up {
+	from { opacity: 0; transform: translateY(4px); }
+	to { opacity: 1; transform: none; }
+}
+
+/* KPI strip extras: the fifth KPI picker and the estimate marker. */
+.kdna-ei-kpi__label-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+}
+
+.kdna-ei-root .kdna-ei-kpi__label--button {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	max-width: 100%;
+	padding: 0;
+	font: inherit;
+	font-size: var(--kdna-ei-fs-label);
+	color: var(--kdna-ei-text-muted);
+	background: none;
+	border: 0;
+	cursor: pointer;
+}
+
+.kdna-ei-root .kdna-ei-kpi__label--button:hover {
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-kpi__label--button > span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.kdna-ei-kpi__menu {
+	max-height: 340px;
+	overflow-y: auto;
+}
+
+.kdna-ei-estimate {
+	display: inline-grid;
+	place-items: center;
+	flex: none;
+	width: 18px;
+	height: 18px;
+	color: var(--kdna-ei-warning);
+	border-radius: 50%;
+	cursor: help;
+}
+
+.kdna-ei-estimate .kdna-ei-icon {
+	width: 16px;
+	height: 16px;
+}
+
+.kdna-ei-estimate:focus-visible {
+	outline: none;
+	box-shadow: var(--kdna-ei-focus-ring);
+}
+
+/* The first KPI has no divider (templates come first in the markup). */
+.kdna-ei-overview .kdna-ei-kpi:first-of-type {
+	border-left: 0;
+}
+
+.kdna-ei-overview .kdna-ei-legend th {
+	font-size: var(--kdna-ei-fs-body);
+	font-weight: 400;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-rank__thumb {
+	display: grid;
+	place-items: center;
+	color: var(--kdna-ei-text-muted);
+}
+
+/* Performance chart. */
+.kdna-ei-performance__controls {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 12px 24px;
+}
+
+.kdna-ei-chart-legend {
+	display: flex;
+	gap: 20px;
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-chart-legend__item {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.kdna-ei-chart-legend__dot {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: var(--kdna-ei-accent);
+}
+
+.kdna-ei-chart-legend__dot--compare {
+	background: var(--kdna-ei-accent-2);
+}
+
+.kdna-ei-segmented {
+	display: inline-flex;
+	padding: 3px;
+	background: var(--kdna-ei-bg);
+	border: 1px solid var(--kdna-ei-border);
+	border-radius: var(--kdna-ei-radius-pill);
+}
+
+.kdna-ei-root .kdna-ei-segmented__item {
+	height: 28px;
+	padding: 0 12px;
+	font: inherit;
+	font-size: var(--kdna-ei-fs-small);
+	font-weight: 500;
+	color: var(--kdna-ei-text-muted);
+	background: transparent;
+	border: 0;
+	border-radius: var(--kdna-ei-radius-pill);
+	cursor: pointer;
+	transition: background-color var(--kdna-ei-duration-fast) ease, color var(--kdna-ei-duration-fast) ease;
+}
+
+.kdna-ei-root .kdna-ei-segmented__item:hover {
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-root .kdna-ei-segmented__item[aria-pressed="true"] {
+	color: var(--kdna-ei-text);
+	background: var(--kdna-ei-surface-raised);
+}
+
+.kdna-ei-chart {
+	position: relative;
+	height: 260px;
+}
+
+.kdna-ei-chart canvas {
+	display: block;
+	width: 100% !important;
+	height: 100% !important;
+}
+
+.kdna-ei-chart__skeleton {
+	position: absolute;
+	inset: 0;
+	height: auto;
+}
+
+/* Chart tooltip card (drawn by kdna-ei-chart-theme.js). */
+.kdna-ei-tooltip {
+	position: absolute;
+	z-index: 20;
+	min-width: 180px;
+	padding: 12px 14px;
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-text);
+	background: var(--kdna-ei-surface-raised);
+	border: 1px solid var(--kdna-ei-border-strong);
+	border-radius: var(--kdna-ei-radius-md);
+	box-shadow: var(--kdna-ei-popover-shadow);
+	pointer-events: none;
+	transition: opacity var(--kdna-ei-duration-fast) ease, transform var(--kdna-ei-duration-fast) ease;
+}
+
+.kdna-ei-tooltip__title {
+	margin-bottom: 8px;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-tooltip__row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.kdna-ei-tooltip__row + .kdna-ei-tooltip__row {
+	margin-top: 6px;
+}
+
+.kdna-ei-tooltip__dot {
+	flex: none;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+}
+
+.kdna-ei-tooltip__label {
+	flex: 1;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-tooltip__value {
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+
+.kdna-ei-tooltip__footer {
+	margin-top: 10px;
+	padding-top: 8px;
+	font-weight: 600;
+	border-top: 1px solid var(--kdna-ei-border);
+}
+
+.kdna-ei-tooltip__footer.is-good { color: var(--kdna-ei-positive); }
+.kdna-ei-tooltip__footer.is-bad { color: var(--kdna-ei-negative); }
+
+/* Inventory donut with the number in the middle. */
+.kdna-ei-donut-row {
+	display: grid;
+	grid-template-columns: 170px minmax(0, 1fr);
+	align-items: center;
+	gap: 40px;
+}
+
+.kdna-ei-donut {
+	position: relative;
+	width: 170px;
+	height: 170px;
+}
+
+.kdna-ei-donut__centre {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-content: center;
+	text-align: center;
+	pointer-events: none;
+}
+
+.kdna-ei-donut__number {
+	font-size: var(--kdna-ei-fs-kpi);
+	font-weight: var(--kdna-ei-fw-kpi);
+	line-height: 1.1;
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-donut__label {
+	font-size: var(--kdna-ei-fs-label);
+	color: var(--kdna-ei-text-muted);
+}
+
+@media (max-width: 600px) {
+	.kdna-ei-donut-row {
+		grid-template-columns: minmax(0, 1fr);
+		justify-items: center;
+		gap: 20px;
+	}
+}
+
+/* Hero card. */
+.kdna-ei-hero {
+	display: flex;
+	flex-direction: column;
+}
+
+.kdna-ei-root .kdna-ei-btn--ghost {
+	height: 32px;
+	width: 32px;
+	border-color: transparent;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-root .kdna-ei-btn--ghost:hover {
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-skel-row {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+}
+
+.kdna-ei-skel-row + .kdna-ei-skel-row {
+	margin-top: 18px;
+}
+
+.kdna-ei-tabs--small {
+	margin-bottom: 18px;
+}
+
+.kdna-ei-tabs--small .kdna-ei-tab {
+	height: 28px;
+	padding: 0 12px;
+	font-size: var(--kdna-ei-fs-small);
+}
+
+/* Top products: ranked list with thumbnail and margin bar. */
+.kdna-ei-root .kdna-ei-rank {
+	display: grid;
+	gap: 18px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.kdna-ei-rank__item {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	margin: 0;
+	animation: kdna-ei-fade-up var(--kdna-ei-duration) var(--kdna-ei-ease) both;
+}
+
+.kdna-ei-rank__item:nth-child(2) { animation-delay: 40ms; }
+.kdna-ei-rank__item:nth-child(3) { animation-delay: 80ms; }
+.kdna-ei-rank__item:nth-child(4) { animation-delay: 120ms; }
+.kdna-ei-rank__item:nth-child(5) { animation-delay: 160ms; }
+
+.kdna-ei-rank__thumb {
+	width: 48px;
+	height: 48px;
+	flex: none;
+}
+
+.kdna-ei-rank__body {
+	display: grid;
+	gap: 4px;
+	flex: 1;
+	min-width: 0;
+}
+
+.kdna-ei-rank__top,
+.kdna-ei-rank__meta {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.kdna-ei-rank__name {
+	overflow: hidden;
+	font-weight: 500;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.kdna-ei-rank__amount {
+	flex: none;
+	font-weight: 600;
+}
+
+.kdna-ei-rank__meta {
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-bar {
+	display: block;
+	height: 4px;
+	margin-top: 4px;
+	overflow: hidden;
+	background: var(--kdna-ei-surface-raised);
+	border-radius: var(--kdna-ei-radius-pill);
+}
+
+.kdna-ei-bar__fill {
+	display: block;
+	height: 100%;
+	background: var(--kdna-ei-positive);
+	border-radius: inherit;
+	transform-origin: left;
+	animation: kdna-ei-grow var(--kdna-ei-duration) var(--kdna-ei-ease) both;
+}
+
+.kdna-ei-bar__fill.is-negative {
+	background: var(--kdna-ei-negative);
+}
+
+@keyframes kdna-ei-grow {
+	from { transform: scaleX(0); }
+	to { transform: scaleX(1); }
+}
+
+/* Profit breakdown: horizontal waterfall from net revenue to net profit. */
+.kdna-ei-waterfall {
+	display: grid;
+	gap: 14px;
+}
+
+.kdna-ei-waterfall__row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: 6px 12px;
+	font-size: var(--kdna-ei-fs-body);
+}
+
+.kdna-ei-waterfall__label {
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-waterfall__row.is-total .kdna-ei-waterfall__label {
+	font-weight: 600;
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-waterfall__amount {
+	font-weight: 600;
+	text-align: right;
+}
+
+.kdna-ei-waterfall__amount.is-negative {
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-waterfall__track {
+	position: relative;
+	grid-column: 1 / -1;
+	height: 8px;
+	background: var(--kdna-ei-surface-raised);
+	border-radius: var(--kdna-ei-radius-pill);
+}
+
+.kdna-ei-waterfall__bar {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	background: var(--kdna-ei-negative);
+	border-radius: inherit;
+	transform-origin: left;
+	animation: kdna-ei-grow var(--kdna-ei-duration) var(--kdna-ei-ease) both;
+}
+
+.kdna-ei-waterfall__row.is-total .kdna-ei-waterfall__bar {
+	background: var(--kdna-ei-accent);
+}
+
+.kdna-ei-waterfall__row:last-child .kdna-ei-waterfall__bar {
+	background: var(--kdna-ei-positive);
+}
+
+/* Goals tracker: progress ring and four facts. */
+.kdna-ei-goal__body {
+	display: grid;
+	justify-items: center;
+	gap: 18px;
+}
+
+.kdna-ei-goal__empty {
+	display: grid;
+	justify-items: start;
+	gap: 14px;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-ring {
+	position: relative;
+	width: 200px;
+	height: 200px;
+}
+
+.kdna-ei-ring svg {
+	width: 100%;
+	height: 100%;
+	transform: rotate(-90deg);
+}
+
+.kdna-ei-ring circle {
+	fill: none;
+	stroke-width: 10;
+}
+
+.kdna-ei-ring__track {
+	stroke: var(--kdna-ei-surface-raised);
+}
+
+.kdna-ei-ring__fill {
+	stroke: var(--kdna-ei-accent);
+	stroke-linecap: round;
+	stroke-dasharray: 326.73;
+	transition: stroke-dashoffset 900ms var(--kdna-ei-ease);
+}
+
+.kdna-ei-ring__fill.is-behind {
+	stroke: var(--kdna-ei-warning);
+}
+
+.kdna-ei-ring__centre {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-content: center;
+	text-align: center;
+}
+
+.kdna-ei-ring__percent {
+	font-size: 36px;
+	font-weight: var(--kdna-ei-fw-kpi);
+	line-height: 1.1;
+}
+
+.kdna-ei-ring__label {
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-root .kdna-ei-goal__facts {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 16px 24px;
+	width: 100%;
+	margin: 0;
+}
+
+.kdna-ei-goal__facts dt {
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-root .kdna-ei-goal__facts dd {
+	margin: 2px 0 0;
+	font-size: 18px;
+	font-weight: 600;
+}
+
+/* Empty state: a store with no orders yet. */
+.kdna-ei-empty-state {
+	display: grid;
+	justify-items: center;
+	gap: 12px;
+	max-width: 560px;
+	margin: 40px auto;
+	padding: 48px 32px;
+	text-align: center;
+}
+
+.kdna-ei-empty-state__icon {
+	display: grid;
+	place-items: center;
+	width: 64px;
+	height: 64px;
+	color: var(--kdna-ei-accent);
+	background: color-mix(in srgb, var(--kdna-ei-accent) 14%, transparent);
+	border-radius: 50%;
+}
+
+.kdna-ei-overview > .kdna-ei-notice {
+	margin-top: var(--kdna-ei-gap);
+}
+
+/* Reduced motion: no count-ups, draw-ins or slide-ins. */
+@media (prefers-reduced-motion: reduce) {
+	.kdna-ei-alert,
+	.kdna-ei-rank__item,
+	.kdna-ei-bar__fill,
+	.kdna-ei-waterfall__bar {
+		animation: none;
+	}
+
+	.kdna-ei-ring__fill,
+	.kdna-ei-tooltip {
+		transition: none;
+	}
+}
+
+/* Settings > Hero card and Goals. */
+.kdna-ei-hero-settings__heading {
+	margin-top: 32px;
+}
+
+.kdna-ei-hero-settings__grid {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 16px;
+	margin-top: 16px;
+}
+
+.kdna-ei-hero-settings__grid .kdna-ei-select,
+.kdna-ei-hero-settings__grid .kdna-ei-input {
+	width: 100%;
+}
+
+@media (max-width: 900px) {
+	.kdna-ei-hero-settings__grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}

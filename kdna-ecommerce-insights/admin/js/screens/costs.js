@@ -95,10 +95,14 @@
 				},
 
 				/**
-				 * Sets up the screen: warns before leaving with unsaved changes.
+				 * Sets up the screen: warns before leaving with unsaved changes, and
+				 * listens for the Overview's "Add costs" alert.
 				 */
 				init: function () {
 					var self = this;
+					window.addEventListener( 'kdna:ei-costs-show-missing', function () {
+						self.showMissing();
+					} );
 					window.addEventListener( 'beforeunload', function ( event ) {
 						if ( self.dirtyCount > 0 ) {
 							event.preventDefault();

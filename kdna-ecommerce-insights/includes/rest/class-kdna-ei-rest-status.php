@@ -8,8 +8,8 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Tells the dashboard what needs attention. Stage 2 reports missing product
- * costs. Later stages add background processing progress, sync times and alerts.
+ * Tells the dashboard what needs attention: missing product costs and the
+ * progress of order processing. Later stages add sync times and alerts.
  *
  * Route: GET /wp-json/kdna-ei/v1/status (Administrators only).
  */
@@ -53,6 +53,8 @@ class KDNA_EcommerceInsights_Rest_Status {
 	 * @return WP_REST_Response
 	 */
 	public function get_status(): WP_REST_Response {
+		// Checking the status also nudges a stalled job back into life.
+		KDNA_EcommerceInsights_Backfill::ensure_running();
 		return rest_ensure_response( self::data() );
 	}
 
@@ -63,9 +65,22 @@ class KDNA_EcommerceInsights_Rest_Status {
 	 * @return array
 	 */
 	public static function data(): array {
+		global $wpdb;
+		$facts = KDNA_EcommerceInsights_Install::table( 'order_facts' );
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$counts = $wpdb->get_row( "SELECT COUNT(*) AS processed, SUM( missing_cost_flag ) AS missing, SUM( currency_flag ) AS currency FROM {$facts}", ARRAY_A );
+		// phpcs:enable
+
 		return array(
-			'missing_costs' => KDNA_EcommerceInsights_Cost_Catalogue::missing_count(),
-			'cost_source'   => KDNA_EcommerceInsights_Costs::native_enabled() ? 'woocommerce' : 'insights',
+			'missing_costs'          => KDNA_EcommerceInsights_Cost_Catalogue::missing_count(),
+			'cost_source'            => KDNA_EcommerceInsights_Costs::native_enabled() ? 'woocommerce' : 'insights',
+			'job'                    => KDNA_EcommerceInsights_Backfill::state(),
+			'orders_processed'       => (int) ( $counts['processed'] ?? 0 ),
+			'orders_missing_costs'   => (int) ( $counts['missing'] ?? 0 ),
+			'orders_currency_flag'   => (int) ( $counts['currency'] ?? 0 ),
+			'order_storage'          => KDNA_EcommerceInsights_Backfill::uses_hpos() ? 'hpos' : 'legacy',
+			'recent_log'             => KDNA_EcommerceInsights_Log::recent( 8 ),
 		);
 	}
 }

@@ -147,6 +147,147 @@ class KDNA_EcommerceInsights_Costs {
 
 	/*
 	 * ---------------------------------------------------------------------
+	 * Cost on a past date (locking costs in at order time)
+	 * ---------------------------------------------------------------------
+	 */
+
+	/**
+	 * In-memory copy of cost history rows, keyed "product_id:variation_id".
+	 *
+	 * @var array<string, array[]>
+	 */
+	private static $history = array();
+
+	/**
+	 * Loads cost history for several products in one query, so processing a
+	 * batch of orders does not query the database once per product.
+	 *
+	 * @param int[] $product_ids Simple product or parent product IDs.
+	 */
+	public static function preload_history( array $product_ids ): void {
+		global $wpdb;
+
+		$product_ids = array_values( array_unique( array_filter( array_map( 'intval', $product_ids ) ) ) );
+		$missing     = array();
+		foreach ( $product_ids as $id ) {
+			if ( ! isset( self::$history[ $id . ':loaded' ] ) ) {
+				$missing[] = $id;
+			}
+		}
+		if ( ! $missing ) {
+			return;
+		}
+
+		$table        = KDNA_EcommerceInsights_Install::table( 'cost_history' );
+		$placeholders = implode( ',', array_fill( 0, count( $missing ), '%d' ) );
+
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.DirectDatabaseQuery
+		$rows = $wpdb->get_results(
+			$wpdb->prepare( "SELECT product_id, variation_id, old_cost, new_cost, changed_at FROM {$table} WHERE product_id IN ( $placeholders ) ORDER BY changed_at ASC, id ASC", $missing ),
+			ARRAY_A
+		);
+		// phpcs:enable
+
+		foreach ( $missing as $id ) {
+			self::$history[ $id . ':loaded' ] = array();
+		}
+		foreach ( (array) $rows as $row ) {
+			self::$history[ (int) $row['product_id'] . ':' . (int) $row['variation_id'] ][] = $row;
+		}
+	}
+
+	/**
+	 * Forgets loaded cost history, for example after costs change.
+	 */
+	public static function forget_history(): void {
+		self::$history = array();
+	}
+
+	/**
+	 * Returns the cost that applied to a product or variation on a past date,
+	 * using the cost history log, so later supplier price changes never alter
+	 * past profit.
+	 *
+	 * The rules, in order:
+	 * 1. The last cost change on or before the date gives the cost then.
+	 * 2. If the first change came after the date, the cost before it applied.
+	 * 3. If no cost was known on the date at all (for example costs entered
+	 *    after the order), the first cost ever entered is used, so costs typed
+	 *    in late still fill old orders when they are recalculated.
+	 * 4. With no history at all, today's cost is used.
+	 * A variation with no cost of its own on the date uses its parent's cost
+	 * on the same date.
+	 *
+	 * @param int    $product_id   Simple product or parent product ID.
+	 * @param int    $variation_id Variation ID, or 0.
+	 * @param string $date_gmt     Date and time in UTC, Y-m-d H:i:s.
+	 * @return float|null
+	 */
+	public static function cost_on_date( int $product_id, int $variation_id, string $date_gmt ): ?float {
+		self::preload_history( array( $product_id ) );
+
+		if ( $variation_id ) {
+			$own = self::history_value( $product_id . ':' . $variation_id, $variation_id, $date_gmt );
+
+			if ( self::native_enabled() ) {
+				$variation = wc_get_product( $variation_id );
+				if ( $variation && method_exists( $variation, 'get_cogs_value_is_additive' ) && $variation->get_cogs_value_is_additive() ) {
+					$parent = self::history_value( $product_id . ':0', $product_id, $date_gmt );
+					return ( null === $own && null === $parent ) ? null : (float) $own + (float) $parent;
+				}
+			}
+
+			if ( null !== $own ) {
+				return $own;
+			}
+		}
+
+		return self::history_value( $product_id . ':0', $product_id, $date_gmt );
+	}
+
+	/**
+	 * Reads one product's or variation's own cost on a date from its history.
+	 *
+	 * @param string $key      History key "product_id:variation_id".
+	 * @param int    $id       The product or variation ID itself.
+	 * @param string $date_gmt Date and time in UTC.
+	 * @return float|null
+	 */
+	private static function history_value( string $key, int $id, string $date_gmt ): ?float {
+		$rows = self::$history[ $key ] ?? array();
+
+		if ( ! $rows ) {
+			return self::get_own_cost( $id );
+		}
+
+		$value = null;
+		$found = false;
+		foreach ( $rows as $row ) {
+			if ( $row['changed_at'] <= $date_gmt ) {
+				$value = self::parse( $row['new_cost'] );
+				$found = true;
+			}
+		}
+
+		if ( ! $found ) {
+			$value = self::parse( $rows[0]['old_cost'] );
+		}
+
+		if ( null === $value && ! $found ) {
+			// Nothing known on that date: use the first cost ever entered.
+			foreach ( $rows as $row ) {
+				$entered = self::parse( $row['new_cost'] );
+				if ( null !== $entered ) {
+					return $entered;
+				}
+			}
+		}
+
+		return $value;
+	}
+
+	/*
+	 * ---------------------------------------------------------------------
 	 * Saving costs
 	 * ---------------------------------------------------------------------
 	 */
@@ -187,6 +328,7 @@ class KDNA_EcommerceInsights_Costs {
 		}
 
 		self::log_change( $product, $old, $cost );
+		self::forget_history();
 
 		/**
 		 * Fires after a product cost changes.
@@ -256,6 +398,7 @@ class KDNA_EcommerceInsights_Costs {
 
 		if ( ! self::same( $old, $new ) ) {
 			self::log_change( $product, $old, $new );
+			self::forget_history();
 			do_action( 'kdna_ei_cost_changed', $product->get_id(), $old, $new );
 		}
 	}

@@ -50,6 +50,11 @@ class KDNA_EcommerceInsights_Plugin {
 		// Shipping costs, including the Insights box on the order screen.
 		new KDNA_EcommerceInsights_Shipping();
 
+		// Order processing engine, history backfill and daily summary.
+		new KDNA_EcommerceInsights_Order_Processor();
+		new KDNA_EcommerceInsights_Backfill();
+		new KDNA_EcommerceInsights_Summary();
+
 		if ( is_admin() ) {
 			new KDNA_EcommerceInsights_Admin();
 		}
@@ -71,6 +76,7 @@ class KDNA_EcommerceInsights_Plugin {
 		( new KDNA_EcommerceInsights_Rest_Costs() )->register_routes();
 		( new KDNA_EcommerceInsights_Rest_Settings() )->register_routes();
 		( new KDNA_EcommerceInsights_Rest_Overheads() )->register_routes();
+		( new KDNA_EcommerceInsights_Rest_Jobs() )->register_routes();
 	}
 
 	/**

@@ -39,6 +39,7 @@ class KDNA_EcommerceInsights_Install {
 		'cost_history',
 		'stock_snapshots',
 		'sync_log',
+		'refund_facts',
 	);
 
 	/*
@@ -57,6 +58,10 @@ class KDNA_EcommerceInsights_Install {
 
 		add_option( self::INSTALLED_AT_OPTION, current_time( 'mysql', true ), '', false );
 		update_option( self::DB_VERSION_OPTION, KDNA_EI_DB_VERSION, false );
+
+		// Ask for the order history to be processed. It starts on the next page
+		// load, once WooCommerce's background job queue is ready.
+		update_option( KDNA_EcommerceInsights_Backfill::PENDING_OPTION, 1, false );
 	}
 
 	/**
@@ -64,7 +69,11 @@ class KDNA_EcommerceInsights_Install {
 	 * later stages use this to stop background jobs.
 	 */
 	public static function deactivate(): void {
-		// Nothing to stop yet. Background jobs arrive in Stage 4.
+		// Stop every Insights background job. Data and settings are kept, and
+		// any unfinished history processing picks up again on reactivation.
+		if ( function_exists( 'as_unschedule_all_actions' ) ) {
+			as_unschedule_all_actions( '', array(), KDNA_EcommerceInsights_Order_Processor::GROUP );
+		}
 	}
 
 	/**
@@ -216,6 +225,8 @@ class KDNA_EcommerceInsights_Install {
 				state VARCHAR(100) NOT NULL DEFAULT '',
 				items_count INT UNSIGNED NOT NULL DEFAULT 0,
 				missing_cost_flag TINYINT(1) NOT NULL DEFAULT 0,
+				cogs_returned $money,
+				tax_refunded $money,
 				calculated_at DATETIME NULL,
 				PRIMARY KEY  (order_id),
 				KEY report_date (report_date),
@@ -338,6 +349,22 @@ class KDNA_EcommerceInsights_Install {
 				PRIMARY KEY  (id),
 				UNIQUE KEY snapshot_product (snapshot_date,product_id,variation_id),
 				KEY product_id (product_id)
+			) $collate;",
+
+			// One row per refund, so refunds can be counted on the day they happened.
+			"CREATE TABLE {$t['refund_facts']} (
+				refund_id BIGINT UNSIGNED NOT NULL,
+				order_id BIGINT UNSIGNED NOT NULL,
+				refund_date DATE NULL,
+				refund_date_gmt DATETIME NULL,
+				amount $money,
+				tax $money,
+				shipping $money,
+				cogs_returned $money,
+				items_qty DECIMAL(19,4) NOT NULL DEFAULT 0,
+				PRIMARY KEY  (refund_id),
+				KEY order_id (order_id),
+				KEY refund_date (refund_date)
 			) $collate;",
 
 			// One row per background job or ad platform sync.

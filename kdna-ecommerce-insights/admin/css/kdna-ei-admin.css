@@ -432,6 +432,128 @@ tr.is-ended td {
 	opacity: 0.55;
 }
 
+/* Progress of background order processing, under the top bar. */
+.kdna-ei-jobbar {
+	display: grid;
+	gap: 10px;
+	margin: -8px 0 24px;
+	padding: 14px 20px;
+	background: var(--kdna-ei-surface);
+	border: 1px solid var(--kdna-ei-border);
+	border-radius: var(--kdna-ei-radius-md);
+	font-size: var(--kdna-ei-fs-body);
+}
+
+.kdna-ei-jobbar__text strong {
+	font-weight: 500;
+	margin-right: 8px;
+}
+
+.kdna-ei-root .kdna-ei-jobbar__bar {
+	margin-top: 0;
+	height: 6px;
+}
+
+/* Settings screen: tab list on the left, panel on the right. */
+.kdna-ei-screen--settings {
+	display: block;
+}
+
+.kdna-ei-settings {
+	display: grid;
+	grid-template-columns: 240px minmax(0, 1fr);
+	gap: var(--kdna-ei-gap);
+	align-items: start;
+}
+
+.kdna-ei-settings__nav {
+	display: grid;
+	gap: 2px;
+	padding: 10px;
+	position: sticky;
+	top: calc(var(--kdna-ei-admin-bar) + 20px);
+}
+
+.kdna-ei-root .kdna-ei-settings__tab {
+	padding: 10px 14px;
+	font-size: var(--kdna-ei-fs-body);
+	text-align: left;
+	color: var(--kdna-ei-text-muted);
+	border-radius: var(--kdna-ei-radius-sm);
+}
+
+.kdna-ei-root .kdna-ei-settings__tab:hover {
+	color: var(--kdna-ei-text);
+	background: var(--kdna-ei-border);
+}
+
+.kdna-ei-root .kdna-ei-settings__tab.is-active {
+	color: var(--kdna-ei-text);
+	background: var(--kdna-ei-surface-raised);
+}
+
+.kdna-ei-stack {
+	display: grid;
+	gap: var(--kdna-ei-gap);
+}
+
+.kdna-ei-data-progress {
+	display: grid;
+	gap: 6px;
+	margin-bottom: 20px;
+}
+
+.kdna-ei-data-progress .kdna-ei-progress {
+	margin-top: 4px;
+}
+
+/* Key facts shown as a grid of label and value. */
+.kdna-ei-facts {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 16px;
+	margin: 0;
+}
+
+.kdna-ei-facts > div {
+	padding: 14px 16px;
+	background: var(--kdna-ei-bg);
+	border: 1px solid var(--kdna-ei-border);
+	border-radius: var(--kdna-ei-radius-md);
+}
+
+.kdna-ei-facts dt {
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-facts dd {
+	margin: 4px 0 0;
+	font-size: 20px;
+	font-weight: 500;
+}
+
+.kdna-ei-facts dd.is-warning {
+	color: var(--kdna-ei-warning);
+}
+
+.kdna-ei-root .kdna-ei-choice__date {
+	width: auto;
+	margin-left: auto;
+}
+
+@media (max-width: 1100px) {
+	.kdna-ei-settings {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.kdna-ei-settings__nav {
+		position: static;
+		grid-auto-flow: column;
+		overflow-x: auto;
+	}
+}
+
 /* Bar fixed to the bottom of the screen while there are unsaved changes. */
 .kdna-ei-savebar {
 	position: fixed;

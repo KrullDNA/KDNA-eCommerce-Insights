@@ -81,6 +81,10 @@
 				comparison: prefs.comparison || 'previous_period',
 				rangeOpen: false,
 				baseTitle: document.title,
+				status: config.status || {},
+				pollTimer: null,
+				jobJustFinished: false,
+				jobError: '',
 
 				/**
 				 * Runs once when the app starts: follows address changes and
@@ -91,6 +95,10 @@
 
 					applyFocusClasses( this.focus );
 					this.updateDocumentTitle();
+
+					if ( this.jobRunning ) {
+						this.startPolling();
+					}
 
 					router.onChange( function ( id ) {
 						self.route = id;
@@ -206,6 +214,171 @@
 					this.rangeOpen = false;
 					savePreferences( { range: key } );
 					broadcast( 'kdna:ei-range-change', { range: this.range, comparison: this.comparison } );
+				},
+
+				/*
+				 * -----------------------------------------------------------
+				 * Background jobs (order history processing, recalculation)
+				 * -----------------------------------------------------------
+				 */
+
+				/**
+				 * Whether order processing is running in the background.
+				 *
+				 * @return {boolean}
+				 */
+				get jobRunning() {
+					return !! ( this.status.job && this.status.job.status === 'running' );
+				},
+
+				/**
+				 * Heading for the progress bar, describing what is running.
+				 *
+				 * @return {string}
+				 */
+				get jobTitle() {
+					var job = this.status.job || {};
+					var jobs = i18n.jobs || {};
+					if ( job.mode === 'after' ) {
+						return jobs.after.replace( '%s', job.after );
+					}
+					return jobs[ job.mode ] || '';
+				},
+
+				/**
+				 * Progress text, for example "1,200 of 5,000 orders (24%)".
+				 *
+				 * @return {string}
+				 */
+				get jobDetail() {
+					var job = this.status.job || {};
+					var format = window.KDNAEI.format;
+					return ( i18n.jobs.progress || '' )
+						.replace( '%1$s', format.number( job.processed || 0, 0 ) )
+						.replace( '%2$s', format.number( job.total || 0, 0 ) )
+						.replace( '%3$s', job.percent || 0 );
+				},
+
+				/**
+				 * Fetches the latest status from the server.
+				 *
+				 * @return {Promise}
+				 */
+				refreshStatus: function () {
+					var self = this;
+					var wasRunning = this.jobRunning;
+
+					return window.KDNAEI.api( 'status' ).then( function ( data ) {
+						self.status = data;
+						broadcast( 'kdna:ei-status', data );
+
+						if ( wasRunning && ! self.jobRunning ) {
+							self.stopPolling();
+							if ( data.job && data.job.status === 'complete' ) {
+								self.jobJustFinished = true;
+								window.setTimeout( function () {
+									self.jobJustFinished = false;
+								}, 6000 );
+								broadcast( 'kdna:ei-data-loaded', data );
+							}
+						}
+					} ).catch( function () {} );
+				},
+
+				/**
+				 * Checks progress every few seconds while a job runs.
+				 */
+				startPolling: function () {
+					var self = this;
+					if ( this.pollTimer ) {
+						return;
+					}
+					this.pollTimer = window.setInterval( function () {
+						self.refreshStatus();
+					}, 3000 );
+				},
+
+				/**
+				 * Stops checking progress.
+				 */
+				stopPolling: function () {
+					window.clearInterval( this.pollTimer );
+					this.pollTimer = null;
+				},
+
+				/**
+				 * Starts a background job: all orders, orders missing costs, or
+				 * orders on or after a date.
+				 *
+				 * @param {string} mode  all, missing or after.
+				 * @param {string} after Y-m-d, for "after".
+				 * @return {Promise<boolean>} True if the job started.
+				 */
+				startJob: function ( mode, after ) {
+					var self = this;
+					this.jobError = '';
+
+					return window.KDNAEI.api( 'jobs', { method: 'POST', body: { mode: mode, after: after || '' } } ).then( function ( data ) {
+						self.status = data;
+						self.jobJustFinished = false;
+						self.startPolling();
+						return true;
+					} ).catch( function ( error ) {
+						self.jobError = error.message;
+						return false;
+					} );
+				},
+
+				/**
+				 * Text for the Data tab and Recalculate tab.
+				 *
+				 * @return {Object}
+				 */
+				get i18nData() {
+					return i18n.data || {};
+				},
+
+				/**
+				 * Replaces %s placeholders in job text, in order.
+				 *
+				 * @param {string} text Text with placeholders.
+				 * @return {string}
+				 */
+				sprintfJobs: function ( text ) {
+					var values = Array.prototype.slice.call( arguments, 1 );
+					return String( text || '' ).replace( /%s/g, function () {
+						return values.length ? values.shift() : '';
+					} );
+				},
+
+				/**
+				 * Shows a UTC date and time from the server in the viewer's own
+				 * time, for example "9 Oct 2026, 3:15 pm".
+				 *
+				 * @param {string} value Y-m-d H:i:s in UTC.
+				 * @return {string}
+				 */
+				niceDateTime: function ( value ) {
+					if ( ! value ) {
+						return '';
+					}
+					var date = new Date( value.replace( ' ', 'T' ) + 'Z' );
+					return isNaN( date ) ? value : date.toLocaleString( config.locale || undefined, { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' } );
+				},
+
+				/**
+				 * Cancels the running job. Orders already done keep their figures.
+				 *
+				 * @return {Promise}
+				 */
+				cancelJob: function () {
+					var self = this;
+					return window.KDNAEI.api( 'jobs', { method: 'DELETE' } ).then( function ( data ) {
+						self.status = data;
+						self.stopPolling();
+					} ).catch( function ( error ) {
+						self.jobError = error.message;
+					} );
 				},
 
 				/**

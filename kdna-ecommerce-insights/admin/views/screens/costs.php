@@ -6,6 +6,7 @@
  * - Payment fees, Shipping, Extra order costs
  *                   admin/views/screens/costs/rules.php
  * - Overheads       admin/views/screens/costs/overheads.php
+ * - Recalculate     admin/views/screens/costs/recalculate.php
  *
  * @package KDNA_EcommerceInsights
  */
@@ -18,6 +19,7 @@ $kdna_ei_cost_tabs = array(
 	'shipping'  => __( 'Shipping', 'kdna-ecommerce-insights' ),
 	'extras'    => __( 'Extra order costs', 'kdna-ecommerce-insights' ),
 	'overheads' => __( 'Overheads', 'kdna-ecommerce-insights' ),
+	'recalc'    => __( 'Recalculate', 'kdna-ecommerce-insights' ),
 );
 ?>
 <div class="kdna-ei-costs-screen" x-data="{ tab: 'products' }">
@@ -44,5 +46,9 @@ $kdna_ei_cost_tabs = array(
 
 	<div id="kdna-ei-costs-panel-overheads" role="tabpanel" aria-labelledby="kdna-ei-costs-tab-overheads" x-show="tab === 'overheads'" x-cloak>
 		<?php include __DIR__ . '/costs/overheads.php'; ?>
+	</div>
+
+	<div id="kdna-ei-costs-panel-recalc" role="tabpanel" aria-labelledby="kdna-ei-costs-tab-recalc" x-show="tab === 'recalc'" x-cloak>
+		<?php include __DIR__ . '/costs/recalculate.php'; ?>
 	</div>
 </div>

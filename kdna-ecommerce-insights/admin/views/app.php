@@ -158,6 +158,21 @@ $layouts       = array( 'overview', 'report', 'table', 'settings' );
 			</div>
 		</header>
 
+		<?php // Background job progress, shown on every screen while orders are being processed. ?>
+		<div class="kdna-ei-jobbar" x-show="jobRunning || jobJustFinished" x-cloak x-transition.opacity role="status" aria-live="polite">
+			<div class="kdna-ei-jobbar__text">
+				<template x-if="jobRunning">
+					<span><strong x-text="jobTitle"></strong> <span class="kdna-ei-muted kdna-ei-num" x-text="jobDetail"></span></span>
+				</template>
+				<template x-if="! jobRunning && jobJustFinished">
+					<strong><?php esc_html_e( 'All done. Your figures are up to date.', 'kdna-ecommerce-insights' ); ?></strong>
+				</template>
+			</div>
+			<div class="kdna-ei-progress kdna-ei-jobbar__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="status.job ? status.job.percent : 0">
+				<span class="kdna-ei-progress__bar" :style="'width:' + ( jobJustFinished && ! jobRunning ? 100 : ( status.job ? status.job.percent : 0 ) ) + '%'"></span>
+			</div>
+		</div>
+
 		<?php foreach ( $screens as $id => $screen ) : ?>
 			<?php
 			$layout      = in_array( $screen['layout'], $layouts, true ) ? $screen['layout'] : 'report';

@@ -298,6 +298,31 @@ class KDNA_EcommerceInsights_Admin {
 					'pageTitle'     => __( 'Insights', 'kdna-ecommerce-insights' ),
 					'requestFailed' => __( 'Something went wrong talking to the server. Please try again.', 'kdna-ecommerce-insights' ),
 					'costs'         => self::costs_strings(),
+					'jobs'          => array(
+						'all'      => __( 'Processing your orders', 'kdna-ecommerce-insights' ),
+						'missing'  => __( 'Recalculating orders missing costs', 'kdna-ecommerce-insights' ),
+						/* translators: %s: date. */
+						'after'    => __( 'Recalculating orders from %s', 'kdna-ecommerce-insights' ),
+						/* translators: 1: orders done, 2: total orders, 3: percentage. */
+						'progress' => __( '%1$s of %2$s orders (%3$s%)', 'kdna-ecommerce-insights' ),
+					),
+					'data'          => array(
+						'processing'   => __( 'Processing', 'kdna-ecommerce-insights' ),
+						'upToDate'     => __( 'Up to date', 'kdna-ecommerce-insights' ),
+						'stopped'      => __( 'Stopped', 'kdna-ecommerce-insights' ),
+						'notStarted'   => __( 'Not started', 'kdna-ecommerce-insights' ),
+						'hpos'         => __( 'High-Performance Order Storage', 'kdna-ecommerce-insights' ),
+						'legacy'       => __( 'WordPress posts (legacy)', 'kdna-ecommerce-insights' ),
+						/* translators: %s: number of orders. */
+						'missingCount' => __( '%s orders had products without a cost when they were processed.', 'kdna-ecommerce-insights' ),
+						/* translators: %s: number of orders. */
+						'allCount'     => __( 'Every order, %s in total. Use this after changing fee, shipping or extra cost rules.', 'kdna-ecommerce-insights' ),
+						'logStatus'    => array(
+							'success' => __( 'Done', 'kdna-ecommerce-insights' ),
+							'warning' => __( 'Done with problems', 'kdna-ecommerce-insights' ),
+							'error'   => __( 'Problem', 'kdna-ecommerce-insights' ),
+						),
+					),
 					'rules'         => self::rules_strings(),
 					'overheads'     => self::overheads_strings(),
 				),

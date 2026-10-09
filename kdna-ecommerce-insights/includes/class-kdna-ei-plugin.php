@@ -1,0 +1,84 @@
+<?php
+/**
+ * Main plugin loader.
+ *
+ * @package KDNA_EcommerceInsights
+ */
+
+defined( 'ABSPATH' ) || exit;
+
+/**
+ * Starts each part of the plugin and connects it to WordPress.
+ *
+ * Only one copy of this class ever exists. Later build stages add their own
+ * modules here (order processing, REST routes, Elementor widgets and so on).
+ */
+class KDNA_EcommerceInsights_Plugin {
+
+	/**
+	 * The single shared copy of this class.
+	 *
+	 * @var KDNA_EcommerceInsights_Plugin|null
+	 */
+	private static $instance = null;
+
+	/**
+	 * Returns the shared copy of the plugin, creating it the first time.
+	 *
+	 * @return KDNA_EcommerceInsights_Plugin
+	 */
+	public static function instance(): self {
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
+		return self::$instance;
+	}
+
+	/**
+	 * Connects the plugin to WordPress. Kept private so the plugin can only be
+	 * started once, through instance().
+	 */
+	private function __construct() {
+		add_action( 'init', array( $this, 'load_textdomain' ) );
+		add_action( 'rest_api_init', array( $this, 'register_rest_routes' ) );
+		add_filter( 'plugin_action_links_' . KDNA_EI_BASENAME, array( $this, 'plugin_action_links' ) );
+
+		if ( is_admin() ) {
+			new KDNA_EcommerceInsights_Admin();
+		}
+	}
+
+	/**
+	 * Loads translations from the plugin's languages folder.
+	 */
+	public function load_textdomain(): void {
+		load_plugin_textdomain( 'kdna-ecommerce-insights', false, dirname( KDNA_EI_BASENAME ) . '/languages' );
+	}
+
+	/**
+	 * Registers the plugin's private REST API routes under kdna-ei/v1.
+	 */
+	public function register_rest_routes(): void {
+		( new KDNA_EcommerceInsights_Rest_Preferences() )->register_routes();
+	}
+
+	/**
+	 * Adds an "Open Insights" shortcut beside Deactivate on the Plugins screen.
+	 *
+	 * @param array $links Existing action links.
+	 * @return array
+	 */
+	public function plugin_action_links( array $links ): array {
+		if ( current_user_can( 'manage_options' ) ) {
+			array_unshift(
+				$links,
+				sprintf(
+					'<a href="%s">%s</a>',
+					esc_url( admin_url( 'admin.php?page=' . KDNA_EcommerceInsights_Admin::MENU_SLUG ) ),
+					esc_html__( 'Open Insights', 'kdna-ecommerce-insights' )
+				)
+			);
+		}
+		return $links;
+	}
+}

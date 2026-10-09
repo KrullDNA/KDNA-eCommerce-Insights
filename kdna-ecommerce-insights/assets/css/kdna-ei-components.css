@@ -1,0 +1,668 @@
+/*
+ * KDNA eCommerce Insights: shared components.
+ *
+ * Cards, KPI strip, badges, tables, buttons, dropdowns and loading skeletons.
+ * Used by both the wp-admin app and the Elementor widgets, so nothing here
+ * depends on the admin layout. Every value comes from kdna-ei-tokens.css.
+ */
+
+/* ==========================================================================
+   Base and reset
+   Keeps WordPress admin styles (and theme styles on the front end) from
+   leaking into Insights.
+   ========================================================================== */
+
+.kdna-ei-root {
+	font-family: var(--kdna-ei-font);
+	font-size: var(--kdna-ei-fs-body);
+	line-height: 1.5;
+	color: var(--kdna-ei-text);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-rendering: optimizeLegibility;
+}
+
+.kdna-ei-root *,
+.kdna-ei-root *::before,
+.kdna-ei-root *::after {
+	box-sizing: border-box;
+}
+
+.kdna-ei-root :where(h1, h2, h3, h4, h5, h6, p, ul, ol, li, figure, table) {
+	margin: 0;
+	padding: 0;
+	font-size: inherit;
+	font-weight: inherit;
+	line-height: inherit;
+	color: inherit;
+}
+
+.kdna-ei-root :where(ul, ol) {
+	list-style: none;
+}
+
+.kdna-ei-root a {
+	color: inherit;
+	text-decoration: none;
+	box-shadow: none;
+	outline: none;
+	transition: color var(--kdna-ei-duration-fast) ease, background-color var(--kdna-ei-duration-fast) ease;
+}
+
+.kdna-ei-root button,
+.kdna-ei-root input,
+.kdna-ei-root select,
+.kdna-ei-root textarea {
+	font: inherit;
+	color: inherit;
+	letter-spacing: inherit;
+	margin: 0;
+	box-shadow: none;
+	outline: none;
+}
+
+.kdna-ei-root button {
+	background: none;
+	border: 0;
+	padding: 0;
+	cursor: pointer;
+	-webkit-appearance: none;
+	appearance: none;
+}
+
+.kdna-ei-root :is(a, button, input, select, textarea, [tabindex]):focus-visible {
+	box-shadow: var(--kdna-ei-focus-ring);
+	outline: none;
+}
+
+.kdna-ei-root [x-cloak] {
+	display: none !important;
+}
+
+.kdna-ei-visually-hidden {
+	position: absolute !important;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+.kdna-ei-num {
+	font-variant-numeric: tabular-nums;
+	font-feature-settings: "tnum" 1;
+}
+
+/* ==========================================================================
+   Icons
+   ========================================================================== */
+
+.kdna-ei-icon {
+	display: inline-block;
+	flex: none;
+	width: 20px;
+	height: 20px;
+	fill: none;
+	stroke: currentColor;
+	vertical-align: middle;
+}
+
+.kdna-ei-icon--sm {
+	width: 16px;
+	height: 16px;
+}
+
+.kdna-ei-icon--lg {
+	width: 28px;
+	height: 28px;
+}
+
+/* ==========================================================================
+   Headings
+   ========================================================================== */
+
+.kdna-ei-eyebrow {
+	font-size: var(--kdna-ei-fs-eyebrow);
+	font-weight: 500;
+	line-height: 1.4;
+	letter-spacing: var(--kdna-ei-tracking-eyebrow);
+	text-transform: uppercase;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-title {
+	font-size: var(--kdna-ei-fs-title);
+	font-weight: var(--kdna-ei-fw-title);
+	line-height: 1.1;
+	letter-spacing: -0.01em;
+	color: var(--kdna-ei-text);
+}
+
+/* ==========================================================================
+   Cards
+   ========================================================================== */
+
+.kdna-ei-card {
+	position: relative;
+	min-width: 0;
+	padding: var(--kdna-ei-card-padding);
+	background: var(--kdna-ei-surface);
+	border: 1px solid var(--kdna-ei-border);
+	border-radius: var(--kdna-ei-radius);
+	box-shadow: var(--kdna-ei-card-shadow);
+}
+
+.kdna-ei-card__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	margin-bottom: 20px;
+}
+
+.kdna-ei-card__title {
+	font-size: var(--kdna-ei-fs-card-title);
+	font-weight: var(--kdna-ei-fw-card-title);
+	line-height: 1.3;
+	letter-spacing: -0.005em;
+	color: var(--kdna-ei-text);
+}
+
+/* ==========================================================================
+   KPI strip
+   One card across the top: line icon, muted label, big number, change.
+   ========================================================================== */
+
+.kdna-ei-kpi-strip {
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: minmax(0, 1fr);
+	padding: 26px 0;
+}
+
+.kdna-ei-kpi {
+	display: flex;
+	align-items: center;
+	gap: 20px;
+	min-width: 0;
+	padding: 0 32px;
+	border-left: 1px solid var(--kdna-ei-border);
+}
+
+.kdna-ei-kpi:first-child {
+	border-left: 0;
+}
+
+.kdna-ei-kpi__icon {
+	display: grid;
+	place-items: center;
+	flex: none;
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-kpi__icon .kdna-ei-icon {
+	width: 28px;
+	height: 28px;
+}
+
+.kdna-ei-kpi__body {
+	min-width: 0;
+}
+
+.kdna-ei-kpi__label {
+	font-size: var(--kdna-ei-fs-label);
+	color: var(--kdna-ei-text-muted);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.kdna-ei-kpi__row {
+	display: flex;
+	align-items: baseline;
+	flex-wrap: wrap;
+	gap: 6px 16px;
+	margin-top: 2px;
+}
+
+.kdna-ei-kpi__value {
+	font-size: var(--kdna-ei-fs-kpi);
+	font-weight: var(--kdna-ei-fw-kpi);
+	line-height: 1.15;
+	letter-spacing: -0.01em;
+	font-variant-numeric: tabular-nums;
+	color: var(--kdna-ei-text);
+}
+
+@media (max-width: 1100px) {
+	.kdna-ei-kpi-strip {
+		grid-auto-flow: row;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		row-gap: 24px;
+	}
+
+	.kdna-ei-kpi:nth-child(odd) {
+		border-left: 0;
+	}
+}
+
+@media (max-width: 600px) {
+	.kdna-ei-kpi-strip {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.kdna-ei-kpi {
+		border-left: 0;
+		padding: 0 24px;
+	}
+}
+
+/* ==========================================================================
+   Change indicator
+   Colour follows whether the change is good or bad, not up or down, because
+   rising costs are bad news (section 4.2, smart change colours).
+   ========================================================================== */
+
+.kdna-ei-change {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	font-size: var(--kdna-ei-fs-label);
+	font-weight: 500;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+.kdna-ei-change .kdna-ei-icon {
+	width: 15px;
+	height: 15px;
+}
+
+.kdna-ei-change--good {
+	color: var(--kdna-ei-positive);
+}
+
+.kdna-ei-change--bad {
+	color: var(--kdna-ei-negative);
+}
+
+.kdna-ei-change--neutral {
+	color: var(--kdna-ei-text-muted);
+}
+
+/* ==========================================================================
+   Badges
+   Pill-shaped status labels, like the mint "Active" badge in the reference.
+   ========================================================================== */
+
+.kdna-ei-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 5px 14px;
+	font-size: 13px;
+	font-weight: 500;
+	line-height: 1.4;
+	white-space: nowrap;
+	border-radius: var(--kdna-ei-radius-pill);
+	background: var(--kdna-ei-badge-neutral-bg);
+	color: var(--kdna-ei-badge-neutral-text);
+}
+
+.kdna-ei-badge::before {
+	content: "";
+	flex: none;
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: currentColor;
+}
+
+.kdna-ei-badge--plain::before {
+	display: none;
+}
+
+.kdna-ei-badge--positive {
+	background: var(--kdna-ei-badge-positive-bg);
+	color: var(--kdna-ei-badge-positive-text);
+}
+
+.kdna-ei-badge--warning {
+	background: var(--kdna-ei-badge-warning-bg);
+	color: var(--kdna-ei-badge-warning-text);
+}
+
+.kdna-ei-badge--negative {
+	background: var(--kdna-ei-badge-negative-bg);
+	color: var(--kdna-ei-badge-negative-text);
+}
+
+/* ==========================================================================
+   Tables
+   Clean rows with hairline dividers and lined-up numbers.
+   ========================================================================== */
+
+.kdna-ei-table-wrap {
+	width: 100%;
+	overflow-x: auto;
+}
+
+.kdna-ei-table {
+	width: 100%;
+	border-collapse: collapse;
+	border-spacing: 0;
+	font-size: var(--kdna-ei-fs-body);
+	background: transparent;
+	border: 0;
+}
+
+.kdna-ei-table th,
+.kdna-ei-table td {
+	padding: 14px 16px;
+	text-align: left;
+	vertical-align: middle;
+	border: 0;
+	border-bottom: 1px solid var(--kdna-ei-border);
+	background: transparent;
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-table th {
+	padding-top: 10px;
+	padding-bottom: 10px;
+	font-size: var(--kdna-ei-fs-small);
+	font-weight: 500;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-table tbody tr:last-child td {
+	border-bottom: 0;
+}
+
+.kdna-ei-table tbody tr {
+	transition: background-color var(--kdna-ei-duration-fast) ease;
+}
+
+.kdna-ei-table--hover tbody tr:hover td {
+	background: var(--kdna-ei-surface-raised);
+}
+
+.kdna-ei-table :is(th, td).is-numeric {
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}
+
+.kdna-ei-table th:first-child,
+.kdna-ei-table td:first-child {
+	padding-left: 0;
+}
+
+.kdna-ei-table th:last-child,
+.kdna-ei-table td:last-child {
+	padding-right: 0;
+}
+
+/* Legend table beside a donut: dot, label, value, percentage. */
+.kdna-ei-legend td {
+	padding-top: 16px;
+	padding-bottom: 16px;
+}
+
+.kdna-ei-legend__dot {
+	display: inline-block;
+	width: 12px;
+	height: 12px;
+	margin-right: 14px;
+	border-radius: 50%;
+	vertical-align: -1px;
+	background: var(--kdna-ei-accent);
+}
+
+.kdna-ei-legend__value {
+	font-weight: 600;
+}
+
+.kdna-ei-legend__percent {
+	color: var(--kdna-ei-text-muted);
+}
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+
+.kdna-ei-root .kdna-ei-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	height: var(--kdna-ei-control-height);
+	padding: 0 18px;
+	font-size: var(--kdna-ei-fs-body);
+	font-weight: 500;
+	line-height: 1;
+	white-space: nowrap;
+	color: var(--kdna-ei-text);
+	background: transparent;
+	border: 1px solid var(--kdna-ei-border-strong);
+	border-radius: var(--kdna-ei-radius-pill);
+	transition: background-color var(--kdna-ei-duration-fast) ease, border-color var(--kdna-ei-duration-fast) ease, color var(--kdna-ei-duration-fast) ease;
+}
+
+.kdna-ei-root .kdna-ei-btn:hover {
+	background: var(--kdna-ei-surface-raised);
+}
+
+.kdna-ei-root .kdna-ei-btn[aria-pressed="true"],
+.kdna-ei-root .kdna-ei-btn.is-active {
+	background: var(--kdna-ei-surface-raised);
+	border-color: var(--kdna-ei-border-strong);
+}
+
+.kdna-ei-root .kdna-ei-btn:disabled,
+.kdna-ei-root .kdna-ei-btn[aria-disabled="true"] {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+.kdna-ei-root .kdna-ei-btn--primary {
+	background: var(--kdna-ei-accent);
+	border-color: var(--kdna-ei-accent);
+	color: #FFFFFF;
+}
+
+.kdna-ei-root .kdna-ei-btn--primary:hover {
+	background: var(--kdna-ei-accent);
+	filter: brightness(1.08);
+}
+
+.kdna-ei-root .kdna-ei-btn--icon {
+	width: var(--kdna-ei-control-height);
+	padding: 0;
+}
+
+/* ==========================================================================
+   Dropdown
+   Pill trigger with a thin outline, floating menu card below.
+   ========================================================================== */
+
+.kdna-ei-dropdown {
+	position: relative;
+}
+
+.kdna-ei-dropdown__trigger {
+	min-width: 152px;
+	justify-content: space-between;
+}
+
+.kdna-ei-dropdown__trigger .kdna-ei-icon {
+	width: 16px;
+	height: 16px;
+	transition: transform var(--kdna-ei-duration-fast) ease;
+}
+
+.kdna-ei-dropdown__trigger[aria-expanded="true"] .kdna-ei-icon {
+	transform: rotate(180deg);
+}
+
+.kdna-ei-dropdown__menu {
+	position: absolute;
+	top: calc(100% + 8px);
+	right: 0;
+	z-index: 50;
+	min-width: 220px;
+	padding: 6px;
+	background: var(--kdna-ei-surface-raised);
+	border: 1px solid var(--kdna-ei-border);
+	border-radius: var(--kdna-ei-radius-md);
+	box-shadow: var(--kdna-ei-popover-shadow);
+}
+
+.kdna-ei-dropdown__group + .kdna-ei-dropdown__group {
+	margin-top: 6px;
+	padding-top: 6px;
+	border-top: 1px solid var(--kdna-ei-border);
+}
+
+.kdna-ei-dropdown__heading {
+	padding: 8px 12px 4px;
+	font-size: var(--kdna-ei-fs-eyebrow);
+	font-weight: 500;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-root .kdna-ei-dropdown__item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	width: 100%;
+	padding: 9px 12px;
+	font-size: var(--kdna-ei-fs-body);
+	text-align: left;
+	color: var(--kdna-ei-text);
+	border-radius: var(--kdna-ei-radius-sm);
+}
+
+.kdna-ei-root .kdna-ei-dropdown__item:hover {
+	background: var(--kdna-ei-border);
+}
+
+.kdna-ei-dropdown__item .kdna-ei-icon {
+	width: 16px;
+	height: 16px;
+	color: var(--kdna-ei-accent);
+	visibility: hidden;
+}
+
+.kdna-ei-dropdown__item[aria-checked="true"] .kdna-ei-icon {
+	visibility: visible;
+}
+
+.kdna-ei-dropdown__item:disabled {
+	color: var(--kdna-ei-text-muted);
+	cursor: not-allowed;
+}
+
+.kdna-ei-dropdown__item:disabled:hover {
+	background: transparent;
+}
+
+.kdna-ei-dropdown__note {
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-text-muted);
+}
+
+/* ==========================================================================
+   Loading skeletons
+   Soft shimmer placeholders while data loads, never a spinner (section 4.4).
+   ========================================================================== */
+
+.kdna-ei-skeleton {
+	position: relative;
+	display: block;
+	overflow: hidden;
+	background: var(--kdna-ei-skeleton);
+	border-radius: var(--kdna-ei-radius-sm);
+}
+
+.kdna-ei-skeleton::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	transform: translateX(-100%);
+	background: linear-gradient(90deg, transparent 0%, var(--kdna-ei-skeleton-shine) 50%, transparent 100%);
+	animation: kdna-ei-shimmer 1.6s ease-in-out infinite;
+}
+
+.kdna-ei-skeleton--text {
+	height: 12px;
+	width: 100%;
+}
+
+.kdna-ei-skeleton--label {
+	height: 12px;
+	width: 64px;
+}
+
+.kdna-ei-skeleton--title {
+	height: 20px;
+	width: 42%;
+	max-width: 220px;
+}
+
+.kdna-ei-skeleton--value {
+	height: 30px;
+	width: 120px;
+}
+
+.kdna-ei-skeleton--pill {
+	height: 26px;
+	width: 72px;
+	border-radius: var(--kdna-ei-radius-pill);
+}
+
+.kdna-ei-skeleton--icon {
+	width: 28px;
+	height: 28px;
+	border-radius: var(--kdna-ei-radius-sm);
+}
+
+.kdna-ei-skeleton--circle {
+	border-radius: 50%;
+}
+
+.kdna-ei-skeleton--block {
+	width: 100%;
+	border-radius: var(--kdna-ei-radius-md);
+}
+
+@keyframes kdna-ei-shimmer {
+	100% {
+		transform: translateX(100%);
+	}
+}
+
+/* ==========================================================================
+   Reduced motion
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+	.kdna-ei-root *,
+	.kdna-ei-root *::before,
+	.kdna-ei-root *::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+
+	.kdna-ei-skeleton::after {
+		display: none;
+	}
+}

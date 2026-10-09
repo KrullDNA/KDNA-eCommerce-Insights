@@ -1,0 +1,39 @@
+/*
+ * KDNA eCommerce Insights: bundled fonts.
+ *
+ * Figtree is served from the plugin itself rather than Google Fonts, which is
+ * faster and sends no visitor data to a third party. Licence: SIL Open Font
+ * Licence 1.1 (see assets/fonts/figtree/OFL.txt).
+ */
+
+@font-face {
+	font-family: "Figtree";
+	font-style: normal;
+	font-weight: 300;
+	font-display: swap;
+	src: url("../fonts/figtree/figtree-latin-300-normal.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Figtree";
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url("../fonts/figtree/figtree-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Figtree";
+	font-style: normal;
+	font-weight: 500;
+	font-display: swap;
+	src: url("../fonts/figtree/figtree-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Figtree";
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url("../fonts/figtree/figtree-latin-600-normal.woff2") format("woff2");
+}

@@ -241,7 +241,10 @@
 					var job = this.status.job || {};
 					var jobs = i18n.jobs || {};
 					if ( job.mode === 'after' ) {
-						return jobs.after.replace( '%s', job.after );
+						var parts = String( job.after || '' ).split( '-' );
+						var day = new Date( Number( parts[ 0 ] ), Number( parts[ 1 ] ) - 1, Number( parts[ 2 ] ) );
+						var nice = isNaN( day ) ? job.after : day.toLocaleDateString( config.locale || undefined, { day: 'numeric', month: 'short', year: 'numeric' } );
+						return jobs.after.replace( '%s', nice );
 					}
 					return jobs[ job.mode ] || '';
 				},

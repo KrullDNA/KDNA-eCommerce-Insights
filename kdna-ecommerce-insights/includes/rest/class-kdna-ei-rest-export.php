@@ -12,7 +12,7 @@ defined( 'ABSPATH' ) || exit;
  * - GET /export?table=...   Returns { filename, csv } for a report table,
  *                           using the same range and filters as the screen.
  *
- * Tables: summary, timeseries, pnl, products, customers, locations,
+ * Tables: summary, timeseries, pnl, products, categories, customers, locations,
  * channels, campaigns, low_stock, out_of_stock, days_of_cover, dead_stock, tax.
  * Product costs are exported from /costs/export.
  */
@@ -21,7 +21,7 @@ class KDNA_EcommerceInsights_Rest_Export extends KDNA_EcommerceInsights_Rest_Rep
 	/**
 	 * Tables that can be exported.
 	 */
-	const TABLES = array( 'summary', 'timeseries', 'pnl', 'products', 'customers', 'locations', 'channels', 'campaigns', 'low_stock', 'out_of_stock', 'days_of_cover', 'dead_stock', 'tax' );
+	const TABLES = array( 'summary', 'timeseries', 'pnl', 'products', 'categories', 'customers', 'locations', 'channels', 'campaigns', 'low_stock', 'out_of_stock', 'days_of_cover', 'dead_stock', 'tax' );
 
 	/**
 	 * Registers the route.
@@ -130,6 +130,14 @@ class KDNA_EcommerceInsights_Rest_Export extends KDNA_EcommerceInsights_Rest_Rep
 					$row[]  = $money( $line['amount'] );
 					$rows[] = $row;
 				}
+
+				// Net margin by month, as a percentage.
+				$row = array( __( 'Net margin %', 'kdna-ecommerce-insights' ) );
+				foreach ( $profit['months'] as $month ) {
+					$row[] = null === $month['lines']['net_margin'] ? '' : round( $month['lines']['net_margin'], 1 );
+				}
+				$row[]  = null === $profit['margins']['net'] ? '' : round( $profit['margins']['net'], 1 );
+				$rows[] = $row;
 				return array( $header, $rows );
 
 			case 'products':
@@ -143,11 +151,16 @@ class KDNA_EcommerceInsights_Rest_Export extends KDNA_EcommerceInsights_Rest_Rep
 				do {
 					$result = KDNA_EcommerceInsights_Report::products( $range, $args );
 					foreach ( $result['rows'] as $item ) {
-						$rows[] = array( $item['name'], $item['variation'], $item['units'], $money( $item['revenue'] ), $money( $item['cost'] ), $money( $item['profit'] ), $item['margin'], $item['refund_rate'] );
+						$rows[] = array( $item['name'], $item['variation'], $item['units'], $item['orders'], $money( $item['revenue'] ), $money( $item['cost'] ), $money( $item['profit'] ), null === $item['margin'] ? '' : round( $item['margin'], 1 ), null === $item['refund_rate'] ? '' : round( $item['refund_rate'], 1 ) );
 					}
 					++$args['page'];
 				} while ( $args['page'] <= $result['pages'] );
-				return array( array( __( 'Product', 'kdna-ecommerce-insights' ), __( 'Variation', 'kdna-ecommerce-insights' ), __( 'Units', 'kdna-ecommerce-insights' ), __( 'Revenue', 'kdna-ecommerce-insights' ), __( 'Cost', 'kdna-ecommerce-insights' ), __( 'Profit', 'kdna-ecommerce-insights' ), __( 'Margin %', 'kdna-ecommerce-insights' ), __( 'Refund rate %', 'kdna-ecommerce-insights' ) ), $rows );
+				return array( array( __( 'Product', 'kdna-ecommerce-insights' ), __( 'Variation', 'kdna-ecommerce-insights' ), __( 'Units', 'kdna-ecommerce-insights' ), __( 'Orders', 'kdna-ecommerce-insights' ), __( 'Revenue', 'kdna-ecommerce-insights' ), __( 'Cost', 'kdna-ecommerce-insights' ), __( 'Profit', 'kdna-ecommerce-insights' ), __( 'Margin %', 'kdna-ecommerce-insights' ), __( 'Refund rate %', 'kdna-ecommerce-insights' ) ), $rows );
+
+			case 'categories':
+				$result = KDNA_EcommerceInsights_Report::products( $range, array( 'per_page' => 1 ) );
+				$rows   = array_map( static fn( $c ) => array( $c['name'], $c['units'], $money( $c['revenue'] ), $money( $c['profit'] ), null === $c['margin'] ? '' : round( $c['margin'], 1 ) ), $result['categories'] );
+				return array( array( __( 'Category', 'kdna-ecommerce-insights' ), __( 'Units', 'kdna-ecommerce-insights' ), __( 'Revenue', 'kdna-ecommerce-insights' ), __( 'Profit', 'kdna-ecommerce-insights' ), __( 'Margin %', 'kdna-ecommerce-insights' ) ), $rows );
 
 			case 'customers':
 			case 'locations':

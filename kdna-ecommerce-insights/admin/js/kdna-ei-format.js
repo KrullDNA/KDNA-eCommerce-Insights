@@ -258,4 +258,108 @@
 			link.remove();
 		}, 1000 );
 	};
+
+	/**
+	 * Replaces %s or %d in text with values, in order. %% becomes %.
+	 *
+	 * @param {string} text Text with placeholders.
+	 * @return {string}
+	 */
+	function sprintf( text ) {
+		var values = Array.prototype.slice.call( arguments, 1 );
+		return String( text || '' ).replace( /%%|%[sd]/g, function ( token ) {
+			return token === '%%' ? '%' : ( values.length ? values.shift() : '' );
+		} );
+	}
+
+	window.KDNAEI.sprintf = sprintf;
+
+	/**
+	 * Fetches a CSV from /export for a table and downloads it.
+	 *
+	 * @param {string} table Table name, for example "pnl" or "products".
+	 * @param {Object} query Range and filters, as the screen uses them.
+	 * @return {Promise}
+	 */
+	window.KDNAEI.exportCsv = function ( table, query ) {
+		return window.KDNAEI.api( 'export', { query: Object.assign( {}, query, { table: table } ) } ).then( function ( data ) {
+			window.KDNAEI.download( data.filename, data.csv );
+		} );
+	};
+
+	/**
+	 * Shared helpers for KPI strips on every report screen: icons, change
+	 * text such as "12%" or "3.0 pts", and the comparison sentence.
+	 */
+	var KPI_ICONS = {
+		net_revenue: 'trending-up',
+		gross_sales: 'trending-up',
+		net_profit: 'coins',
+		gross_profit: 'coins',
+		contribution_profit: 'coins',
+		orders: 'cart',
+		items_sold: 'bag',
+		net_margin: 'percent',
+		gross_margin: 'percent',
+		new_customers: 'users-plus',
+		customers: 'users',
+		ad_spend: 'megaphone',
+		cogs: 'tag',
+		payment_fees: 'tag',
+		shipping_costs: 'box',
+	};
+
+	window.KDNAEI.kpi = {
+		/**
+		 * Icon name for a metric.
+		 *
+		 * @param {string} key Metric key.
+		 * @return {string}
+		 */
+		icon: function ( key ) {
+			return KPI_ICONS[ key ] || 'chart';
+		},
+
+		/**
+		 * The change shown beside a KPI, for example "12%" or "3.0 pts".
+		 *
+		 * @param {Object} kpi Metric from /summary.
+		 * @return {string}
+		 */
+		changeText: function ( kpi ) {
+			var t = ( config.i18n && config.i18n.overview ) || {};
+			if ( kpi.change === null ) {
+				return kpi.previous === 0 && kpi.value ? t.new : '';
+			}
+			var amount = number( Math.abs( kpi.change ), 1 );
+			return kpi.change_type === 'points' ? sprintf( t.points, amount ) : amount + '%';
+		},
+
+		/**
+		 * Sentence with the comparison period's value, for tooltips and
+		 * screen readers.
+		 *
+		 * @param {Object} kpi             Metric from /summary.
+		 * @param {string} comparisonLabel For example "Previous period".
+		 * @return {string}
+		 */
+		previousText: function ( kpi, comparisonLabel ) {
+			var t = ( config.i18n && config.i18n.overview ) || {};
+			if ( kpi.previous === null || kpi.previous === undefined ) {
+				return '';
+			}
+			return sprintf( t.previousWas, comparisonLabel, metric( kpi.previous, kpi.format, kpi.decimals ) );
+		},
+
+		/**
+		 * Name of the comparison period.
+		 *
+		 * @param {string} comparison previous_period or previous_year.
+		 * @return {string}
+		 */
+		comparisonLabel: function ( comparison ) {
+			var t = ( config.i18n && config.i18n.overview ) || {};
+			return comparison === 'previous_year' ? t.lastYear : t.previousPeriod;
+		},
+	};
 }( window ) );

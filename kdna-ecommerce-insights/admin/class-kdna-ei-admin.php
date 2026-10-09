@@ -249,7 +249,7 @@ class KDNA_EcommerceInsights_Admin {
 
 		// One script per built screen, each registering its Alpine component.
 		$screen_scripts = array( 'kdna-ei-app' );
-		foreach ( array( 'overview', 'costs', 'cost-rules', 'overheads', 'settings-hero' ) as $screen_id ) {
+		foreach ( array( 'overview', 'profit', 'products', 'costs', 'cost-rules', 'overheads', 'settings-hero' ) as $screen_id ) {
 			$path   = 'admin/js/screens/' . $screen_id . '.js';
 			$handle = 'kdna-ei-screen-' . $screen_id;
 			wp_enqueue_script( $handle, KDNA_EI_URL . $path, array( 'kdna-ei-app', 'kdna-ei-chart-theme' ), $this->asset_version( $path ), true );
@@ -312,6 +312,8 @@ class KDNA_EcommerceInsights_Admin {
 					/* translators: %s: number of days. */
 					'days'          => __( '%s days', 'kdna-ecommerce-insights' ),
 					'overview'      => self::overview_strings(),
+					'profit'        => self::profit_strings(),
+					'products'      => self::products_strings(),
 					'heroSettings'  => array(
 						'saved'       => __( 'Saved. The Overview has been updated.', 'kdna-ecommerce-insights' ),
 						'amountError' => __( 'Enter an amount of zero or more, for example 25000.', 'kdna-ecommerce-insights' ),
@@ -369,6 +371,81 @@ class KDNA_EcommerceInsights_Admin {
 			}
 		}
 		return $options;
+	}
+
+	/**
+	 * Text used by the Profit & Loss screen script.
+	 *
+	 * @return array
+	 */
+	private static function profit_strings(): array {
+		return array(
+			'thisPeriod'        => __( 'This period', 'kdna-ecommerce-insights' ),
+			'netMargin'         => __( 'Net margin', 'kdna-ecommerce-insights' ),
+			'grossMargin'       => __( 'Gross margin', 'kdna-ecommerce-insights' ),
+			/* translators: %s: net margin. */
+			'marginSummary'     => __( 'Gross and net margin over the chosen dates. Net margin overall: %s.', 'kdna-ecommerce-insights' ),
+			/* translators: 1: comparison name, 2: amount. */
+			'previousAmount'    => __( '%s: %s', 'kdna-ecommerce-insights' ),
+			'includesEstimates' => __( 'Includes estimates', 'kdna-ecommerce-insights' ),
+			/* translators: 1: orders with an estimated fee, 2: all orders. */
+			'feesEstimated'     => __( 'Estimated for %s of %s orders: the gateway did not record its fee, so your fee rule was used.', 'kdna-ecommerce-insights' ),
+			/* translators: 1: orders with an estimated shipping cost, 2: all orders. */
+			'shippingEstimated' => __( 'Estimated for %s of %s orders: no real postage cost was recorded, so your shipping rule was used.', 'kdna-ecommerce-insights' ),
+			/* translators: 1: orders missing a product cost, 2: all orders. */
+			'cogsIncomplete'    => __( 'Incomplete: %s of %s orders include products with no cost, so this is lower than it should be and profit is overstated.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: month, for example Oct 2026. */
+			'partMonth'         => __( '%s (part)', 'kdna-ecommerce-insights' ),
+		);
+	}
+
+	/**
+	 * Text used by the Products screen script.
+	 *
+	 * @return array
+	 */
+	private static function products_strings(): array {
+		return array(
+			'tableCaption'    => __( 'Product performance for the chosen dates. Column headings sort the table.', 'kdna-ecommerce-insights' ),
+			'noSales'         => __( 'No products sold in this period.', 'kdna-ecommerce-insights' ),
+			'noMatches'       => __( 'No products match these filters.', 'kdna-ecommerce-insights' ),
+			/* translators: 1: first row, 2: last row, 3: total rows. */
+			'showing'         => __( 'Showing %s to %s of %s', 'kdna-ecommerce-insights' ),
+			/* translators: 1: page, 2: pages. */
+			'pageOf'          => __( 'Page %s of %s', 'kdna-ecommerce-insights' ),
+			'missingCost'     => __( 'No cost', 'kdna-ecommerce-insights' ),
+			'missingCostHelp' => __( 'Some sales of this product had no cost price, so its profit is overstated.', 'kdna-ecommerce-insights' ),
+			'revenue'         => __( 'Revenue', 'kdna-ecommerce-insights' ),
+			'profit'          => __( 'Profit', 'kdna-ecommerce-insights' ),
+			'margin'          => __( 'Margin', 'kdna-ecommerce-insights' ),
+			'units'           => __( 'Units', 'kdna-ecommerce-insights' ),
+			'orders'          => __( 'Orders', 'kdna-ecommerce-insights' ),
+			'refundRate'      => __( 'Refund rate', 'kdna-ecommerce-insights' ),
+			'variation'       => __( 'Variation', 'kdna-ecommerce-insights' ),
+			'byVariation'     => __( 'By variation', 'kdna-ecommerce-insights' ),
+			'allVariations'   => __( 'All variations', 'kdna-ecommerce-insights' ),
+			'salesAndProfit'  => __( 'Sales and profit', 'kdna-ecommerce-insights' ),
+			/* translators: 1: revenue, 2: profit. */
+			'chartSummary'    => __( 'Revenue and profit over the chosen dates: %s revenue and %s profit in total.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: units. */
+			'unitsSold'       => __( '%s sold', 'kdna-ecommerce-insights' ),
+			/* translators: %s: SKU. */
+			'sku'             => __( 'SKU %s', 'kdna-ecommerce-insights' ),
+			'details'         => __( 'Details', 'kdna-ecommerce-insights' ),
+			'price'           => __( 'Price (excluding tax)', 'kdna-ecommerce-insights' ),
+			'costPrice'       => __( 'Cost price', 'kdna-ecommerce-insights' ),
+			'noCost'          => __( 'Not set', 'kdna-ecommerce-insights' ),
+			'stock'           => __( 'Stock', 'kdna-ecommerce-insights' ),
+			/* translators: %s: stock quantity. */
+			'inStockCount'    => __( '%s in stock', 'kdna-ecommerce-insights' ),
+			'stockStatuses'   => array(
+				'instock'     => __( 'In stock', 'kdna-ecommerce-insights' ),
+				'outofstock'  => __( 'Out of stock', 'kdna-ecommerce-insights' ),
+				'onbackorder' => __( 'On backorder', 'kdna-ecommerce-insights' ),
+			),
+			'editProduct'     => __( 'Edit product', 'kdna-ecommerce-insights' ),
+			'addCost'         => __( 'Add a cost', 'kdna-ecommerce-insights' ),
+		);
 	}
 
 	/**

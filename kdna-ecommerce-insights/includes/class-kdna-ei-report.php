@@ -618,6 +618,162 @@ class KDNA_EcommerceInsights_Report {
 		return $map;
 	}
 
+	/**
+	 * Daily sales figures for one product (or one variation) straight from
+	 * the order item facts, optionally split by variation.
+	 *
+	 * @param array $range           Range.
+	 * @param int   $product_id      Parent product ID.
+	 * @param int   $variation_id    Variation ID, or 0 for the whole product.
+	 * @param bool  $by_variation    Group by variation instead of by day.
+	 * @return array[] Rows with day or variation_id, units, refunded_units, revenue, cost, orders.
+	 */
+	private static function product_rows( array $range, int $product_id, int $variation_id, bool $by_variation = false ): array {
+		global $wpdb;
+		list( $in, $statuses ) = self::statuses();
+
+		$restock = 'restocked' === KDNA_EcommerceInsights_Settings::get( 'general.restock_treatment', 'restocked' ) ? 1 : 0;
+		$group   = $by_variation ? 'i.variation_id' : 'f.report_date';
+		$where   = $variation_id ? ' AND i.variation_id = %d' : '';
+		$values  = array_merge( array( $product_id, $range['start'], $range['end'] ), $statuses, $variation_id ? array( $variation_id ) : array() );
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+		$rows = KDNA_EcommerceInsights_Cache::timed(
+			$by_variation ? 'Product figures by variation' : 'Product figures by day',
+			static fn() => $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT {$group} AS grouping_key,
+						SUM( i.qty ) AS units,
+						SUM( i.refunded_qty ) AS refunded_units,
+						SUM( i.line_net ) - SUM( i.refunded_amount ) AS revenue,
+						SUM( i.line_cost ) - SUM( CASE WHEN i.unit_cost IS NULL THEN 0 ELSE i.unit_cost * i.refunded_qty * {$restock} END ) AS cost,
+						SUM( i.missing_cost ) AS missing_lines,
+						COUNT( DISTINCT i.order_id ) AS orders
+					FROM " . self::t( 'order_item_facts' ) . ' i
+					INNER JOIN ' . self::t( 'order_facts' ) . " f ON f.order_id = i.order_id
+					WHERE i.product_id = %d AND f.report_date BETWEEN %s AND %s AND f.status IN ( $in ){$where}
+					GROUP BY {$group}",
+					$values
+				),
+				ARRAY_A
+			)
+		);
+		// phpcs:enable
+
+		return (array) $rows;
+	}
+
+	/**
+	 * Adds up product rows into one set of totals with profit, margin and
+	 * refund rate.
+	 *
+	 * @param array[] $rows Rows from product_rows().
+	 * @return array
+	 */
+	private static function product_totals( array $rows ): array {
+		$totals = array( 'units' => 0.0, 'refunded_units' => 0.0, 'revenue' => 0.0, 'cost' => 0.0, 'orders' => 0, 'missing_cost' => false );
+		foreach ( $rows as $row ) {
+			$totals['units']          += (float) $row['units'];
+			$totals['refunded_units'] += (float) $row['refunded_units'];
+			$totals['revenue']        += (float) $row['revenue'];
+			$totals['cost']           += (float) $row['cost'];
+			$totals['orders']         += (int) $row['orders'];
+			$totals['missing_cost']    = $totals['missing_cost'] || (int) $row['missing_lines'] > 0;
+		}
+
+		$profit = $totals['revenue'] - $totals['cost'];
+		return array(
+			'units'        => $totals['units'],
+			'orders'       => $totals['orders'],
+			'revenue'      => round( $totals['revenue'], 2 ),
+			'cost'         => round( $totals['cost'], 2 ),
+			'profit'       => round( $profit, 2 ),
+			'margin'       => KDNA_EcommerceInsights_Metrics::margin( $profit, $totals['revenue'] ),
+			'refund_rate'  => KDNA_EcommerceInsights_Metrics::margin( $totals['refunded_units'], $totals['units'] ),
+			'missing_cost' => $totals['missing_cost'],
+		);
+	}
+
+	/**
+	 * Everything the product drawer shows: the product's details, totals
+	 * for the range and comparison period, a sales and profit series, and
+	 * a split by variation for variable products.
+	 *
+	 * @param array      $range        Range.
+	 * @param array|null $compare      Comparison range.
+	 * @param int        $product_id   Parent product ID.
+	 * @param int        $variation_id Variation ID, or 0 for the whole product.
+	 * @return array
+	 */
+	public static function product_detail( array $range, ?array $compare, int $product_id, int $variation_id = 0 ): array {
+		$days        = self::product_rows( $range, $product_id, $variation_id );
+		$granularity = KDNA_EcommerceInsights_Dates::auto_granularity( $range );
+		$buckets     = KDNA_EcommerceInsights_Dates::buckets( $range, $granularity );
+
+		$by_day = array();
+		foreach ( $days as $row ) {
+			$by_day[ $row['grouping_key'] ] = $row;
+		}
+
+		$series = array( 'units' => array(), 'revenue' => array(), 'profit' => array() );
+		foreach ( $buckets as $bucket ) {
+			$in_bucket = array_filter( $by_day, static fn( $day ) => $day >= $bucket['start'] && $day <= $bucket['end'], ARRAY_FILTER_USE_KEY );
+			$totals    = self::product_totals( $in_bucket );
+
+			$series['units'][]   = $totals['units'];
+			$series['revenue'][] = $totals['revenue'];
+			$series['profit'][]  = $totals['profit'];
+		}
+
+		// Split by variation for a variable product.
+		$variations = array();
+		if ( ! $variation_id ) {
+			$rows  = array_filter( self::product_rows( $range, $product_id, 0, true ), static fn( $row ) => (int) $row['grouping_key'] > 0 );
+			$names = self::product_names( array_map( static fn( $row ) => array( 'product_id' => $product_id, 'variation_id' => (int) $row['grouping_key'] ), $rows ) );
+			foreach ( $rows as $row ) {
+				$variations[] = array_merge(
+					array(
+						'variation_id' => (int) $row['grouping_key'],
+						'name'         => $names[ (int) $row['grouping_key'] . ':attributes' ] ?? '#' . (int) $row['grouping_key'],
+					),
+					self::product_totals( array( $row ) )
+				);
+			}
+			usort( $variations, static fn( $a, $b ) => $b['revenue'] <=> $a['revenue'] );
+		}
+
+		// Product details.
+		$product = wc_get_product( $variation_id ? $variation_id : $product_id );
+		$parent  = $variation_id ? wc_get_product( $product_id ) : $product;
+		$thumb   = $product ? get_the_post_thumbnail_url( $product->get_id(), 'medium' ) : '';
+		if ( ! $thumb && $parent ) {
+			$thumb = get_the_post_thumbnail_url( $parent->get_id(), 'medium' );
+		}
+
+		return array(
+			'product'     => array(
+				'product_id'   => $product_id,
+				'variation_id' => $variation_id,
+				'name'         => $parent ? wp_specialchars_decode( $parent->get_name(), ENT_QUOTES ) : sprintf( /* translators: %d: product ID. */ __( 'Deleted product #%d', 'kdna-ecommerce-insights' ), $product_id ),
+				'variation'    => $variation_id && $product ? wc_get_formatted_variation( $product, true, false ) : '',
+				'sku'          => $product ? (string) $product->get_sku() : '',
+				'price'        => $product && '' !== $product->get_price() ? (float) wc_get_price_excluding_tax( $product ) : null,
+				'cost'         => $product ? KDNA_EcommerceInsights_Costs::get_effective_cost( $product ) : null,
+				'stock_status' => $product ? $product->get_stock_status() : '',
+				'stock'        => $product && $product->managing_stock() ? $product->get_stock_quantity() : null,
+				'thumbnail'    => $thumb ? $thumb : '',
+				'edit_url'     => (string) get_edit_post_link( $product_id, 'raw' ),
+				'view_url'     => $parent ? (string) $parent->get_permalink() : '',
+			),
+			'totals'      => self::product_totals( $days ),
+			'previous'    => $compare ? self::product_totals( self::product_rows( $compare, $product_id, $variation_id ) ) : null,
+			'granularity' => $granularity,
+			'buckets'     => $buckets,
+			'series'      => $series,
+			'variations'  => $variations,
+		);
+	}
+
 	/*
 	 * ---------------------------------------------------------------------
 	 * Customers

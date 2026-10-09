@@ -1561,3 +1561,633 @@ body.kdna-ei-focus .kdna-ei-savebar {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }
+
+/* ==========================================================================
+   Shared report pieces (Stage 7)
+   ========================================================================== */
+
+.kdna-ei-root .is-negative {
+	color: var(--kdna-ei-negative);
+}
+
+.kdna-ei-root td.is-warning {
+	color: var(--kdna-ei-warning);
+}
+
+.kdna-ei-chart--tall {
+	height: 320px;
+}
+
+.kdna-ei-chart--drawer {
+	height: 220px;
+}
+
+.kdna-ei-chart-legend__dot--positive {
+	background: var(--kdna-ei-positive);
+}
+
+.kdna-ei-chart-legend__dot--negative {
+	background: var(--kdna-ei-negative);
+}
+
+.kdna-ei-legend--compact td,
+.kdna-ei-legend--compact th {
+	padding-top: 10px;
+	padding-bottom: 10px;
+}
+
+.kdna-ei-thumb {
+	display: grid;
+	place-items: center;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-thumb--sm {
+	width: 36px;
+	height: 36px;
+}
+
+.kdna-ei-thumb--lg {
+	width: 56px;
+	height: 56px;
+	border-radius: var(--kdna-ei-radius-md);
+}
+
+.kdna-ei-root .kdna-ei-select--small {
+	height: 32px;
+	min-width: 0;
+	padding-right: 30px;
+	font-size: var(--kdna-ei-fs-small);
+}
+
+/* Inline "i" marker inside table cells and legend rows. */
+.kdna-ei-statement__label,
+.kdna-ei-legend th {
+	white-space: nowrap;
+}
+
+.kdna-ei-statement__label .kdna-ei-estimate,
+.kdna-ei-legend th .kdna-ei-estimate {
+	margin-left: 6px;
+	vertical-align: -3px;
+}
+
+/* ==========================================================================
+   Profit & Loss screen
+   ========================================================================== */
+
+.kdna-ei-screen--profit,
+.kdna-ei-screen--products {
+	display: block;
+}
+
+.kdna-ei-profit__grid {
+	display: grid;
+	gap: var(--kdna-ei-gap);
+	grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr);
+	grid-template-areas:
+		"kpis kpis"
+		"waterfall waterfall"
+		"margin costs"
+		"statement statement";
+}
+
+.kdna-ei-area-waterfall { grid-area: waterfall; }
+.kdna-ei-area-margin { grid-area: margin; }
+.kdna-ei-area-costs { grid-area: costs; }
+.kdna-ei-area-statement { grid-area: statement; }
+
+.kdna-ei-profit .kdna-ei-kpi:first-of-type {
+	border-left: 0;
+}
+
+.kdna-ei-profit > .kdna-ei-notice {
+	margin-bottom: var(--kdna-ei-gap);
+}
+
+@media (max-width: 1100px) {
+	.kdna-ei-profit__grid {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-areas:
+			"kpis"
+			"waterfall"
+			"margin"
+			"costs"
+			"statement";
+	}
+}
+
+/* Cost donut with its legend underneath. */
+.kdna-ei-cost-donut {
+	display: grid;
+	justify-items: center;
+	gap: 16px;
+}
+
+.kdna-ei-cost-donut .kdna-ei-donut__number {
+	font-size: 22px;
+}
+
+.kdna-ei-cost-donut .kdna-ei-legend th {
+	font-size: var(--kdna-ei-fs-body);
+	font-weight: 400;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--kdna-ei-text);
+}
+
+/* P&L statement: first column stays put while months scroll sideways. */
+.kdna-ei-statement-wrap:focus-visible {
+	outline: none;
+	box-shadow: var(--kdna-ei-focus-ring);
+}
+
+.kdna-ei-statement {
+	min-width: 640px;
+}
+
+.kdna-ei-statement th,
+.kdna-ei-statement td {
+	white-space: nowrap;
+}
+
+.kdna-ei-statement tbody th {
+	font-size: var(--kdna-ei-fs-body);
+	font-weight: 400;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-statement :is(thead th, tbody th):first-child {
+	position: sticky;
+	left: 0;
+	z-index: 1;
+	background: var(--kdna-ei-surface);
+}
+
+.kdna-ei-statement tr.is-subtract th,
+.kdna-ei-statement tr.is-subtract td {
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-statement tr.is-subtract th {
+	padding-left: 18px;
+}
+
+.kdna-ei-statement tr.is-total th,
+.kdna-ei-statement tr.is-total td {
+	font-weight: 600;
+	background: color-mix(in srgb, var(--kdna-ei-accent) 5%, transparent);
+}
+
+.kdna-ei-statement tr.is-total th {
+	background: color-mix(in srgb, var(--kdna-ei-accent) 5%, var(--kdna-ei-surface));
+}
+
+.kdna-ei-statement tr.is-total:last-of-type th,
+.kdna-ei-statement tr.is-margin th,
+.kdna-ei-statement tr.is-margin td {
+	font-weight: 600;
+}
+
+.kdna-ei-statement tr.is-total td.is-negative,
+.kdna-ei-statement td.is-negative {
+	color: var(--kdna-ei-negative);
+}
+
+.kdna-ei-statement tr.is-subtract td.is-negative {
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-statement .kdna-ei-statement__total {
+	border-left: 1px solid var(--kdna-ei-border);
+	font-weight: 600;
+}
+
+/* ==========================================================================
+   Products screen
+   ========================================================================== */
+
+.kdna-ei-products {
+	display: grid;
+	gap: var(--kdna-ei-gap);
+}
+
+.kdna-ei-products__top {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: var(--kdna-ei-gap);
+}
+
+@media (max-width: 1100px) {
+	.kdna-ei-products__top {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+/* Best and worst performers. */
+.kdna-ei-root .kdna-ei-performers__list {
+	display: grid;
+	gap: 4px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.kdna-ei-performers__list li {
+	margin: 0;
+}
+
+.kdna-ei-root .kdna-ei-performer {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	width: 100%;
+	padding: 6px 8px;
+	margin: 0 -8px;
+	width: calc(100% + 16px);
+	font: inherit;
+	color: var(--kdna-ei-text);
+	text-align: left;
+	background: transparent;
+	border: 0;
+	border-radius: var(--kdna-ei-radius-sm);
+	cursor: pointer;
+	transition: background-color var(--kdna-ei-duration-fast) ease;
+}
+
+.kdna-ei-root .kdna-ei-performer:hover {
+	background: var(--kdna-ei-surface-raised);
+}
+
+.kdna-ei-root .kdna-ei-performer:focus-visible {
+	outline: none;
+	box-shadow: var(--kdna-ei-focus-ring);
+}
+
+.kdna-ei-performer__name {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	font-weight: 500;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.kdna-ei-performer__figures {
+	display: grid;
+	justify-items: end;
+	flex: none;
+	font-weight: 600;
+	line-height: 1.3;
+}
+
+.kdna-ei-performer__figures .kdna-ei-muted {
+	font-size: var(--kdna-ei-fs-small);
+	font-weight: 400;
+}
+
+/* Category breakdown. */
+.kdna-ei-category-table th,
+.kdna-ei-category-table td {
+	padding-top: 8px;
+	padding-bottom: 8px;
+}
+
+.kdna-ei-category-table tbody th {
+	width: 60%;
+	font-size: var(--kdna-ei-fs-body);
+	font-weight: 400;
+	letter-spacing: 0;
+	text-transform: none;
+}
+
+.kdna-ei-root .kdna-ei-category {
+	display: grid;
+	gap: 6px;
+	width: 100%;
+	padding: 0;
+	font: inherit;
+	color: var(--kdna-ei-text);
+	text-align: left;
+	background: none;
+	border: 0;
+	cursor: pointer;
+}
+
+.kdna-ei-root .kdna-ei-category:hover span:first-child,
+.kdna-ei-category-table tr.is-active .kdna-ei-category span:first-child {
+	color: var(--kdna-ei-accent);
+}
+
+.kdna-ei-root .kdna-ei-category:focus-visible {
+	outline: none;
+	box-shadow: var(--kdna-ei-focus-ring);
+	border-radius: 4px;
+}
+
+.kdna-ei-category .kdna-ei-bar {
+	margin-top: 0;
+}
+
+.kdna-ei-bar__fill--accent {
+	background: var(--kdna-ei-accent);
+}
+
+/* Product performance table. */
+.kdna-ei-root .kdna-ei-sort {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 0;
+	font: inherit;
+	letter-spacing: inherit;
+	text-transform: inherit;
+	color: inherit;
+	background: none;
+	border: 0;
+	cursor: pointer;
+}
+
+.kdna-ei-root .kdna-ei-sort:hover,
+.kdna-ei-table th[aria-sort="ascending"] .kdna-ei-sort,
+.kdna-ei-table th[aria-sort="descending"] .kdna-ei-sort {
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-root .kdna-ei-sort:focus-visible {
+	outline: none;
+	box-shadow: var(--kdna-ei-focus-ring);
+	border-radius: 4px;
+}
+
+.kdna-ei-sort__icon {
+	width: 14px;
+	height: 14px;
+	opacity: 0;
+	transition: transform var(--kdna-ei-duration-fast) ease, opacity var(--kdna-ei-duration-fast) ease;
+}
+
+.kdna-ei-sort:hover .kdna-ei-sort__icon {
+	opacity: 0.4;
+}
+
+th[aria-sort="ascending"] .kdna-ei-sort__icon,
+th[aria-sort="descending"] .kdna-ei-sort__icon {
+	opacity: 1;
+}
+
+th[aria-sort="ascending"] .kdna-ei-sort__icon {
+	transform: rotate(180deg);
+}
+
+.kdna-ei-table th.is-numeric .kdna-ei-sort {
+	flex-direction: row-reverse;
+}
+
+.kdna-ei-root .kdna-ei-product__open {
+	max-width: 100%;
+	padding: 0;
+	font: inherit;
+	font-weight: 500;
+	text-align: left;
+	white-space: nowrap;
+	background: none;
+	border: 0;
+	cursor: pointer;
+}
+
+.kdna-ei-root .kdna-ei-product__open:hover {
+	color: var(--kdna-ei-accent);
+}
+
+.kdna-ei-root .kdna-ei-product__open:focus-visible {
+	outline: none;
+	box-shadow: var(--kdna-ei-focus-ring);
+	border-radius: 4px;
+}
+
+.kdna-ei-performance-table td:first-child {
+	min-width: 260px;
+	max-width: 420px;
+}
+
+.kdna-ei-performance-table tr.is-loss td:first-child {
+	box-shadow: inset 2px 0 0 var(--kdna-ei-negative);
+}
+
+.kdna-ei-table-wrap.is-loading {
+	opacity: 0.55;
+	transition: opacity var(--kdna-ei-duration-fast) ease;
+}
+
+/* ==========================================================================
+   Drill-down drawer
+   ========================================================================== */
+
+.kdna-ei-drawer-backdrop {
+	position: fixed;
+	inset: 0;
+	z-index: 100000;
+	background: rgba(0, 0, 0, 0.45);
+}
+
+.kdna-ei-drawer {
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 100001;
+	display: flex;
+	flex-direction: column;
+	width: min(560px, 100vw);
+	background: var(--kdna-ei-surface);
+	border-left: 1px solid var(--kdna-ei-border);
+	box-shadow: var(--kdna-ei-popover-shadow);
+}
+
+.kdna-ei-drawer--enter,
+.kdna-ei-drawer--leave {
+	transition: transform 320ms var(--kdna-ei-ease), opacity 320ms var(--kdna-ei-ease);
+}
+
+.kdna-ei-drawer--leave {
+	transition-duration: 220ms;
+}
+
+.kdna-ei-drawer--from {
+	opacity: 0;
+	transform: translateX(40px);
+}
+
+.kdna-ei-drawer--to {
+	opacity: 1;
+	transform: none;
+}
+
+.kdna-ei-drawer__header {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: 24px;
+	border-bottom: 1px solid var(--kdna-ei-border);
+}
+
+.kdna-ei-drawer__heading {
+	flex: 1;
+	min-width: 0;
+}
+
+.kdna-ei-drawer__heading .kdna-ei-card__title {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.kdna-ei-drawer__heading p {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px 12px;
+	margin: 4px 0 0;
+	font-size: var(--kdna-ei-fs-small);
+}
+
+.kdna-ei-drawer__close {
+	flex: none;
+	align-self: flex-start;
+}
+
+.kdna-ei-drawer__body {
+	flex: 1;
+	display: grid;
+	align-content: start;
+	gap: 28px;
+	padding: 24px;
+	overflow-y: auto;
+}
+
+.kdna-ei-root .kdna-ei-drawer__back {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	justify-self: start;
+}
+
+.kdna-ei-root .kdna-ei-drawer__stats {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 20px 16px;
+	margin: 0;
+}
+
+.kdna-ei-drawer__stat dt {
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-root .kdna-ei-drawer__stat dd {
+	display: grid;
+	gap: 2px;
+	margin: 4px 0 0;
+	font-size: 22px;
+	font-weight: 600;
+	line-height: 1.2;
+}
+
+.kdna-ei-drawer__stat .kdna-ei-change {
+	font-size: var(--kdna-ei-fs-small);
+	font-weight: 500;
+}
+
+.kdna-ei-drawer__section .kdna-ei-card__header {
+	margin-bottom: 12px;
+}
+
+.kdna-ei-drawer__subtitle {
+	margin: 0 0 12px;
+	font-size: 16px;
+	font-weight: 500;
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-drawer__section .kdna-ei-card__header .kdna-ei-drawer__subtitle {
+	margin: 0;
+}
+
+.kdna-ei-facts--compact {
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 10px;
+}
+
+.kdna-ei-facts--compact > div {
+	padding: 10px 12px;
+}
+
+.kdna-ei-facts--compact dd {
+	font-size: 16px;
+}
+
+.kdna-ei-drawer__links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-top: 16px;
+}
+
+@media (max-width: 600px) {
+	.kdna-ei-root .kdna-ei-drawer__stats,
+	.kdna-ei-facts--compact {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.kdna-ei-drawer--enter,
+	.kdna-ei-drawer--leave {
+		transition: opacity 1ms;
+	}
+
+	.kdna-ei-drawer--from {
+		transform: none;
+	}
+}
+
+/* P&L: the margin chart is about as tall as the cost card beside it (a
+   fixed height, because Chart.js keeps growing inside a stretchy box), the
+   KPI strip is a little tighter, and the Total column stays in view. */
+.kdna-ei-area-margin .kdna-ei-chart {
+	height: 360px;
+}
+
+.kdna-ei-area-costs {
+	align-self: start;
+}
+
+.kdna-ei-profit .kdna-ei-kpi {
+	gap: 16px;
+	padding: 0 24px;
+}
+
+.kdna-ei-statement thead th.kdna-ei-statement__total,
+.kdna-ei-statement td.kdna-ei-statement__total {
+	position: sticky;
+	right: 0;
+	z-index: 1;
+	background: var(--kdna-ei-surface);
+}
+
+.kdna-ei-statement tr.is-total td.kdna-ei-statement__total {
+	background: color-mix(in srgb, var(--kdna-ei-accent) 5%, var(--kdna-ei-surface));
+}
+
+.kdna-ei-statement th,
+.kdna-ei-statement td {
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+.kdna-ei-statement thead th.kdna-ei-statement__total,
+.kdna-ei-statement td.kdna-ei-statement__total {
+	box-shadow: -10px 0 12px -10px rgba(0, 0, 0, 0.35);
+}

@@ -8,10 +8,12 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Route (Administrators only):
- * - GET /products   Units, revenue, cost, profit, margin and refund rate per
- *                   product or variation, paginated and sortable, with best
- *                   and worst performers and a category breakdown.
+ * Routes (Administrators only):
+ * - GET /products        Units, revenue, cost, profit, margin and refund rate
+ *                        per product or variation, paginated and sortable,
+ *                        with best and worst performers and a category breakdown.
+ * - GET /products/{id}   One product for the drill-down drawer, optionally one
+ *                        variation (?variation=ID).
  */
 class KDNA_EcommerceInsights_Rest_Products extends KDNA_EcommerceInsights_Rest_Report_Base {
 
@@ -28,6 +30,60 @@ class KDNA_EcommerceInsights_Rest_Products extends KDNA_EcommerceInsights_Rest_R
 				'permission_callback' => array( $this, 'permissions_check' ),
 				'args'                => array_merge( $this->range_args(), self::table_args() ),
 			)
+		);
+
+		register_rest_route(
+			KDNA_EI_REST_NAMESPACE,
+			'/products/(?P<id>\d+)',
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_product' ),
+				'permission_callback' => array( $this, 'permissions_check' ),
+				'args'                => array_merge(
+					$this->range_args(),
+					array(
+						'id'        => array(
+							'type'    => 'integer',
+							'minimum' => 1,
+						),
+						'variation' => array(
+							'type'    => 'integer',
+							'default' => 0,
+							'minimum' => 0,
+						),
+					)
+				),
+			)
+		);
+	}
+
+	/**
+	 * Returns one product's figures for the drawer: totals with comparison,
+	 * a sales and profit series and a split by variation.
+	 *
+	 * @param WP_REST_Request $request Incoming request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function get_product( WP_REST_Request $request ) {
+		$ranges = $this->ranges( $request );
+		if ( is_wp_error( $ranges ) ) {
+			return $ranges;
+		}
+		list( $range, $compare ) = $ranges;
+
+		$product_id   = (int) $request['id'];
+		$variation_id = (int) $request['variation'];
+
+		return $this->respond(
+			$request,
+			'product',
+			array(
+				'id'        => $product_id,
+				'variation' => $variation_id,
+			),
+			static fn() => KDNA_EcommerceInsights_Report::product_detail( $range, $compare, $product_id, $variation_id ),
+			$range,
+			$compare
 		);
 	}
 

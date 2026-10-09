@@ -248,9 +248,9 @@
 			var value = dataset.data[ index ];
 			var label = helpers.seriesLabel ? helpers.seriesLabel( datasetIndex, index ) : dataset.label;
 			html += '<div class="kdna-ei-tooltip__row">' +
-				'<span class="kdna-ei-tooltip__dot" style="background:' + escapeHtml( dataset.borderColor ) + '"></span>' +
+				'<span class="kdna-ei-tooltip__dot" style="background:' + escapeHtml( Array.isArray( dataset.backgroundColor ) ? dataset.backgroundColor[ index ] : dataset.borderColor ) + '"></span>' +
 				'<span class="kdna-ei-tooltip__label">' + escapeHtml( label ) + '</span>' +
-				'<span class="kdna-ei-tooltip__value">' + escapeHtml( helpers.value ? helpers.value( value ) : String( value ) ) + '</span>' +
+				'<span class="kdna-ei-tooltip__value">' + escapeHtml( helpers.value ? helpers.value( value, index, datasetIndex ) : String( value ) ) + '</span>' +
 				'</div>';
 		} );
 
@@ -372,14 +372,19 @@
 	 * @param {Object} t     Tokens.
 	 */
 	function styleLineDatasets( chart, t ) {
+		// The ringed latest point matches the main line's colour.
+		if ( chart.options && chart.options.plugins && chart.options.plugins.kdnaLatestPoint && chart.data.datasets[ 0 ] && chart.data.datasets[ 0 ].kdnaColour ) {
+			chart.options.plugins.kdnaLatestPoint.stroke = t[ chart.data.datasets[ 0 ].kdnaColour ] || chart.data.datasets[ 0 ].kdnaColour;
+		}
 		chart.data.datasets.forEach( function ( dataset, index ) {
 			var primary = index === 0;
-			var colour = primary ? t.accent : t.accent2;
+			var colour = dataset.kdnaColour ? ( t[ dataset.kdnaColour ] || dataset.kdnaColour ) : ( primary ? t.accent : t.accent2 );
+			var filled = dataset.kdnaFill === undefined ? primary : dataset.kdnaFill;
 			dataset.borderColor = colour;
-			dataset.backgroundColor = primary ? function ( ctx ) {
+			dataset.backgroundColor = filled ? function ( ctx ) {
 				return areaGradient( ctx.chart, colour );
 			} : 'transparent';
-			dataset.fill = primary ? 'origin' : false;
+			dataset.fill = filled ? 'origin' : false;
 			dataset.borderWidth = primary ? 2.5 : 2;
 			dataset.tension = 0.4;
 			dataset.cubicInterpolationMode = 'monotone';
@@ -390,6 +395,18 @@
 			dataset.pointHoverBorderWidth = 2.5;
 			dataset.order = primary ? 0 : 1;
 		} );
+	}
+
+	/**
+	 * Turns one series ({ label, data, colour, fill }) into a Chart.js
+	 * dataset. colour is a token name such as "positive"; fill adds the
+	 * gradient under the line (the first series has it by default).
+	 *
+	 * @param {Object} series Series.
+	 * @return {Object}
+	 */
+	function datasetFrom( series ) {
+		return { label: series.label, data: series.data, spanGaps: true, kdnaColour: series.colour, kdnaFill: series.fill };
 	}
 
 	/**
@@ -408,7 +425,7 @@
 		var data = {
 			labels: options.labels,
 			datasets: options.series.map( function ( series ) {
-				return { label: series.label, data: series.data, spanGaps: true };
+				return datasetFrom( series );
 			} ),
 		};
 
@@ -439,7 +456,7 @@
 		chart.$kdna = options;
 		chart.data.labels = options.labels;
 		chart.data.datasets = options.series.map( function ( series ) {
-			return { label: series.label, data: series.data, spanGaps: true };
+			return datasetFrom( series );
 		} );
 		var t = tokens( chart.canvas );
 		chart.options = lineOptions( t, options );
@@ -491,6 +508,106 @@
 	}
 
 	/**
+	 * Colours for each waterfall bar: totals in the accent colour, money
+	 * coming in in the positive colour, money going out in the negative one.
+	 *
+	 * @param {Object}   t     Tokens.
+	 * @param {Object[]} steps Steps with a type of add, subtract or total.
+	 * @return {string[]}
+	 */
+	function waterfallColours( t, steps ) {
+		return steps.map( function ( step, index ) {
+			if ( step.type === 'total' ) {
+				return index === steps.length - 1 ? ( step.amount < 0 ? t.negative : t.positive ) : t.accent;
+			}
+			return step.type === 'add' ? t.accent2 : withOpacity( t.negative, 0.85 );
+		} );
+	}
+
+	/**
+	 * Builds Chart.js options for the waterfall: the same quiet axes and
+	 * tooltip card as the line charts.
+	 *
+	 * @param {Object} t       Tokens.
+	 * @param {Object} options Options passed to waterfallChart().
+	 * @return {Object}
+	 */
+	function waterfallOptions( t, options ) {
+		var base = lineOptions( t, options );
+		base.interaction = { mode: 'index', intersect: false };
+		base.scales.x.ticks.maxTicksLimit = options.steps.length;
+		base.scales.x.ticks.autoSkip = false;
+		base.scales.x.ticks.font = { family: t.font, size: 11 };
+		base.plugins.kdnaLatestPoint = { display: false };
+		base.animation = reduceMotion ? false : { duration: 600, easing: 'easeOutCubic' };
+		return base;
+	}
+
+	/**
+	 * Creates a waterfall chart: floating bars that step down from net
+	 * revenue to net profit, so you can see where the money went.
+	 *
+	 * @param {HTMLCanvasElement} canvas  Canvas inside an Insights root.
+	 * @param {Object}            options steps ([ { label, amount, type, from, to } ]),
+	 *                                    plus formatters xLabel(index), yLabel(value),
+	 *                                    title(index), value(value, index).
+	 * @return {Chart}
+	 */
+	function waterfallChart( canvas, options ) {
+		var t = tokens( canvas );
+		var colours = waterfallColours( t, options.steps );
+		var chart = new Chart( canvas, {
+			type: 'bar',
+			data: {
+				labels: options.steps.map( function ( step ) {
+					return step.label;
+				} ),
+				datasets: [ {
+					label: '',
+					data: options.steps.map( function ( step ) {
+						return [ step.from, step.to ];
+					} ),
+					backgroundColor: colours,
+					borderColor: colours,
+					borderWidth: 0,
+					borderRadius: 6,
+					borderSkipped: false,
+					maxBarThickness: 44,
+					categoryPercentage: 0.7,
+				} ],
+			},
+			options: waterfallOptions( t, options ),
+		} );
+
+		chart.$kdna = options;
+		chart.$kdnaKind = 'waterfall';
+		charts.push( chart );
+		return chart;
+	}
+
+	/**
+	 * Replaces a waterfall chart's steps and redraws it.
+	 *
+	 * @param {Chart}  chart   Chart from waterfallChart().
+	 * @param {Object} options Same shape as waterfallChart() options.
+	 */
+	function updateWaterfallChart( chart, options ) {
+		var t = tokens( chart.canvas );
+		var colours = waterfallColours( t, options.steps );
+		chart.$kdna = options;
+		chart.data.labels = options.steps.map( function ( step ) {
+			return step.label;
+		} );
+		chart.data.datasets[ 0 ].data = options.steps.map( function ( step ) {
+			return [ step.from, step.to ];
+		} );
+		chart.data.datasets[ 0 ].backgroundColor = colours;
+		chart.data.datasets[ 0 ].borderColor = colours;
+		chart.options = waterfallOptions( t, options );
+		chart.update();
+	}
+
+	/**
 	 * Re-reads the theme colours and redraws every chart, for example after
 	 * switching between light and dark mode.
 	 */
@@ -504,6 +621,11 @@
 			if ( chart.$kdnaKind === 'line' ) {
 				chart.options = lineOptions( t, chart.$kdna );
 				styleLineDatasets( chart, t );
+			} else if ( chart.$kdnaKind === 'waterfall' ) {
+				var colours = waterfallColours( t, chart.$kdna.steps );
+				chart.options = waterfallOptions( t, chart.$kdna );
+				chart.data.datasets[ 0 ].backgroundColor = colours;
+				chart.data.datasets[ 0 ].borderColor = colours;
 			} else if ( chart.$kdnaKind === 'donut' ) {
 				chart.data.datasets[ 0 ].backgroundColor = chart.$kdna.colours.map( function ( name ) {
 					return t[ name ] || name;
@@ -528,6 +650,8 @@
 		lineChart: lineChart,
 		updateLineChart: updateLineChart,
 		donutChart: donutChart,
+		waterfallChart: waterfallChart,
+		updateWaterfallChart: updateWaterfallChart,
 		refreshAll: refreshAll,
 	};
 }( window, document ) );

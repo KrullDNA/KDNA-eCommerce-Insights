@@ -282,6 +282,8 @@ class KDNA_EcommerceInsights_Admin {
 				'comparisons'  => KDNA_EcommerceInsights_Settings::comparison_modes(),
 				'storeName'    => KDNA_EcommerceInsights_Settings::store_name(),
 				'locale'       => str_replace( '_', '-', get_user_locale() ),
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only switch, Administrators only.
+				'debug'        => isset( $_GET['kdna_ei_debug'] ) && '1' === $_GET['kdna_ei_debug'] && current_user_can( 'manage_options' ),
 				'status'       => KDNA_EcommerceInsights_Rest_Status::data(),
 				'currency'     => array(
 					'symbol'   => html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUOTES, 'UTF-8' ),

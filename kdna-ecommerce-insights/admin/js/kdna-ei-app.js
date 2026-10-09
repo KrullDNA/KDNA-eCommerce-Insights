@@ -82,6 +82,7 @@
 				rangeOpen: false,
 				baseTitle: document.title,
 				status: config.status || {},
+				debug: !! config.debug,
 				pollTimer: null,
 				jobJustFinished: false,
 				jobError: '',

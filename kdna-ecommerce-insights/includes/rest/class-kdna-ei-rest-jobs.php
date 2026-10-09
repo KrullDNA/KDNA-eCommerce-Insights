@@ -63,20 +63,13 @@ class KDNA_EcommerceInsights_Rest_Jobs {
 	}
 
 	/**
-	 * Only Administrators may use these routes.
+	 * Only Administrators with a valid REST nonce may use these routes.
 	 *
+	 * @param WP_REST_Request $request Incoming request.
 	 * @return bool|WP_Error
 	 */
-	public function permissions_check() {
-		if ( current_user_can( 'manage_options' ) ) {
-			return true;
-		}
-
-		return new WP_Error(
-			'kdna_ei_forbidden',
-			__( 'Sorry, only administrators can use Insights.', 'kdna-ecommerce-insights' ),
-			array( 'status' => is_user_logged_in() ? 403 : 401 )
-		);
+	public function permissions_check( $request ) {
+		return KDNA_EcommerceInsights_Rest_Report_Base::check_access( $request );
 	}
 
 	/**

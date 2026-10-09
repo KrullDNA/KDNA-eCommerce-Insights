@@ -554,6 +554,57 @@ tr.is-ended td {
 	}
 }
 
+/* Debug panel (?kdna_ei_debug=1). */
+.kdna-ei-debug {
+	position: fixed;
+	right: 16px;
+	bottom: 16px;
+	z-index: 99999;
+	width: 440px;
+	max-width: calc(100vw - 32px);
+	font-size: var(--kdna-ei-fs-small);
+	background: var(--kdna-ei-surface-raised);
+	border: 1px solid var(--kdna-ei-border-strong);
+	border-radius: var(--kdna-ei-radius-md);
+	box-shadow: var(--kdna-ei-popover-shadow);
+}
+
+.kdna-ei-root .kdna-ei-debug__toggle {
+	display: flex;
+	justify-content: space-between;
+	width: 100%;
+	padding: 10px 14px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.kdna-ei-debug__body {
+	max-height: 50vh;
+	overflow-y: auto;
+	padding: 0 14px 12px;
+}
+
+.kdna-ei-debug__entry {
+	padding: 8px 0;
+	border-top: 1px solid var(--kdna-ei-border);
+}
+
+.kdna-ei-debug__entry summary {
+	cursor: pointer;
+}
+
+.kdna-ei-debug__entry table {
+	width: 100%;
+	margin-top: 6px;
+	border-collapse: collapse;
+}
+
+.kdna-ei-debug__entry td {
+	padding: 3px 4px;
+	border-top: 1px solid var(--kdna-ei-border);
+}
+
 /* Bar fixed to the bottom of the screen while there are unsaved changes. */
 .kdna-ei-savebar {
 	position: fixed;

@@ -196,4 +196,27 @@ $layouts       = array( 'overview', 'report', 'table', 'settings' );
 			</section>
 		<?php endforeach; ?>
 	</main>
+
+	<?php // Debug panel: only with ?kdna_ei_debug=1 on the Insights page, Administrators only. ?>
+	<template x-if="debug">
+		<aside class="kdna-ei-debug" x-data="{ open: true, entries: [] }" @kdna:ei-debug.window="entries = [ $event.detail ].concat( entries ).slice( 0, 15 )" aria-label="<?php esc_attr_e( 'Debug panel', 'kdna-ecommerce-insights' ); ?>">
+			<button type="button" class="kdna-ei-debug__toggle" @click="open = ! open">
+				<?php esc_html_e( 'Debug', 'kdna-ecommerce-insights' ); ?>
+				<span class="kdna-ei-num" x-text="entries.length ? entries[0].total_ms + ' ms' : ''"></span>
+			</button>
+			<div class="kdna-ei-debug__body" x-show="open">
+				<p class="kdna-ei-muted" x-show="! entries.length"><?php esc_html_e( 'Query timings appear here as screens load data.', 'kdna-ecommerce-insights' ); ?></p>
+				<template x-for="( entry, index ) in entries" :key="index + entry.route + entry.total_ms">
+					<details class="kdna-ei-debug__entry" :open="index === 0">
+						<summary><strong x-text="'/' + entry.route"></strong> <span class="kdna-ei-num" x-text="entry.total_ms + ' ms, ' + entry.queries.length + ' queries, ' + entry.memory"></span></summary>
+						<table>
+							<template x-for="( query, q ) in entry.queries" :key="q">
+								<tr><td x-text="query.label"></td><td class="kdna-ei-num" x-text="query.ms + ' ms'"></td><td class="kdna-ei-num kdna-ei-muted" x-text="query.rows + ' rows'"></td></tr>
+							</template>
+						</table>
+					</details>
+				</template>
+			</div>
+		</aside>
+	</template>
 </div>

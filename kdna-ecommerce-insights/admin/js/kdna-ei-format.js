@@ -134,6 +134,12 @@
 		options = options || {};
 
 		var url = config.restUrl + path;
+
+		// Debug mode (?kdna_ei_debug=1 on the Insights page) asks every route for query timings.
+		if ( config.debug ) {
+			options.query = Object.assign( {}, options.query || {}, { kdna_ei_debug: 1 } );
+		}
+
 		if ( options.query ) {
 			var query = Object.keys( options.query ).filter( function ( key ) {
 				return options.query[ key ] !== '' && options.query[ key ] !== null && options.query[ key ] !== undefined && options.query[ key ] !== false;
@@ -158,6 +164,9 @@
 			return response.json().catch( function () {
 				return {};
 			} ).then( function ( data ) {
+				if ( config.debug && data && data.meta && data.meta.debug ) {
+					window.dispatchEvent( new window.CustomEvent( 'kdna:ei-debug', { detail: data.meta.debug } ) );
+				}
 				if ( ! response.ok ) {
 					var error = new Error( ( data && data.message ) || ( config.i18n && config.i18n.requestFailed ) || 'Request failed.' );
 					error.status = response.status;

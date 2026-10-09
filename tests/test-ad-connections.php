@@ -59,6 +59,16 @@ function kdna_ei_t_call( string $method, string $path, array $params = array() )
 require_once __DIR__ . '/support/ad-platform-mock.php';
 
 /**
+ * A day relative to today, Y-m-d (uses the mock's helper).
+ *
+ * @param int $offset Days back.
+ * @return string
+ */
+function kdna_ei_t_day( int $offset ): string {
+	return kdna_ei_mock_day( $offset );
+}
+
+/**
  * Spend saved for a channel and source in the last 30 days.
  *
  * @param string $channel Channel.

@@ -232,6 +232,7 @@
 					var error = new Error( ( data && data.message ) || ( config.i18n && config.i18n.requestFailed ) || 'Request failed.' );
 					error.status = response.status;
 					error.fields = ( data && data.data && data.data.fields ) || {};
+					error.data = ( data && data.data ) || {};
 					throw error;
 				}
 				return data;

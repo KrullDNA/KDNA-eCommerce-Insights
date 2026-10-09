@@ -44,6 +44,13 @@ class KDNA_EcommerceInsights_Ad_Spend {
 		if ( '' === sanitize_key( (string) ( $data['channel'] ?? '' ) ) ) {
 			$errors['channel'] = __( 'Choose a channel, for example Meta or Google.', 'kdna-ecommerce-insights' );
 		}
+		// A live-connected channel's spend comes from the platform for synced dates.
+		if ( ! $errors && class_exists( 'KDNA_EcommerceInsights_Ad_Sync' ) ) {
+			$blocked = KDNA_EcommerceInsights_Ad_Sync::blocked( sanitize_key( (string) $data['channel'] ), (string) $data['start'], (string) ( ! empty( $data['end'] ) ? $data['end'] : $data['start'] ) );
+			if ( '' !== $blocked ) {
+				$errors['channel'] = $blocked;
+			}
+		}
 		if ( mb_strlen( (string) ( $data['campaign_name'] ?? '' ) ) > 255 ) {
 			$errors['campaign_name'] = __( 'Please keep the campaign name under 255 characters.', 'kdna-ecommerce-insights' );
 		}
@@ -239,6 +246,7 @@ class KDNA_EcommerceInsights_Ad_Spend {
 				$row['campaigns']    = (int) $row['campaigns'];
 				$row['includes_gst'] = (bool) $row['includes_gst'];
 				$row['editable']     = 'manual' === $row['source'];
+				$row['live']         = 'api' === $row['source'] && KDNA_EcommerceInsights_Ad_Sync::platform( $row['channel'] ) && KDNA_EcommerceInsights_Ad_Sync::platform( $row['channel'] )->configured();
 				return $row;
 			},
 			(array) $rows

@@ -147,6 +147,14 @@
 				csv: { open: false },
 				mappingEdited: false,
 
+				connections: {},
+				connResult: {},
+				connBusy: { meta: false, google: false },
+				syncDays: { meta: 7, google: 7 },
+				confirmDisconnect: '',
+				conn: { open: false, key: '', form: {}, saved: {}, errors: {}, error: '', busy: false, rate: '1', frequency: 'daily' },
+				copied: false,
+
 				/**
 				 * Sets up the forms and reloads when the date range changes.
 				 */
@@ -155,6 +163,7 @@
 					held.root = this.$el;
 					this.form = this.blankForm();
 					this.csv = this.blankImport();
+					this.loadConnections();
 
 					var refresh = function () {
 						if ( ! self.loaded ) {
@@ -646,6 +655,7 @@
 					f.errors = errors;
 					f.error = '';
 					if ( Object.keys( errors ).length ) {
+						this.focusProblem( 'formDialog' );
 						return;
 					}
 
@@ -667,7 +677,8 @@
 						self.announceChange();
 					} ).catch( function ( error ) {
 						f.errors = error.fields || {};
-						f.error = error.fields ? t.checkFields : error.message;
+						f.error = Object.keys( f.errors ).length ? t.checkFields : error.message;
+						self.focusProblem( 'formDialog' );
 					} ).finally( function () {
 						f.busy = false;
 					} );
@@ -883,7 +894,7 @@
 				 * @return {boolean}
 				 */
 				get canImport() {
-					return !! ( this.csv.channel && ! this.needsMapping && this.csv.preview && this.csv.preview.totals.rows > 0 );
+					return !! ( this.csv.channel && ! this.needsMapping && this.csv.preview && this.csv.preview.totals.rows > 0 && ! this.csv.preview.blocked );
 				},
 
 				/**
@@ -995,6 +1006,253 @@
 
 				/*
 				 * -------------------------------------------------------------
+				 * Live connections
+				 * -------------------------------------------------------------
+				 */
+
+				/**
+				 * Fetches both connections' status, and shows any message from
+				 * returning after Sign in with Google.
+				 *
+				 * @return {Promise}
+				 */
+				loadConnections: function () {
+					var self = this;
+					return api( 'connections' ).then( function ( data ) {
+						self.connections = data.connections;
+						self.conn.rate = String( data.rate );
+						self.conn.frequency = data.frequency;
+						if ( data.notice ) {
+							self.notice = data.notice;
+						}
+					} ).catch( function () {} );
+				},
+
+				/**
+				 * The connections in display order.
+				 *
+				 * @return {Object[]}
+				 */
+				get connectionList() {
+					var c = this.connections;
+					return [ c.meta, c.google ].filter( Boolean );
+				},
+
+				/**
+				 * Badge colour for a connection state.
+				 *
+				 * @param {string} state not_set_up, ready, connected or error.
+				 * @return {string}
+				 */
+				stateBadge: function ( state ) {
+					return {
+						connected: 'kdna-ei-badge--positive',
+						error: 'kdna-ei-badge--negative',
+						ready: 'kdna-ei-badge--warning',
+					}[ state ] || 'kdna-ei-badge--plain';
+				},
+
+				/**
+				 * Puts a connection's updated status on its card.
+				 *
+				 * @param {Object} connection Connection from the server.
+				 */
+				setConnection: function ( connection ) {
+					if ( connection ) {
+						this.connections = Object.assign( {}, this.connections, { [ connection.key ]: connection } );
+					}
+				},
+
+				/**
+				 * Opens the setup window for a platform, filled in with the
+				 * saved details (secrets are never sent, only whether one is saved).
+				 *
+				 * @param {string}  key     meta or google.
+				 * @param {Element} trigger Button that opened it.
+				 */
+				openConnection: function ( key, trigger ) {
+					var self = this;
+					var saved = ( this.connections[ key ] || {} ).settings || {};
+					held.trigger = trigger || null;
+					this.conn = Object.assign( {}, this.conn, {
+						open: true,
+						key: key,
+						saved: saved,
+						errors: {},
+						error: '',
+						busy: false,
+						form: key === 'meta'
+							? { app_id: saved.app_id || '', ad_account_id: saved.ad_account_id || '', token: '' }
+							: { client_id: saved.client_id || '', client_secret: '', developer_token: '', customer_id: saved.customer_id || '', login_customer_id: saved.login_customer_id || '' },
+					} );
+					this.$nextTick( function () {
+						var first = held.root.querySelector( '[x-ref="connDialog"] input' );
+						if ( first ) {
+							first.focus();
+						}
+					} );
+				},
+
+				/**
+				 * Closes the setup window.
+				 */
+				closeConnection: function () {
+					this.conn.open = false;
+					this.returnFocus();
+				},
+
+				/**
+				 * Saves the rate and sync timing, then the platform's details.
+				 * The server tests the connection straight away when it can.
+				 * For Google, a first save continues to Sign in with Google.
+				 *
+				 * @return {Promise}
+				 */
+				saveConnection: function () {
+					var self = this;
+					var c = this.conn;
+					c.busy = true;
+					c.error = '';
+					c.errors = {};
+
+					return api( 'connections/rate', { method: 'POST', body: { rate: c.rate, frequency: c.frequency } } ).then( function () {
+						return api( 'connections/' + c.key, { method: 'POST', body: c.form } );
+					} ).then( function ( result ) {
+						self.setConnection( result.connection );
+						self.connResult[ c.key ] = result.test ? ( result.test.ok ? t.connectedOk : '' ) : t.savedOnly;
+						var signIn = c.key === 'google' && ! result.connection.settings.signed_in;
+						self.closeConnection();
+						self.notice = { type: result.test && ! result.test.ok ? 'negative' : 'positive', text: result.test && ! result.test.ok ? result.test.message : sprintf( t.savedConnection, result.connection.label ) };
+						if ( signIn ) {
+							return self.googleSignIn();
+						}
+					} ).catch( function ( error ) {
+						c.errors = error.fields || {};
+						c.error = Object.keys( c.errors ).length ? t.checkFields : error.message;
+						self.focusProblem( 'connDialog' );
+					} ).finally( function () {
+						c.busy = false;
+					} );
+				},
+
+				/**
+				 * Sends the browser to Google to sign in. Google returns to
+				 * Insights afterwards.
+				 *
+				 * @return {Promise}
+				 */
+				googleSignIn: function () {
+					var self = this;
+					this.connBusy.google = 'signin';
+					return api( 'connections/google/auth-url' ).then( function ( result ) {
+						window.location.href = result.url;
+					} ).catch( function ( error ) {
+						self.notice = { type: 'negative', text: error.message };
+						self.connBusy.google = false;
+					} );
+				},
+
+				/**
+				 * Tests a connection and shows the result on its card.
+				 *
+				 * @param {string} key Platform.
+				 * @return {Promise}
+				 */
+				testConnection: function ( key ) {
+					var self = this;
+					this.connBusy[ key ] = 'test';
+					this.connResult[ key ] = '';
+					return api( 'connections/' + key + '/test', { method: 'POST' } ).then( function ( result ) {
+						self.setConnection( result.connection );
+						self.connResult[ key ] = sprintf( t.testOk, result.account.name );
+					} ).catch( function ( error ) {
+						self.setConnection( error.data && error.data.connection );
+					} ).finally( function () {
+						self.connBusy[ key ] = false;
+					} );
+				},
+
+				/**
+				 * Syncs now, reaching back as far as chosen on the card.
+				 *
+				 * @param {string} key Platform.
+				 * @return {Promise}
+				 */
+				syncNow: function ( key ) {
+					var self = this;
+					this.connBusy[ key ] = 'sync';
+					this.connResult[ key ] = '';
+					return api( 'connections/' + key + '/sync', { method: 'POST', body: { days: this.syncDays[ key ] } } ).then( function ( result ) {
+						var r = result.result;
+						self.setConnection( result.connection );
+						self.connResult[ key ] = sprintf( t.syncOk, self.formatNumber( r.rows ), self.money( r.spend ), self.dateRange( r.start, r.end ) ) + ( r.replaced > 0 ? ' ' + sprintf( t.syncReplaced, self.money( r.replaced ) ) : '' );
+						self.announceChange();
+					} ).catch( function ( error ) {
+						self.setConnection( error.data && error.data.connection );
+					} ).finally( function () {
+						self.connBusy[ key ] = false;
+					} );
+				},
+
+				/**
+				 * Disconnects a platform after confirming. Synced spend is kept.
+				 *
+				 * @param {string} key Platform.
+				 * @return {Promise}
+				 */
+				disconnect: function ( key ) {
+					var self = this;
+					this.confirmDisconnect = '';
+					return api( 'connections/' + key, { method: 'DELETE' } ).then( function ( result ) {
+						self.setConnection( result.connection );
+						self.connResult[ key ] = '';
+						self.notice = { type: 'positive', text: sprintf( t.disconnected, result.connection.label ) };
+						self.announceChange();
+					} ).catch( function ( error ) {
+						self.notice = { type: 'negative', text: error.message };
+					} );
+				},
+
+				/**
+				 * Copies text, such as the Google redirect address.
+				 *
+				 * @param {string} text Text.
+				 */
+				copy: function ( text ) {
+					var self = this;
+					if ( window.navigator.clipboard ) {
+						window.navigator.clipboard.writeText( text ).then( function () {
+							self.copied = true;
+							window.setTimeout( function () {
+								self.copied = false;
+							}, 2000 );
+						} );
+					}
+				},
+
+				/**
+				 * A GMT "Y-m-d H:i:s" time shown in the visitor's own time and style.
+				 *
+				 * @param {string} value Date and time.
+				 * @return {string}
+				 */
+				dateTime: function ( value ) {
+					var date = new Date( String( value ).replace( ' ', 'T' ) + 'Z' );
+					return isNaN( date ) ? value : date.toLocaleString( config.locale || undefined, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' } );
+				},
+
+				/**
+				 * A Y-m-d date as short text.
+				 *
+				 * @param {string} value Date.
+				 * @return {string}
+				 */
+				dateLabel: function ( value ) {
+					return dates.short( value );
+				},
+
+				/*
+				 * -------------------------------------------------------------
 				 * Helpers
 				 * -------------------------------------------------------------
 				 */
@@ -1020,6 +1278,24 @@
 						event.preventDefault();
 						first.focus();
 					}
+				},
+
+				/**
+				 * Moves focus to the first field that needs fixing in a window,
+				 * or to the window itself, so keyboard and screen reader users
+				 * land on the problem.
+				 *
+				 * @param {string} ref The window's x-ref name.
+				 */
+				focusProblem: function ( ref ) {
+					this.$nextTick( function () {
+						var dialog = held.root.querySelector( '[x-ref="' + ref + '"]' );
+						if ( ! dialog ) {
+							return;
+						}
+						var field = dialog.querySelector( '.is-invalid input, input.is-invalid, select.is-invalid' );
+						( field || dialog ).focus();
+					} );
 				},
 
 				/**

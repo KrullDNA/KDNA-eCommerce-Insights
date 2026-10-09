@@ -487,6 +487,7 @@ class KDNA_EcommerceInsights_Ad_Spend_Import {
 			'start'          => $prepared['start'],
 			'end'            => $prepared['end'],
 			'replaces'       => round( $replaces, 2 ),
+			'blocked'        => $prepared['start'] && $channel ? KDNA_EcommerceInsights_Ad_Sync::blocked( $channel, $prepared['start'], $prepared['end'] ) : '',
 		);
 	}
 
@@ -511,6 +512,11 @@ class KDNA_EcommerceInsights_Ad_Spend_Import {
 		if ( ! $prepared['rows'] ) {
 			$message = $prepared['errors'] ? $prepared['errors'][0]['message'] : __( 'There is nothing to import in that file.', 'kdna-ecommerce-insights' );
 			return new WP_Error( 'kdna_ei_import_empty', $message, array( 'status' => 400 ) );
+		}
+
+		$blocked = KDNA_EcommerceInsights_Ad_Sync::blocked( $channel, $prepared['start'], $prepared['end'] );
+		if ( '' !== $blocked ) {
+			return new WP_Error( 'kdna_ei_import_blocked', $blocked, array( 'status' => 400 ) );
 		}
 
 		$replaced = self::existing( $channel, $prepared['start'], $prepared['end'] );

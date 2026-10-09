@@ -513,6 +513,88 @@ class KDNA_EcommerceInsights_Admin {
 			'importedReplaced'  => __( 'This replaced %s imported earlier for the same dates.', 'kdna-ecommerce-insights' ),
 			'done'              => __( 'Done', 'kdna-ecommerce-insights' ),
 			'cancel'            => __( 'Cancel', 'kdna-ecommerce-insights' ),
+
+			// Live connections.
+			'liveSubtitle'      => __( 'Live connection', 'kdna-ecommerce-insights' ),
+			'states'            => array(
+				'not_set_up' => __( 'Not set up', 'kdna-ecommerce-insights' ),
+				'ready'      => __( 'Ready to test', 'kdna-ecommerce-insights' ),
+				'connected'  => __( 'Connected', 'kdna-ecommerce-insights' ),
+				'error'      => __( 'Needs attention', 'kdna-ecommerce-insights' ),
+			),
+			'metaIntro'         => __( 'Bring in Facebook and Instagram ad spend, purchases and purchase value automatically every day.', 'kdna-ecommerce-insights' ),
+			'googleIntro'       => __( 'Bring in Google Ads spend, conversions and conversion value automatically every day.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: list of items. */
+			'stillNeeded'       => __( 'Still needed: %s.', 'kdna-ecommerce-insights' ),
+			/* translators: 1: date and time, 2: campaign days, 3: spend. */
+			'lastSynced'        => __( 'Last synced %1$s: %2$s campaign days, %3$s spend.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: date and time. */
+			'nextSync'          => __( 'Next sync %s.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: date. */
+			'syncedFrom'        => __( 'Spend from %s onwards comes from this connection, so it cannot be added by hand.', 'kdna-ecommerce-insights' ),
+			'setUp'             => __( 'Set up', 'kdna-ecommerce-insights' ),
+			'changeDetails'     => __( 'Change details', 'kdna-ecommerce-insights' ),
+			'signIn'            => __( 'Sign in with Google', 'kdna-ecommerce-insights' ),
+			'howFarBack'        => __( 'How far back to sync', 'kdna-ecommerce-insights' ),
+			'days7'             => __( 'Last 7 days', 'kdna-ecommerce-insights' ),
+			'days30'            => __( 'Last 30 days', 'kdna-ecommerce-insights' ),
+			'days90'            => __( 'Last 90 days', 'kdna-ecommerce-insights' ),
+			'days365'           => __( 'Last 12 months', 'kdna-ecommerce-insights' ),
+			'syncNow'           => __( 'Sync now', 'kdna-ecommerce-insights' ),
+			'syncing'           => __( 'Syncing...', 'kdna-ecommerce-insights' ),
+			'test'              => __( 'Test connection', 'kdna-ecommerce-insights' ),
+			'testing'           => __( 'Testing...', 'kdna-ecommerce-insights' ),
+			'disconnect'        => __( 'Disconnect', 'kdna-ecommerce-insights' ),
+			'disconnectConfirm' => __( 'Disconnect? Spend already synced is kept.', 'kdna-ecommerce-insights' ),
+			'yesDisconnect'     => __( 'Yes, disconnect', 'kdna-ecommerce-insights' ),
+			'keep'              => __( 'Keep', 'kdna-ecommerce-insights' ),
+			'liveSynced'        => __( 'Live', 'kdna-ecommerce-insights' ),
+			'liveHelp'          => __( 'Synced from a live connection. It updates itself; disconnect the platform to remove it.', 'kdna-ecommerce-insights' ),
+			'metaTitle'         => __( 'Connect Meta ads', 'kdna-ecommerce-insights' ),
+			'googleTitle'       => __( 'Connect Google Ads', 'kdna-ecommerce-insights' ),
+			'howToGet'          => __( 'Where do I find these?', 'kdna-ecommerce-insights' ),
+			'metaSteps'         => array(
+				__( 'In Meta for Developers, create an app of type Business, linked to your business portfolio. Copy its App ID.', 'kdna-ecommerce-insights' ),
+				__( 'In Business Settings, go to Users > System users and add a system user with the Employee role.', 'kdna-ecommerce-insights' ),
+				__( 'Assign the system user to your ad account with "View performance" access, and to the app.', 'kdna-ecommerce-insights' ),
+				__( 'Press Generate new token, choose the app, set expiry to Never and tick only ads_read. Copy the token.', 'kdna-ecommerce-insights' ),
+				__( 'Your ad account ID is the number after "act=" in the Ads Manager web address.', 'kdna-ecommerce-insights' ),
+			),
+			'googleSteps'       => array(
+				__( 'In Google Cloud, create a project, enable the Google Ads API, and set up the OAuth consent screen (publish it so sign-in does not expire after 7 days).', 'kdna-ecommerce-insights' ),
+				__( 'Create an OAuth client ID of type Web application and add the redirect address shown here. Copy the client ID and secret.', 'kdna-ecommerce-insights' ),
+				__( 'In your Google Ads manager account, open Admin > API Centre, apply for a developer token (Explorer access is enough) and copy it.', 'kdna-ecommerce-insights' ),
+				__( 'Copy the customer ID from the top of Google Ads, and the manager account ID if you reach the ad account through one.', 'kdna-ecommerce-insights' ),
+				__( 'Save, then sign in with a Google account that can see the ad account.', 'kdna-ecommerce-insights' ),
+			),
+			'tokenSaved'        => __( 'Saved. Paste a new one to replace it.', 'kdna-ecommerce-insights' ),
+			'tokenKeep'         => __( 'A token is saved and encrypted. Leave this empty to keep it.', 'kdna-ecommerce-insights' ),
+			'tokenHelp'         => __( 'Stored encrypted on this site and never shown again, not even to administrators.', 'kdna-ecommerce-insights' ),
+			'copy'              => __( 'Copy', 'kdna-ecommerce-insights' ),
+			'copied'            => __( 'Copied', 'kdna-ecommerce-insights' ),
+			'redirectHelp'      => __( 'Add this exact address under "Authorised redirect URIs" in your OAuth client in Google Cloud.', 'kdna-ecommerce-insights' ),
+			'signedIn'          => __( 'Signed in with Google. Saving keeps you signed in unless the client ID changes.', 'kdna-ecommerce-insights' ),
+			'signInAfter'       => __( 'After saving, you will be taken to Google to sign in and allow read-only access to your ads.', 'kdna-ecommerce-insights' ),
+			'rateField'         => __( 'Ad account currency rate', 'kdna-ecommerce-insights' ),
+			'rateFieldHelp'     => __( 'If your ad accounts spend in a different currency, how much 1 unit is worth in your store currency. Leave at 1 if they match.', 'kdna-ecommerce-insights' ),
+			'frequency'         => __( 'Sync automatically', 'kdna-ecommerce-insights' ),
+			'daily'             => __( 'Once a day (about 5am)', 'kdna-ecommerce-insights' ),
+			'twiceDaily'        => __( 'Twice a day', 'kdna-ecommerce-insights' ),
+			'manualOnly'        => __( 'Only when I press Sync now', 'kdna-ecommerce-insights' ),
+			'saveAndTest'       => __( 'Save and test', 'kdna-ecommerce-insights' ),
+			'saveAndSignIn'     => __( 'Save and sign in with Google', 'kdna-ecommerce-insights' ),
+			'connectedOk'       => __( 'Connected. Press Sync now to bring spend in straight away.', 'kdna-ecommerce-insights' ),
+			'savedOnly'         => __( 'Saved.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: platform. */
+			'savedConnection'   => __( '%s details saved.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: ad account name. */
+			'testOk'            => __( 'Connection works: %s.', 'kdna-ecommerce-insights' ),
+			/* translators: 1: campaign days, 2: spend, 3: dates. */
+			'syncOk'            => __( 'Synced %1$s campaign days, %2$s spend, for %3$s.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: amount. */
+			'syncReplaced'      => __( 'This replaced %s added by hand or by CSV for the same dates, so nothing is counted twice.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: platform. */
+			'disconnected'      => __( '%s disconnected. Spend already synced has been kept.', 'kdna-ecommerce-insights' ),
 		);
 	}
 

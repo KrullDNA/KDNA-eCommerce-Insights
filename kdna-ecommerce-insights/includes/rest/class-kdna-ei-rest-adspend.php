@@ -46,7 +46,7 @@ class KDNA_EcommerceInsights_Rest_Adspend extends KDNA_EcommerceInsights_Rest_Re
 
 		register_rest_route(
 			KDNA_EI_REST_NAMESPACE,
-			'/adspend/(?P<group>[a-f0-9\-]{36})',
+			'/adspend/(?P<group>[a-z0-9\-]{8,64})',
 			array(
 				array(
 					'methods'             => WP_REST_Server::DELETABLE,
@@ -338,6 +338,10 @@ class KDNA_EcommerceInsights_Rest_Adspend extends KDNA_EcommerceInsights_Rest_Re
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function delete_entry( WP_REST_Request $request ) {
+		$entry = KDNA_EcommerceInsights_Ad_Spend::entry( (string) $request['group'] );
+		if ( $entry && 'api' === $entry['source'] && KDNA_EcommerceInsights_Ad_Sync::platform( $entry['channel'] ) && KDNA_EcommerceInsights_Ad_Sync::platform( $entry['channel'] )->configured() ) {
+			return new WP_Error( 'kdna_ei_live_entry', __( 'This spend comes from a live connection and would come straight back at the next sync. Disconnect the platform first if you want to remove it.', 'kdna-ecommerce-insights' ), array( 'status' => 400 ) );
+		}
 		if ( ! KDNA_EcommerceInsights_Ad_Spend::delete_group( (string) $request['group'] ) ) {
 			return new WP_Error( 'kdna_ei_not_found', __( 'That ad spend entry no longer exists.', 'kdna-ecommerce-insights' ), array( 'status' => 404 ) );
 		}

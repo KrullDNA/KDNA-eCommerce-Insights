@@ -45,6 +45,84 @@ $kdna_ei_symbol = html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUO
 		</div>
 	</template>
 
+	<?php // Live connections (section 7.4). ?>
+	<section class="kdna-ei-connections" aria-labelledby="kdna-ei-connections-title">
+		<h2 id="kdna-ei-connections-title" class="kdna-ei-visually-hidden"><?php esc_html_e( 'Live connections', 'kdna-ecommerce-insights' ); ?></h2>
+		<template x-for="card in connectionList" :key="card.key">
+			<article class="kdna-ei-card kdna-ei-connection" :class="'is-' + card.state" :aria-label="card.label">
+				<div class="kdna-ei-connection__head">
+					<span class="kdna-ei-connection__logo" :class="'is-' + card.key" aria-hidden="true" x-text="card.key === 'meta' ? 'M' : 'G'"></span>
+					<div class="kdna-ei-connection__title">
+						<h3 class="kdna-ei-card__title" x-text="card.label"></h3>
+						<p class="kdna-ei-muted" x-text="card.account ? card.account + ( card.currency ? ' · ' + card.currency : '' ) : t.liveSubtitle"></p>
+					</div>
+					<span class="kdna-ei-badge" :class="stateBadge( card.state )" x-text="t.states[ card.state ]"></span>
+				</div>
+
+				<div class="kdna-ei-connection__body">
+					<template x-if="card.state === 'not_set_up'">
+						<p class="kdna-ei-muted" x-text="card.key === 'meta' ? t.metaIntro : t.googleIntro"></p>
+					</template>
+					<template x-if="card.state !== 'not_set_up' && card.missing.length">
+						<p class="kdna-ei-muted" x-text="sprintf( t.stillNeeded, card.missing.join( ', ' ) )"></p>
+					</template>
+					<template x-if="card.last_success">
+						<p x-text="sprintf( t.lastSynced, dateTime( card.last_success ), formatNumber( card.rows ), money( card.spend ) )"></p>
+					</template>
+					<template x-if="card.next_sync && card.state === 'connected'">
+						<p class="kdna-ei-muted" x-text="sprintf( t.nextSync, dateTime( card.next_sync ) )"></p>
+					</template>
+					<template x-if="card.synced_from && card.state !== 'not_set_up'">
+						<p class="kdna-ei-muted" x-text="sprintf( t.syncedFrom, dateLabel( card.synced_from ) )"></p>
+					</template>
+					<template x-if="card.message">
+						<p class="kdna-ei-connection__error" role="alert" x-text="card.message"></p>
+					</template>
+					<template x-if="card.warning">
+						<p class="kdna-ei-connection__warning" x-text="card.warning"></p>
+					</template>
+					<template x-if="connResult[ card.key ]">
+						<p class="kdna-ei-connection__result" role="status" x-text="connResult[ card.key ]"></p>
+					</template>
+				</div>
+
+				<div class="kdna-ei-connection__actions">
+					<button type="button" class="kdna-ei-btn" :class="{ 'kdna-ei-btn--primary': card.state === 'not_set_up' }" @click="openConnection( card.key, $event.currentTarget )" x-text="card.state === 'not_set_up' ? t.setUp : t.changeDetails"></button>
+					<template x-if="card.key === 'google' && card.settings.client_id && ! card.settings.signed_in">
+						<button type="button" class="kdna-ei-btn kdna-ei-btn--primary" @click="googleSignIn()" :disabled="connBusy.google" x-text="t.signIn"></button>
+					</template>
+					<template x-if="! card.missing.length">
+						<div class="kdna-ei-connection__sync">
+							<label class="kdna-ei-visually-hidden" :for="'kdna-ei-sync-days-' + card.key" x-text="t.howFarBack"></label>
+							<select class="kdna-ei-select kdna-ei-select--small" :id="'kdna-ei-sync-days-' + card.key" x-model.number="syncDays[ card.key ]">
+								<option value="7" x-text="t.days7"></option>
+								<option value="30" x-text="t.days30"></option>
+								<option value="90" x-text="t.days90"></option>
+								<option value="365" x-text="t.days365"></option>
+							</select>
+							<button type="button" class="kdna-ei-btn" @click="syncNow( card.key )" :disabled="connBusy[ card.key ]" x-text="connBusy[ card.key ] === 'sync' ? t.syncing : t.syncNow"></button>
+							<button type="button" class="kdna-ei-link" @click="testConnection( card.key )" :disabled="connBusy[ card.key ]" x-text="connBusy[ card.key ] === 'test' ? t.testing : t.test"></button>
+						</div>
+					</template>
+					<template x-if="card.state !== 'not_set_up' || card.settings.has_token || card.settings.has_secret">
+						<span class="kdna-ei-connection__disconnect">
+							<template x-if="confirmDisconnect !== card.key">
+								<button type="button" class="kdna-ei-link kdna-ei-link--danger" @click="confirmDisconnect = card.key" x-text="t.disconnect"></button>
+							</template>
+							<template x-if="confirmDisconnect === card.key">
+								<span class="kdna-ei-confirm">
+									<span x-text="t.disconnectConfirm"></span>
+									<button type="button" class="kdna-ei-link kdna-ei-link--danger" @click="disconnect( card.key )" x-text="t.yesDisconnect"></button>
+									<button type="button" class="kdna-ei-link" @click="confirmDisconnect = ''" x-text="t.keep"></button>
+								</span>
+							</template>
+						</span>
+					</template>
+				</div>
+			</article>
+		</template>
+	</section>
+
 	<?php // Nothing spent yet in this period. ?>
 	<template x-if="loaded && ! hasSpend">
 		<div class="kdna-ei-card kdna-ei-empty-state">
@@ -275,12 +353,15 @@ $kdna_ei_symbol = html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUO
 									<template x-if="entry.editable">
 										<button type="button" class="kdna-ei-link" @click="openForm( entry, $event.currentTarget )" :aria-label="sprintf( t.editEntry, channelLabel( entry.channel ), dateRange( entry.start, entry.end ) )"><?php esc_html_e( 'Edit', 'kdna-ecommerce-insights' ); ?></button>
 									</template>
-									<template x-if="confirmDelete !== entry.entry_group">
+									<template x-if="entry.live">
+										<span class="kdna-ei-muted" :title="t.liveHelp" x-text="t.liveSynced"></span>
+									</template>
+									<template x-if="! entry.live && confirmDelete !== entry.entry_group">
 										<button type="button" class="kdna-ei-link kdna-ei-link--danger" @click="confirmDelete = entry.entry_group" :aria-label="sprintf( t.deleteEntry, channelLabel( entry.channel ), dateRange( entry.start, entry.end ) )"><?php esc_html_e( 'Delete', 'kdna-ecommerce-insights' ); ?></button>
 									</template>
 									<template x-if="confirmDelete === entry.entry_group">
 										<span class="kdna-ei-confirm">
-											<span x-text="entry.source === 'csv' ? t.confirmImport : t.confirmEntry"></span>
+											<span x-text="entry.source === 'manual' ? t.confirmEntry : t.confirmImport"></span>
 											<button type="button" class="kdna-ei-link kdna-ei-link--danger" @click="deleteEntry( entry )" :disabled="deleting"><?php esc_html_e( 'Yes, delete', 'kdna-ecommerce-insights' ); ?></button>
 											<button type="button" class="kdna-ei-link" @click="confirmDelete = ''"><?php esc_html_e( 'Keep', 'kdna-ecommerce-insights' ); ?></button>
 										</span>
@@ -303,7 +384,7 @@ $kdna_ei_symbol = html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUO
 	</div>
 
 	<?php // Add or edit spend. ?>
-	<div class="kdna-ei-modal" x-show="form.open" x-cloak x-transition.opacity @keydown.escape.stop="closeForm()">
+	<div class="kdna-ei-modal" x-show="form.open" x-cloak x-transition.opacity @keydown.escape.window="form.open && closeForm()">
 		<div class="kdna-ei-modal__backdrop" @click="closeForm()"></div>
 		<div class="kdna-ei-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="kdna-ei-spend-form-title" tabindex="-1" x-ref="formDialog" @keydown.tab="trap( $event, 'formDialog' )">
 			<div class="kdna-ei-modal__header">
@@ -385,8 +466,124 @@ $kdna_ei_symbol = html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUO
 		</div>
 	</div>
 
+	<?php // Set up a live connection. ?>
+	<div class="kdna-ei-modal" x-show="conn.open" x-cloak x-transition.opacity @keydown.escape.window="conn.open && closeConnection()">
+		<div class="kdna-ei-modal__backdrop" @click="closeConnection()"></div>
+		<div class="kdna-ei-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="kdna-ei-conn-title" tabindex="-1" x-ref="connDialog" @keydown.tab="trap( $event, 'connDialog' )">
+			<div class="kdna-ei-modal__header">
+				<h2 id="kdna-ei-conn-title" class="kdna-ei-card__title" x-text="conn.key === 'meta' ? t.metaTitle : t.googleTitle"></h2>
+				<button type="button" class="kdna-ei-btn kdna-ei-btn--icon" @click="closeConnection()" aria-label="<?php esc_attr_e( 'Close', 'kdna-ecommerce-insights' ); ?>">&times;</button>
+			</div>
+			<div class="kdna-ei-modal__body kdna-ei-spend-form">
+				<template x-if="conn.error">
+					<div class="kdna-ei-notice kdna-ei-notice--negative" role="alert"><p x-text="conn.error"></p></div>
+				</template>
+
+				<details class="kdna-ei-import-columns">
+					<summary x-text="t.howToGet"></summary>
+					<ol class="kdna-ei-steps" x-show="conn.key === 'meta'">
+						<template x-for="( step, i ) in t.metaSteps" :key="i"><li x-text="step"></li></template>
+					</ol>
+					<ol class="kdna-ei-steps" x-show="conn.key === 'google'">
+						<template x-for="( step, i ) in t.googleSteps" :key="i"><li x-text="step"></li></template>
+					</ol>
+				</details>
+
+				<?php // Meta fields. ?>
+				<template x-if="conn.key === 'meta'">
+					<div class="kdna-ei-spend-form">
+						<div class="kdna-ei-spend-form__row">
+							<div>
+								<label for="kdna-ei-meta-app" class="kdna-ei-field-label"><?php esc_html_e( 'App ID', 'kdna-ecommerce-insights' ); ?></label>
+								<input id="kdna-ei-meta-app" type="text" inputmode="numeric" class="kdna-ei-input" x-model="conn.form.app_id" :class="{ 'is-invalid': conn.errors.app_id }" autocomplete="off" />
+								<p class="kdna-ei-field-error" x-show="conn.errors.app_id" x-text="conn.errors.app_id"></p>
+							</div>
+							<div>
+								<label for="kdna-ei-meta-account" class="kdna-ei-field-label"><?php esc_html_e( 'Ad account ID', 'kdna-ecommerce-insights' ); ?></label>
+								<input id="kdna-ei-meta-account" type="text" class="kdna-ei-input" x-model="conn.form.ad_account_id" placeholder="act_1234567890" :class="{ 'is-invalid': conn.errors.ad_account_id }" autocomplete="off" />
+								<p class="kdna-ei-field-error" x-show="conn.errors.ad_account_id" x-text="conn.errors.ad_account_id"></p>
+							</div>
+						</div>
+						<div>
+							<label for="kdna-ei-meta-token" class="kdna-ei-field-label"><?php esc_html_e( 'System user access token', 'kdna-ecommerce-insights' ); ?></label>
+							<input id="kdna-ei-meta-token" type="password" class="kdna-ei-input" x-model="conn.form.token" :placeholder="conn.saved.has_token ? t.tokenSaved : ''" :class="{ 'is-invalid': conn.errors.token }" autocomplete="new-password" spellcheck="false" />
+							<p class="kdna-ei-field-error" x-show="conn.errors.token" x-text="conn.errors.token"></p>
+							<p class="kdna-ei-help" x-show="! conn.errors.token" x-text="conn.saved.has_token ? t.tokenKeep : t.tokenHelp"></p>
+						</div>
+					</div>
+				</template>
+
+				<?php // Google fields. ?>
+				<template x-if="conn.key === 'google'">
+					<div class="kdna-ei-spend-form">
+						<div>
+							<span class="kdna-ei-field-label"><?php esc_html_e( 'Redirect address for your OAuth client', 'kdna-ecommerce-insights' ); ?></span>
+							<div class="kdna-ei-copy">
+								<code x-text="conn.saved.redirect_uri"></code>
+								<button type="button" class="kdna-ei-btn kdna-ei-btn--small" @click="copy( conn.saved.redirect_uri )" x-text="copied ? t.copied : t.copy"></button>
+							</div>
+							<p class="kdna-ei-help" x-text="t.redirectHelp"></p>
+						</div>
+						<div>
+							<label for="kdna-ei-google-client" class="kdna-ei-field-label"><?php esc_html_e( 'OAuth client ID', 'kdna-ecommerce-insights' ); ?></label>
+							<input id="kdna-ei-google-client" type="text" class="kdna-ei-input" x-model="conn.form.client_id" placeholder="123456789-abc.apps.googleusercontent.com" :class="{ 'is-invalid': conn.errors.client_id }" autocomplete="off" />
+							<p class="kdna-ei-field-error" x-show="conn.errors.client_id" x-text="conn.errors.client_id"></p>
+						</div>
+						<div class="kdna-ei-spend-form__row">
+							<div>
+								<label for="kdna-ei-google-secret" class="kdna-ei-field-label"><?php esc_html_e( 'Client secret', 'kdna-ecommerce-insights' ); ?></label>
+								<input id="kdna-ei-google-secret" type="password" class="kdna-ei-input" x-model="conn.form.client_secret" :placeholder="conn.saved.has_secret ? t.tokenSaved : ''" :class="{ 'is-invalid': conn.errors.client_secret }" autocomplete="new-password" spellcheck="false" />
+								<p class="kdna-ei-field-error" x-show="conn.errors.client_secret" x-text="conn.errors.client_secret"></p>
+							</div>
+							<div>
+								<label for="kdna-ei-google-dev" class="kdna-ei-field-label"><?php esc_html_e( 'Developer token', 'kdna-ecommerce-insights' ); ?></label>
+								<input id="kdna-ei-google-dev" type="password" class="kdna-ei-input" x-model="conn.form.developer_token" :placeholder="conn.saved.has_developer_token ? t.tokenSaved : ''" :class="{ 'is-invalid': conn.errors.developer_token }" autocomplete="new-password" spellcheck="false" />
+								<p class="kdna-ei-field-error" x-show="conn.errors.developer_token" x-text="conn.errors.developer_token"></p>
+							</div>
+						</div>
+						<div class="kdna-ei-spend-form__row">
+							<div>
+								<label for="kdna-ei-google-customer" class="kdna-ei-field-label"><?php esc_html_e( 'Customer ID', 'kdna-ecommerce-insights' ); ?></label>
+								<input id="kdna-ei-google-customer" type="text" class="kdna-ei-input" x-model="conn.form.customer_id" placeholder="123-456-7890" :class="{ 'is-invalid': conn.errors.customer_id }" autocomplete="off" />
+								<p class="kdna-ei-field-error" x-show="conn.errors.customer_id" x-text="conn.errors.customer_id"></p>
+							</div>
+							<div>
+								<label for="kdna-ei-google-login" class="kdna-ei-field-label"><?php esc_html_e( 'Manager account ID (optional)', 'kdna-ecommerce-insights' ); ?></label>
+								<input id="kdna-ei-google-login" type="text" class="kdna-ei-input" x-model="conn.form.login_customer_id" placeholder="987-654-3210" :class="{ 'is-invalid': conn.errors.login_customer_id }" autocomplete="off" />
+								<p class="kdna-ei-field-error" x-show="conn.errors.login_customer_id" x-text="conn.errors.login_customer_id"></p>
+							</div>
+						</div>
+						<p class="kdna-ei-help" x-text="conn.saved.signed_in ? t.signedIn : t.signInAfter"></p>
+					</div>
+				</template>
+
+				<?php // Shared: currency rate and how often to sync. ?>
+				<div class="kdna-ei-spend-form__row kdna-ei-conn-shared">
+					<div>
+						<label for="kdna-ei-conn-rate" class="kdna-ei-field-label" x-text="t.rateField"></label>
+						<input id="kdna-ei-conn-rate" type="text" inputmode="decimal" class="kdna-ei-input" x-model="conn.rate" :class="{ 'is-invalid': conn.errors.rate }" />
+						<p class="kdna-ei-field-error" x-show="conn.errors.rate" x-text="conn.errors.rate"></p>
+						<p class="kdna-ei-help" x-show="! conn.errors.rate" x-text="t.rateFieldHelp"></p>
+					</div>
+					<div>
+						<label for="kdna-ei-conn-frequency" class="kdna-ei-field-label" x-text="t.frequency"></label>
+						<select id="kdna-ei-conn-frequency" class="kdna-ei-select" x-model="conn.frequency">
+							<option value="daily" x-text="t.daily"></option>
+							<option value="twice_daily" x-text="t.twiceDaily"></option>
+							<option value="manual" x-text="t.manualOnly"></option>
+						</select>
+					</div>
+				</div>
+			</div>
+			<div class="kdna-ei-modal__footer">
+				<button type="button" class="kdna-ei-btn" @click="closeConnection()"><?php esc_html_e( 'Cancel', 'kdna-ecommerce-insights' ); ?></button>
+				<button type="button" class="kdna-ei-btn kdna-ei-btn--primary" @click="saveConnection()" :disabled="conn.busy" x-text="conn.busy ? t.saving : ( conn.key === 'google' && ! conn.saved.signed_in ? t.saveAndSignIn : t.saveAndTest )"></button>
+			</div>
+		</div>
+	</div>
+
 	<?php // CSV import: choose a file, check the columns and preview, done. ?>
-	<div class="kdna-ei-modal" x-show="csv.open" x-cloak x-transition.opacity @keydown.escape.stop="closeImport()">
+	<div class="kdna-ei-modal" x-show="csv.open" x-cloak x-transition.opacity @keydown.escape.window="csv.open && closeImport()">
 		<div class="kdna-ei-modal__backdrop" @click="closeImport()"></div>
 		<div class="kdna-ei-modal__dialog kdna-ei-modal__dialog--wide" role="dialog" aria-modal="true" aria-labelledby="kdna-ei-spend-import-title" tabindex="-1" x-ref="importDialog" @keydown.tab="trap( $event, 'importDialog' )">
 			<div class="kdna-ei-modal__header">
@@ -488,6 +685,9 @@ $kdna_ei_symbol = html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUO
 							<div><span class="kdna-ei-muted" x-text="t.campaigns"></span><strong class="kdna-ei-num" x-text="formatNumber( csv.preview.totals.campaigns )"></strong></div>
 						</div>
 
+						<template x-if="csv.preview.blocked">
+							<p class="kdna-ei-notice kdna-ei-notice--negative" role="alert" x-text="csv.preview.blocked"></p>
+						</template>
 						<template x-if="csv.preview.replaces > 0">
 							<p class="kdna-ei-notice kdna-ei-notice--warning" x-text="sprintf( t.replaces, money( csv.preview.replaces ), channelLabel( csv.channel ), dateRange( csv.preview.start, csv.preview.end ) )"></p>
 						</template>

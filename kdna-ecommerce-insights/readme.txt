@@ -63,7 +63,8 @@ When it is first activated, Insights works through every past order in the backg
 
 Profit is only as good as the costs behind it, so this is the most important step.
 
-* **One product at a time:** edit a product in WooCommerce and fill in the **Cost price** box (in the General tab, or the Inventory tab if you prefer; see Insights > Settings > Costs). Variations each have their own box.
+* **One product at a time:** edit a product in WooCommerce. In the Product data box, on the General tab, fill in **Cost price** under the regular and sale prices (Insights > Settings > Costs chooses whether it sits after the regular price or the sale price). For a variable product, the General tab has a default cost, and each variation has its own Cost price box in the Variations tab. Only Administrators see this box.
+* **Using WooCommerce's own Cost of Goods?** If it is switched on (WooCommerce > Settings > Advanced > Features), WooCommerce shows its own **Cost** box in the same place instead, and Insights reads that.
 * **Many at once:** go to Insights > Costs > Product costs, where every product is listed with an editable cost and margin.
 * **From a spreadsheet:** on the same screen, press **Import CSV**, choose your file, check the preview and press Import.
 * **Already using a cost plugin?** Insights can bring in costs from WooCommerce's own Cost of Goods field and popular cost of goods plugins from the same screen.

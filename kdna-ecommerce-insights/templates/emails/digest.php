@@ -51,7 +51,7 @@ $kdna_ei_eyebrow = 'monthly' === $digest['frequency'] ? __( 'Monthly summary', '
 		body { margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
 		table { border-collapse: collapse; mso-table-lspace: 0; mso-table-rspace: 0; }
 		img { border: 0; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; }
-		a { color: <?php echo esc_html( $kdna_ei_b['accent'] ); ?>; }
+		a { color: <?php echo esc_html( $kdna_ei_b['link'] ); ?>; }
 		@media screen and (max-width: 620px) {
 			.kdna-ei-pad { padding-left: 20px !important; padding-right: 20px !important; }
 			.kdna-ei-col { display: block !important; width: 100% !important; box-sizing: border-box; }
@@ -87,7 +87,7 @@ $kdna_ei_eyebrow = 'monthly' === $digest['frequency'] ? __( 'Monthly summary', '
 					</tr>
 					<tr>
 						<td class="kdna-ei-pad" style="padding:24px 36px 0;">
-							<p style="margin:0 0 6px;font-size:12px;line-height:16px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;color:<?php echo esc_attr( $kdna_ei_b['accent'] ); ?>;"><?php echo esc_html( $kdna_ei_eyebrow ); ?></p>
+							<p style="margin:0 0 6px;font-size:12px;line-height:16px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;color:<?php echo esc_attr( $kdna_ei_b['link'] ); ?>;"><?php echo esc_html( $kdna_ei_eyebrow ); ?></p>
 							<h1 style="margin:0;font-size:26px;line-height:32px;font-weight:600;color:<?php echo esc_attr( $kdna_ei_text ); ?>;"><?php echo esc_html( $digest['title'] ); ?></h1>
 							<p style="margin:6px 0 0;font-size:15px;line-height:22px;color:<?php echo esc_attr( $kdna_ei_muted ); ?>;"><?php echo esc_html( $digest['dates'] ); ?></p>
 						</td>
@@ -274,13 +274,13 @@ $kdna_ei_eyebrow = 'monthly' === $digest['frequency'] ? __( 'Monthly summary', '
 					<tr>
 						<td class="kdna-ei-pad" align="left" style="padding:28px 36px 36px;">
 							<!--[if mso]>
-							<v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="<?php echo esc_url( $digest['link'] ); ?>" style="height:46px;v-text-anchor:middle;width:220px;" arcsize="50%" stroke="f" fillcolor="<?php echo esc_attr( $kdna_ei_b['accent'] ); ?>">
+							<v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="<?php echo esc_url( $digest['link'] ); ?>" style="height:46px;v-text-anchor:middle;width:220px;" arcsize="50%" stroke="f" fillcolor="<?php echo esc_attr( $kdna_ei_b['button'] ); ?>">
 							<w:anchorlock/>
-							<center style="color:#FFFFFF;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;"><?php esc_html_e( 'Open Insights', 'kdna-ecommerce-insights' ); ?></center>
+							<center style="color:<?php echo esc_attr( $kdna_ei_b['on_button'] ); ?>;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;"><?php esc_html_e( 'Open Insights', 'kdna-ecommerce-insights' ); ?></center>
 							</v:roundrect>
 							<![endif]-->
 							<!--[if !mso]><!-->
-							<a href="<?php echo esc_url( $digest['link'] ); ?>" style="display:inline-block;padding:13px 28px;border-radius:999px;background-color:<?php echo esc_attr( $kdna_ei_b['accent'] ); ?>;color:#FFFFFF;font-size:15px;line-height:20px;font-weight:600;text-decoration:none;"><?php esc_html_e( 'Open Insights', 'kdna-ecommerce-insights' ); ?></a>
+							<a href="<?php echo esc_url( $digest['link'] ); ?>" style="display:inline-block;padding:13px 28px;border-radius:999px;background-color:<?php echo esc_attr( $kdna_ei_b['button'] ); ?>;color:<?php echo esc_attr( $kdna_ei_b['on_button'] ); ?>;font-size:15px;line-height:20px;font-weight:600;text-decoration:none;"><?php esc_html_e( 'Open Insights', 'kdna-ecommerce-insights' ); ?></a>
 							<!--<![endif]-->
 						</td>
 					</tr>

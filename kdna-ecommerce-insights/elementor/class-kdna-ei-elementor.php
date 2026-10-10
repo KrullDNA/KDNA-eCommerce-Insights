@@ -218,6 +218,8 @@ class KDNA_EcommerceInsights_Elementor {
 			),
 			'i18n'        => array(
 				'requestFailed' => __( 'Something went wrong talking to the server. Please try again.', 'kdna-ecommerce-insights' ),
+				'chartPeriod'   => __( 'Period', 'kdna-ecommerce-insights' ),
+				'chartValue'    => __( 'Value', 'kdna-ecommerce-insights' ),
 				/* translators: %s: number of days. */
 				'days'          => __( '%s days', 'kdna-ecommerce-insights' ),
 				/* translators: 1: start date, 2: end date. */

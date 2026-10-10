@@ -529,9 +529,9 @@ abstract class KDNA_EcommerceInsights_Widget_Base extends \Elementor\Widget_Base
 		<section class="kdna-ei-card kdna-ei-hero <?php echo esc_attr( $class ); ?>" aria-label="<?php echo esc_attr( $title ); ?>">
 			<?php $this->render_card_header( $title ); ?>
 			<?php if ( 'top_products' === $hero && $tabs ) : ?>
-				<div class="kdna-ei-tabs kdna-ei-tabs--small" role="group" aria-label="<?php echo esc_attr( $t['rankBy'] ); ?>">
-					<button type="button" class="kdna-ei-tab" aria-selected="false" data-kdna-ei-sort="profit"><?php echo esc_html( $t['byProfit'] ); ?></button>
-					<button type="button" class="kdna-ei-tab" aria-selected="false" data-kdna-ei-sort="revenue"><?php echo esc_html( $t['byRevenue'] ); ?></button>
+				<div class="kdna-ei-tabs kdna-ei-tabs--small" role="tablist" aria-label="<?php echo esc_attr( $t['rankBy'] ); ?>">
+					<button type="button" class="kdna-ei-tab" role="tab" aria-selected="false" data-kdna-ei-sort="profit"><?php echo esc_html( $t['byProfit'] ); ?></button>
+					<button type="button" class="kdna-ei-tab" role="tab" aria-selected="false" data-kdna-ei-sort="revenue"><?php echo esc_html( $t['byRevenue'] ); ?></button>
 				</div>
 			<?php endif; ?>
 			<div class="kdna-ei-hero__body" data-kdna-ei-part="hero">

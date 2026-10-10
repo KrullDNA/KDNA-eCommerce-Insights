@@ -128,7 +128,7 @@ use KDNA_EcommerceInsights_Admin as Admin;
 			<template x-if="loaded && ! cohorts.length">
 				<p class="kdna-ei-muted" x-text="t.noCohorts"></p>
 			</template>
-			<div class="kdna-ei-table-wrap" x-show="loaded && cohorts.length" x-cloak>
+			<div class="kdna-ei-table-wrap" tabindex="0" x-show="loaded && cohorts.length" x-cloak>
 				<table class="kdna-ei-table kdna-ei-cohort">
 					<caption class="kdna-ei-visually-hidden" x-text="t.cohortCaption"></caption>
 					<thead>
@@ -169,7 +169,7 @@ use KDNA_EcommerceInsights_Admin as Admin;
 					<span><?php esc_html_e( 'Export CSV', 'kdna-ecommerce-insights' ); ?></span>
 				</button>
 			</div>
-			<div class="kdna-ei-table-wrap">
+			<div class="kdna-ei-table-wrap" tabindex="0">
 				<table class="kdna-ei-table kdna-ei-table--hover">
 					<caption class="kdna-ei-visually-hidden"><?php esc_html_e( 'Top customers by profit', 'kdna-ecommerce-insights' ); ?></caption>
 					<thead>

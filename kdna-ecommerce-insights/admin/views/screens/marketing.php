@@ -246,7 +246,7 @@ $kdna_ei_symbol = html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUO
 					</button>
 				</div>
 			</div>
-			<div class="kdna-ei-table-wrap">
+			<div class="kdna-ei-table-wrap" tabindex="0">
 				<table class="kdna-ei-table kdna-ei-table--hover kdna-ei-table--compact">
 					<caption class="kdna-ei-visually-hidden"><?php esc_html_e( 'Campaigns. Column headings sort the table.', 'kdna-ecommerce-insights' ); ?></caption>
 					<thead>
@@ -325,7 +325,7 @@ $kdna_ei_symbol = html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUO
 					<span><?php esc_html_e( 'Export CSV', 'kdna-ecommerce-insights' ); ?></span>
 				</button>
 			</div>
-			<div class="kdna-ei-table-wrap">
+			<div class="kdna-ei-table-wrap" tabindex="0">
 				<table class="kdna-ei-table kdna-ei-table--hover kdna-ei-table--compact">
 					<caption class="kdna-ei-visually-hidden"><?php esc_html_e( 'Ad spend entries overlapping these dates', 'kdna-ecommerce-insights' ); ?></caption>
 					<thead>

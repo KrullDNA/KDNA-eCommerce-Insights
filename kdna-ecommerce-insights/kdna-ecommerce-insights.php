@@ -28,7 +28,7 @@ defined( 'ABSPATH' ) || exit;
  */
 
 define( 'KDNA_EI_VERSION', '1.0.0' );
-define( 'KDNA_EI_DB_VERSION', '1.0.1' );
+define( 'KDNA_EI_DB_VERSION', '1.0.2' );
 define( 'KDNA_EI_FILE', __FILE__ );
 define( 'KDNA_EI_PATH', plugin_dir_path( __FILE__ ) );
 define( 'KDNA_EI_URL', plugin_dir_url( __FILE__ ) );

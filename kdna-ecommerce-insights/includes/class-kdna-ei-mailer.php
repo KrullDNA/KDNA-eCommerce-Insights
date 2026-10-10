@@ -64,6 +64,9 @@ class KDNA_EcommerceInsights_Mailer {
 	public static function render( string $heading, string $intro, string $content, string $link = '', string $button = '' ): string {
 		$colours = (array) KDNA_EcommerceInsights_Settings::get( 'branding.colours', KDNA_EcommerceInsights_Settings::default_colours() );
 		$accent  = sanitize_hex_color( $colours['light']['accent'] ?? '' ) ? $colours['light']['accent'] : '#5A6FE0';
+		// Deepened a little so white button text stays readable (WCAG AA).
+		$accent  = KDNA_EcommerceInsights_Admin::mix_colour( $accent, '#000000', 0.85 );
+		$on      = KDNA_EcommerceInsights_Admin::contrast( $accent, '#FFFFFF' ) >= 4.5 ? '#FFFFFF' : '#17181C';
 		$store   = KDNA_EcommerceInsights_Settings::store_name();
 		$logo_id = (int) KDNA_EcommerceInsights_Settings::get( 'branding.logo_id', 0 );
 		$logo    = $logo_id ? wp_get_attachment_image_url( $logo_id, 'medium' ) : '';
@@ -73,7 +76,7 @@ class KDNA_EcommerceInsights_Mailer {
 			: '<span style="font-size:13px;letter-spacing:0.2em;text-transform:uppercase;color:#6B6E78;">' . esc_html( $store ) . '</span>';
 
 		$cta = '' !== $link && '' !== $button
-			? '<p style="margin:28px 0 0;"><a href="' . esc_url( $link ) . '" style="display:inline-block;padding:12px 22px;border-radius:999px;background:' . esc_attr( $accent ) . ';color:#FFFFFF;text-decoration:none;font-weight:600;">' . esc_html( $button ) . '</a></p>'
+			? '<p style="margin:28px 0 0;"><a href="' . esc_url( $link ) . '" style="display:inline-block;padding:12px 22px;border-radius:999px;background:' . esc_attr( $accent ) . ';color:' . esc_attr( $on ) . ';text-decoration:none;font-weight:600;">' . esc_html( $button ) . '</a></p>'
 			: '';
 
 		$footer = sprintf(

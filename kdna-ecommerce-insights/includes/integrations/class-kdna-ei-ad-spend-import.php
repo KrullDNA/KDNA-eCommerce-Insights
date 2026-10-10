@@ -140,6 +140,11 @@ class KDNA_EcommerceInsights_Ad_Spend_Import {
 	 * @return array{header: string[], rows: array<int, string[]>, skipped: int}|WP_Error
 	 */
 	public static function read( string $text ) {
+		// Check the size first, before any work is done on the file.
+		if ( strlen( $text ) > KDNA_EcommerceInsights_Csv_Import::MAX_BYTES ) {
+			return new WP_Error( 'kdna_ei_csv_too_large', __( 'That file is too large. Please upload a CSV under 5 MB.', 'kdna-ecommerce-insights' ) );
+		}
+
 		// Google Ads "Excel CSV" files are UTF-16 with tabs.
 		if ( 0 === strncmp( $text, "\xFF\xFE", 2 ) || 0 === strncmp( $text, "\xFE\xFF", 2 ) ) {
 			$text = mb_convert_encoding( substr( $text, 2 ), 'UTF-8', 0 === strncmp( $text, "\xFF\xFE", 2 ) ? 'UTF-16LE' : 'UTF-16BE' );

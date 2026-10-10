@@ -318,6 +318,8 @@ class KDNA_EcommerceInsights_Admin {
 					'exitFocus'     => __( 'Exit Focus Mode', 'kdna-ecommerce-insights' ),
 					'pageTitle'     => __( 'Insights', 'kdna-ecommerce-insights' ),
 					'requestFailed' => __( 'Something went wrong talking to the server. Please try again.', 'kdna-ecommerce-insights' ),
+					'chartPeriod'   => __( 'Period', 'kdna-ecommerce-insights' ),
+					'chartValue'    => __( 'Value', 'kdna-ecommerce-insights' ),
 					/* translators: 1: start date, 2: end date. */
 					'rangeTo'       => __( '%1$s to %2$s', 'kdna-ecommerce-insights' ),
 					'customMissing' => __( 'Choose both a start and an end date.', 'kdna-ecommerce-insights' ),
@@ -1139,6 +1141,11 @@ class KDNA_EcommerceInsights_Admin {
 				$value = sanitize_hex_color( (string) ( $colours[ $theme ][ $key ] ?? '' ) );
 				if ( $value && strtoupper( $value ) !== strtoupper( $defaults[ $theme ][ $key ] ) ) {
 					$rules .= $variable . ':' . $value . ';';
+					// Buttons filled with a brand accent get whichever text colour reads best on it.
+					if ( 'accent' === $key ) {
+						$fill   = 'light' === $theme ? self::mix_colour( $value, '#000000', 0.85 ) : $value;
+						$rules .= '--kdna-ei-on-accent:' . ( self::contrast( $fill, '#FFFFFF' ) >= self::contrast( $fill, '#17181C' ) ? '#FFFFFF' : '#17181C' ) . ';';
+					}
 				}
 			}
 			if ( '' !== $rules ) {
@@ -1157,6 +1164,50 @@ class KDNA_EcommerceInsights_Admin {
 		}
 
 		return $css;
+	}
+
+	/**
+	 * How much two colours stand out from each other, as the WCAG contrast
+	 * ratio (1 to 21; 4.5 or more is readable for normal text).
+	 *
+	 * @param string $a Hex colour.
+	 * @param string $b Hex colour.
+	 * @return float
+	 */
+	public static function contrast( string $a, string $b ): float {
+		$luminance = static function ( string $hex ): float {
+			$hex = ltrim( $hex, '#' );
+			if ( 3 === strlen( $hex ) ) {
+				$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+			}
+			$channels = array();
+			foreach ( array( 0, 2, 4 ) as $i ) {
+				$c          = hexdec( substr( $hex, $i, 2 ) ) / 255;
+				$channels[] = $c <= 0.03928 ? $c / 12.92 : ( ( $c + 0.055 ) / 1.055 ) ** 2.4;
+			}
+			return 0.2126 * $channels[0] + 0.7152 * $channels[1] + 0.0722 * $channels[2];
+		};
+		$la = $luminance( $a );
+		$lb = $luminance( $b );
+		return ( max( $la, $lb ) + 0.05 ) / ( min( $la, $lb ) + 0.05 );
+	}
+
+	/**
+	 * Mixes two hex colours, the same way CSS color-mix() does.
+	 *
+	 * @param string $a      Hex colour.
+	 * @param string $b      Hex colour.
+	 * @param float  $amount How much of $a, from 0 to 1.
+	 * @return string Hex colour.
+	 */
+	public static function mix_colour( string $a, string $b, float $amount ): string {
+		$a   = ltrim( $a, '#' );
+		$b   = ltrim( $b, '#' );
+		$out = '#';
+		foreach ( array( 0, 2, 4 ) as $i ) {
+			$out .= sprintf( '%02X', (int) round( hexdec( substr( $a, $i, 2 ) ) * $amount + hexdec( substr( $b, $i, 2 ) ) * ( 1 - $amount ) ) );
+		}
+		return $out;
 	}
 
 	/**

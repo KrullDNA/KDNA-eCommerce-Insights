@@ -196,9 +196,9 @@ use KDNA_EcommerceInsights_Admin as Admin;
 			<?php // Top Products. ?>
 			<template x-if="heroLoaded && heroType === 'top_products'">
 				<div class="kdna-ei-top-products">
-					<div class="kdna-ei-tabs kdna-ei-tabs--small" role="group" :aria-label="t.rankBy">
-						<button type="button" class="kdna-ei-tab" :aria-selected="heroSort === 'profit' ? 'true' : 'false'" @click="chooseHeroSort( 'profit' )" x-text="t.byProfit"></button>
-						<button type="button" class="kdna-ei-tab" :aria-selected="heroSort === 'revenue' ? 'true' : 'false'" @click="chooseHeroSort( 'revenue' )" x-text="t.byRevenue"></button>
+					<div class="kdna-ei-tabs kdna-ei-tabs--small" role="tablist" :aria-label="t.rankBy">
+						<button type="button" class="kdna-ei-tab" role="tab" :aria-selected="heroSort === 'profit' ? 'true' : 'false'" @click="chooseHeroSort( 'profit' )" x-text="t.byProfit"></button>
+						<button type="button" class="kdna-ei-tab" role="tab" :aria-selected="heroSort === 'revenue' ? 'true' : 'false'" @click="chooseHeroSort( 'revenue' )" x-text="t.byRevenue"></button>
 					</div>
 					<ol class="kdna-ei-rank">
 						<template x-for="( item, i ) in heroProducts" :key="item.product_id + ':' + item.variation_id">

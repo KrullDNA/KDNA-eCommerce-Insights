@@ -200,6 +200,11 @@ class KDNA_EcommerceInsights_Meta_Ads extends KDNA_EcommerceInsights_Ad_Platform
 	 * @return array|WP_Error
 	 */
 	private function get( string $url ) {
+		// The token only ever goes to Meta's own API over HTTPS, even when
+		// following a "next page" address that came back from Meta.
+		if ( 'https' !== wp_parse_url( $url, PHP_URL_SCHEME ) || 'graph.facebook.com' !== wp_parse_url( $url, PHP_URL_HOST ) ) {
+			return new WP_Error( 'kdna_ei_meta_bad_address', __( 'Meta sent back an address Insights does not recognise, so the sync stopped to keep your access token safe.', 'kdna-ecommerce-insights' ) );
+		}
 		$token = $this->token();
 		if ( is_wp_error( $token ) ) {
 			return $token;

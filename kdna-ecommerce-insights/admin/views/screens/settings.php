@@ -983,7 +983,7 @@ $kdna_ei_footer = static function ( string $tab, bool $resetable = true ): void 
 						<button type="button" class="kdna-ei-btn kdna-ei-btn--icon kdna-ei-btn--ghost" @click="exportLog()" aria-label="<?php esc_attr_e( 'Export the log as CSV', 'kdna-ecommerce-insights' ); ?>" title="<?php esc_attr_e( 'Export the log as CSV', 'kdna-ecommerce-insights' ); ?>"><?php Admin::icon( 'download', 'kdna-ei-icon--sm' ); ?></button>
 					</div>
 				</div>
-				<div class="kdna-ei-table-wrap">
+				<div class="kdna-ei-table-wrap" tabindex="0">
 					<table class="kdna-ei-table kdna-ei-table--compact kdna-ei-log__table">
 						<thead>
 							<tr>
@@ -1041,7 +1041,7 @@ $kdna_ei_footer = static function ( string $tab, bool $resetable = true ): void 
 						<?php esc_html_e( 'Deleting the plugin will then remove its tables (processed orders, summaries, ad spend, overheads, stock snapshots and the sync log), all settings and saved connection keys, cost prices entered in Insights, scheduled jobs and each person\'s preferences. Your WooCommerce orders and products are never touched, and cost prices kept in WooCommerce\'s own cost field stay.', 'kdna-ecommerce-insights' ); ?>
 					</p>
 				</div>
-				<p class="kdna-ei-help" x-show="! form.data.delete_on_uninstall"><?php esc_html_e( 'Recommended for most stores. Everything is kept, so reinstalling Insights picks up exactly where it left off.', 'kdna-ecommerce-insights' ); ?></p>
+				<p class="kdna-ei-help" x-show="! form.data.delete_on_uninstall"><?php esc_html_e( 'Recommended for most stores. Everything is kept, so reinstalling Insights picks up exactly where it left off. For safety, the Meta and Google Ads access keys are always removed, so you would reconnect those.', 'kdna-ecommerce-insights' ); ?></p>
 				<?php $kdna_ei_footer( 'data', false ); ?>
 			</section>
 			</template>

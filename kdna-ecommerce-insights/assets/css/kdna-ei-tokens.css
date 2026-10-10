@@ -31,6 +31,16 @@
 	/* Text that sits on a filled status colour, such as the mint Active badge. */
 	--kdna-ei-on-status: #17181C;
 
+	/*
+	 * Accessible versions of the accent (WCAG AA, 4.5 to 1). Text in the
+	 * accent colour is lifted a little so it reads on dark cards and tinted
+	 * alerts; buttons filled with the accent get dark text. Both follow the
+	 * brand accent automatically.
+	 */
+	--kdna-ei-accent-text: color-mix(in srgb, var(--kdna-ei-accent) 70%, #FFFFFF);
+	--kdna-ei-accent-fill: var(--kdna-ei-accent);
+	--kdna-ei-on-accent: #17181C;
+
 	/* Badge fills. Dark mode uses solid pastel pills like the reference. */
 	--kdna-ei-badge-positive-bg: var(--kdna-ei-positive);
 	--kdna-ei-badge-positive-text: var(--kdna-ei-on-status);
@@ -99,18 +109,23 @@
 	--kdna-ei-text-muted: #6B6E78;
 	--kdna-ei-accent: #5A6FE0;
 	--kdna-ei-accent-2: #9C92E8;
-	--kdna-ei-positive: #1F9D62;
-	--kdna-ei-warning: #B7791F;
-	--kdna-ei-negative: #D64545;
+	--kdna-ei-positive: #16794A;
+	--kdna-ei-warning: #8F5C12;
+	--kdna-ei-negative: #C13030;
 
 	--kdna-ei-on-status: #FFFFFF;
 
+	/* Accent text and buttons are deepened a little to read on white. */
+	--kdna-ei-accent-text: color-mix(in srgb, var(--kdna-ei-accent) 80%, #000000);
+	--kdna-ei-accent-fill: color-mix(in srgb, var(--kdna-ei-accent) 85%, #000000);
+	--kdna-ei-on-accent: #FFFFFF;
+
 	/* Light mode uses soft tinted pills so text stays readable. */
-	--kdna-ei-badge-positive-bg: rgba(31, 157, 98, 0.12);
+	--kdna-ei-badge-positive-bg: rgba(22, 121, 74, 0.12);
 	--kdna-ei-badge-positive-text: var(--kdna-ei-positive);
-	--kdna-ei-badge-warning-bg: rgba(183, 121, 31, 0.12);
+	--kdna-ei-badge-warning-bg: rgba(143, 92, 18, 0.1);
 	--kdna-ei-badge-warning-text: var(--kdna-ei-warning);
-	--kdna-ei-badge-negative-bg: rgba(214, 69, 69, 0.1);
+	--kdna-ei-badge-negative-bg: rgba(193, 48, 48, 0.09);
 	--kdna-ei-badge-negative-text: var(--kdna-ei-negative);
 	--kdna-ei-badge-neutral-bg: var(--kdna-ei-surface-raised);
 	--kdna-ei-badge-neutral-text: var(--kdna-ei-text);

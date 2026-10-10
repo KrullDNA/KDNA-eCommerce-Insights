@@ -395,7 +395,7 @@ class KDNA_EcommerceInsights_Widget_Table extends KDNA_EcommerceInsights_Widget_
 					} : null
 				);
 				?>
-				<div class="kdna-ei-table-wrap" data-kdna-ei-part="table">
+				<div class="kdna-ei-table-wrap" tabindex="0" data-kdna-ei-part="table">
 					<table class="kdna-ei-table kdna-ei-data-table">
 						<caption class="kdna-ei-visually-hidden"><?php echo esc_html( '' !== $title ? $title : $source['title'] ); ?></caption>
 						<thead>

@@ -98,7 +98,7 @@ use KDNA_EcommerceInsights_Admin as Admin;
 				</div>
 
 				<?php // By month or quarter. ?>
-				<div class="kdna-ei-table-wrap">
+				<div class="kdna-ei-table-wrap" tabindex="0">
 					<table class="kdna-ei-table kdna-ei-table--hover kdna-ei-tax__table" x-show="taxLoaded" x-cloak>
 						<caption class="kdna-ei-visually-hidden" x-text="taxTitle"></caption>
 						<thead>

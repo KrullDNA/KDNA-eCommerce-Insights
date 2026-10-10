@@ -119,8 +119,9 @@ class KDNA_EcommerceInsights_Rest_Costs {
 				'permission_callback' => $permission,
 				'args'                => array(
 					'csv' => array(
-						'type'     => 'string',
-						'required' => true,
+						'type'      => 'string',
+						'required'  => true,
+						'maxLength' => KDNA_EcommerceInsights_Csv_Import::MAX_BYTES,
 					),
 				),
 			)

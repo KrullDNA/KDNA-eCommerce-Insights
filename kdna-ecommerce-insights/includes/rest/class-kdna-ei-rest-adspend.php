@@ -73,7 +73,11 @@ class KDNA_EcommerceInsights_Rest_Adspend extends KDNA_EcommerceInsights_Rest_Re
 		);
 
 		$import_args = array(
-			'csv'          => array( 'type' => 'string', 'required' => true ),
+			'csv'          => array(
+				'type'      => 'string',
+				'required'  => true,
+				'maxLength' => KDNA_EcommerceInsights_Csv_Import::MAX_BYTES,
+			),
 			'channel'      => array( 'type' => 'string', 'default' => '' ),
 			'preset'       => array( 'type' => 'string', 'default' => '' ),
 			'mapping'      => array( 'type' => 'object', 'default' => array() ),

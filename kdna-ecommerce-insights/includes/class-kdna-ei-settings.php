@@ -103,9 +103,9 @@ class KDNA_EcommerceInsights_Settings {
 			'light' => array(
 				'accent'   => '#5A6FE0',
 				'accent_2' => '#9C92E8',
-				'positive' => '#1F9D62',
-				'warning'  => '#B7791F',
-				'negative' => '#D64545',
+				'positive' => '#16794A',
+				'warning'  => '#8F5C12',
+				'negative' => '#C13030',
 			),
 		);
 	}

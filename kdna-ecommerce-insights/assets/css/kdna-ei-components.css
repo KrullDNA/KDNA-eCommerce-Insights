@@ -350,6 +350,13 @@
 	overflow-x: auto;
 }
 
+/* Wide tables can be focused with the keyboard so they can be scrolled. */
+.kdna-ei-table-wrap[tabindex]:focus-visible {
+	outline: none;
+	box-shadow: var(--kdna-ei-focus-ring);
+	border-radius: var(--kdna-ei-radius-sm);
+}
+
 .kdna-ei-table {
 	width: 100%;
 	border-collapse: collapse;
@@ -470,13 +477,13 @@
 }
 
 .kdna-ei-root .kdna-ei-btn--primary {
-	background: var(--kdna-ei-accent);
-	border-color: var(--kdna-ei-accent);
-	color: #FFFFFF;
+	background: var(--kdna-ei-accent-fill);
+	border-color: var(--kdna-ei-accent-fill);
+	color: var(--kdna-ei-on-accent);
 }
 
 .kdna-ei-root .kdna-ei-btn--primary:hover {
-	background: var(--kdna-ei-accent);
+	background: var(--kdna-ei-accent-fill);
 	filter: brightness(1.08);
 }
 
@@ -557,7 +564,7 @@
 .kdna-ei-dropdown__item .kdna-ei-icon {
 	width: 16px;
 	height: 16px;
-	color: var(--kdna-ei-accent);
+	color: var(--kdna-ei-accent-text);
 	visibility: hidden;
 }
 
@@ -694,7 +701,7 @@
 .kdna-ei-root .kdna-ei-link {
 	font-size: inherit;
 	font-weight: 500;
-	color: var(--kdna-ei-accent);
+	color: var(--kdna-ei-accent-text);
 	text-decoration: underline;
 	text-decoration-color: transparent;
 	text-underline-offset: 3px;
@@ -1067,7 +1074,7 @@
 }
 
 .kdna-ei-root a.kdna-ei-product__name:hover {
-	color: var(--kdna-ei-accent);
+	color: var(--kdna-ei-accent-text);
 }
 
 .kdna-ei-product__meta {
@@ -1188,7 +1195,7 @@
 }
 
 .kdna-ei-dropzone .kdna-ei-icon {
-	color: var(--kdna-ei-accent);
+	color: var(--kdna-ei-accent-text);
 }
 
 /* Radio options shown as cards. */
@@ -2095,7 +2102,7 @@
 	place-items: center;
 	width: 64px;
 	height: 64px;
-	color: var(--kdna-ei-accent);
+	color: var(--kdna-ei-accent-text);
 	background: color-mix(in srgb, var(--kdna-ei-accent) 14%, transparent);
 	border-radius: 50%;
 }

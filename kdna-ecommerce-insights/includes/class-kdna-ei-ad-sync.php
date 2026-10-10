@@ -312,7 +312,7 @@ class KDNA_EcommerceInsights_Ad_Sync {
 			/* translators: %s: platform name. */
 			sprintf( __( '%s needs attention', 'kdna-ecommerce-insights' ), $label ),
 			__( 'The daily ad spend sync did not work, so the latest spend is missing from your profit figures. Nothing already saved has changed, and Insights will try again at the next sync.', 'kdna-ecommerce-insights' ),
-			'<p style="margin:0;padding:14px 16px;background:#F7F8FA;border-left:3px solid #D64545;font-size:15px;line-height:1.5;">' . esc_html( $error->get_error_message() ) . '</p>',
+			'<p style="margin:0;padding:14px 16px;background:#F7F8FA;border-left:3px solid #C13030;font-size:15px;line-height:1.5;">' . esc_html( $error->get_error_message() ) . '</p>',
 			admin_url( 'admin.php?page=' . KDNA_EcommerceInsights_Admin::MENU_SLUG . '#/marketing' ),
 			__( 'Open Marketing', 'kdna-ecommerce-insights' )
 		);

@@ -37,7 +37,7 @@ $kdna_ei_stock_table = static function ( string $key, string $title, string $not
 				<?php Admin::icon( 'download', 'kdna-ei-icon--sm' ); ?>
 			</button>
 		</div>
-		<div class="kdna-ei-table-wrap">
+		<div class="kdna-ei-table-wrap" tabindex="0">
 			<table class="kdna-ei-table kdna-ei-table--hover kdna-ei-table--compact">
 				<caption class="kdna-ei-visually-hidden"><?php echo esc_html( $title ); ?></caption>
 				<thead>

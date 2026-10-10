@@ -68,6 +68,8 @@ update_post_meta( $kdna_ei_tu_product->get_id(), '_cogs_total_value', '7' );
 update_user_meta( 1, 'kdna_ei_preferences', array( 'theme' => 'light' ) );
 set_transient( 'kdna_ei_c_uninstall_test', array( 1 ), HOUR_IN_SECONDS );
 as_schedule_single_action( time() + DAY_IN_SECONDS, 'kdna_ei_uninstall_test', array(), 'kdna-ei' );
+$kdna_ei_tu_secrets = get_option( 'kdna_ei_secrets', null );
+update_option( 'kdna_ei_secrets', array( 'uninstall_test' => 'kdna1s:test' ), false );
 $kdna_ei_tu_orders = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}wc_orders" ); // phpcs:ignore WordPress.DB
 
 KDNA_EcommerceInsights_Settings::update( array( 'data' => array( 'delete_on_uninstall' => 'delete' === $kdna_ei_tu_mode ) ) );
@@ -90,6 +92,10 @@ if ( 'keep' === $kdna_ei_tu_mode ) {
 	kdna_ei_tu( 'Cost prices are kept', '7.5' === $kdna_ei_tu_cost );
 	kdna_ei_tu( 'Preferences are kept', 'light' === ( $kdna_ei_tu_prefs['theme'] ?? '' ) );
 	kdna_ei_tu( 'Scheduled jobs are kept', (bool) $kdna_ei_tu_jobs );
+	kdna_ei_tu( 'Encrypted ad platform keys are always removed', false === get_option( 'kdna_ei_secrets' ) );
+	if ( null !== $kdna_ei_tu_secrets ) {
+		update_option( 'kdna_ei_secrets', $kdna_ei_tu_secrets, false );
+	}
 	as_unschedule_all_actions( 'kdna_ei_uninstall_test' );
 	delete_transient( 'kdna_ei_c_uninstall_test' );
 	delete_post_meta( $kdna_ei_tu_product->get_id(), '_kdna_ei_cost' );

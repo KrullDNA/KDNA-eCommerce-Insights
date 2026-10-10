@@ -350,6 +350,77 @@
 
 	/*
 	 * ---------------------------------------------------------------------
+	 * Screen reader alternative
+	 * ---------------------------------------------------------------------
+	 */
+
+	/**
+	 * Writes the chart's figures into a table hidden from view but read by
+	 * screen readers, next to the canvas. Runs every time the chart is drawn
+	 * with new figures, so the table always matches what is on screen.
+	 *
+	 * @param {Chart} chart Chart instance.
+	 */
+	function describe( chart ) {
+		var canvas = chart.canvas;
+		var holder = canvas && canvas.parentNode;
+		if ( ! holder || ! chart.$kdnaKind ) {
+			return;
+		}
+		var helpers = chart.$kdna || {};
+		var strings = ( window.kdnaEiApp && window.kdnaEiApp.i18n ) || {};
+		var number = window.KDNAEI.format ? window.KDNAEI.format.number : function ( v ) {
+			return String( v );
+		};
+		var table = holder.querySelector( 'table.kdna-ei-chart-table' );
+		if ( ! table ) {
+			table = document.createElement( 'table' );
+			table.className = 'kdna-ei-visually-hidden kdna-ei-chart-table';
+			holder.appendChild( table );
+		}
+		var datasets = chart.data.datasets || [];
+		var labels = chart.data.labels || [];
+		var html = '<caption>' + escapeHtml( canvas.getAttribute( 'aria-label' ) || '' ) + '</caption><thead><tr><th scope="col">' + escapeHtml( strings.chartPeriod || '' ) + '</th>';
+
+		if ( chart.$kdnaKind === 'donut' || chart.$kdnaKind === 'waterfall' ) {
+			html += '<th scope="col">' + escapeHtml( strings.chartValue || '' ) + '</th></tr></thead><tbody>';
+			labels.forEach( function ( label, i ) {
+				var raw = datasets[ 0 ] ? datasets[ 0 ].data[ i ] : null;
+				var value = chart.$kdnaKind === 'waterfall' ? ( helpers.steps && helpers.steps[ i ] ? helpers.steps[ i ].amount : null ) : raw;
+				var text = helpers.value ? helpers.value( value, i, 0 ) : number( value, 0 );
+				html += '<tr><th scope="row">' + escapeHtml( label ) + '</th><td>' + escapeHtml( text ) + '</td></tr>';
+			} );
+		} else {
+			datasets.forEach( function ( dataset ) {
+				html += '<th scope="col">' + escapeHtml( dataset.label ) + '</th>';
+			} );
+			html += '</tr></thead><tbody>';
+			labels.forEach( function ( label, i ) {
+				html += '<tr><th scope="row">' + escapeHtml( helpers.title ? helpers.title( i ) : label ) + '</th>';
+				datasets.forEach( function ( dataset, d ) {
+					var value = dataset.data[ i ];
+					html += '<td>' + escapeHtml( value === null || value === undefined ? '-' : ( helpers.value ? helpers.value( value, i, d ) : number( value, 2 ) ) ) + '</td>';
+				} );
+				html += '</tr>';
+			} );
+		}
+		table.innerHTML = html + '</tbody>';
+	}
+
+	// Keep the table up to date whenever an Insights chart redraws with new figures.
+	if ( Chart ) {
+		Chart.register( {
+			id: 'kdnaDescribe',
+			afterUpdate: function ( chart ) {
+				if ( chart.$kdnaKind ) {
+					describe( chart );
+				}
+			},
+		} );
+	}
+
+	/*
+	 * ---------------------------------------------------------------------
 	 * Building charts
 	 * ---------------------------------------------------------------------
 	 */
@@ -510,6 +581,7 @@
 		chart.$kdnaTokens = t;
 		reveal( chart );
 		charts.push( chart );
+		describe( chart );
 		return chart;
 	}
 
@@ -583,6 +655,7 @@
 		chart.$kdna = options;
 		chart.$kdnaKind = 'donut';
 		charts.push( chart );
+		describe( chart );
 		return chart;
 	}
 
@@ -661,6 +734,7 @@
 		chart.$kdna = options;
 		chart.$kdnaKind = 'waterfall';
 		charts.push( chart );
+		describe( chart );
 		return chart;
 	}
 
@@ -752,6 +826,7 @@
 		chart.$kdna = options;
 		chart.$kdnaKind = 'bar';
 		charts.push( chart );
+		describe( chart );
 		return chart;
 	}
 

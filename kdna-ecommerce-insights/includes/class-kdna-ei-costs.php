@@ -415,7 +415,7 @@ class KDNA_EcommerceInsights_Costs {
 	public function render_simple_field(): void {
 		global $product_object;
 
-		if ( self::native_enabled() || ! $product_object instanceof WC_Product ) {
+		if ( self::native_enabled() || ! self::can_edit_costs() || ! $product_object instanceof WC_Product ) {
 			return;
 		}
 
@@ -443,7 +443,7 @@ class KDNA_EcommerceInsights_Costs {
 	public function render_variable_parent_field(): void {
 		global $product_object;
 
-		if ( self::native_enabled() || ! $product_object instanceof WC_Product ) {
+		if ( self::native_enabled() || ! self::can_edit_costs() || ! $product_object instanceof WC_Product ) {
 			return;
 		}
 
@@ -464,13 +464,24 @@ class KDNA_EcommerceInsights_Costs {
 	}
 
 	/**
+	 * Whether the current user may see and change cost prices. Like every
+	 * other part of Insights, this is for Administrators only, so Shop
+	 * Managers editing a product never see or change what it costs.
+	 *
+	 * @return bool
+	 */
+	public static function can_edit_costs(): bool {
+		return current_user_can( 'manage_options' );
+	}
+
+	/**
 	 * Saves the simple or variable product cost when the product is updated.
 	 * WooCommerce has already checked the edit form's security nonce.
 	 *
 	 * @param WC_Product $product Product being saved.
 	 */
 	public function save_product_field( $product ): void {
-		if ( self::native_enabled() || ! current_user_can( 'edit_product', $product->get_id() ) ) {
+		if ( self::native_enabled() || ! self::can_edit_costs() || ! current_user_can( 'edit_product', $product->get_id() ) ) {
 			return;
 		}
 
@@ -501,7 +512,7 @@ class KDNA_EcommerceInsights_Costs {
 	 * @param WP_Post $variation      Variation post.
 	 */
 	public function render_variation_field( $loop, $variation_data, $variation ): void {
-		if ( self::native_enabled() ) {
+		if ( self::native_enabled() || ! self::can_edit_costs() ) {
 			return;
 		}
 
@@ -534,7 +545,7 @@ class KDNA_EcommerceInsights_Costs {
 	 * @param int                  $index     Position of the variation in the submitted form.
 	 */
 	public function save_variation_field( $variation, $index ): void {
-		if ( self::native_enabled() || ! current_user_can( 'edit_product', $variation->get_parent_id() ) ) {
+		if ( self::native_enabled() || ! self::can_edit_costs() || ! current_user_can( 'edit_product', $variation->get_parent_id() ) ) {
 			return;
 		}
 

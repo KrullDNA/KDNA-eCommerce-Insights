@@ -1238,7 +1238,7 @@ body.kdna-ei-focus .kdna-ei-savebar {
 
 .kdna-ei-root .kdna-ei-category:hover span:first-child,
 .kdna-ei-category-table tr.is-active .kdna-ei-category span:first-child {
-	color: var(--kdna-ei-accent);
+	color: var(--kdna-ei-accent-text);
 }
 
 .kdna-ei-root .kdna-ei-category:focus-visible {
@@ -1319,7 +1319,7 @@ th[aria-sort="ascending"] .kdna-ei-sort__icon {
 }
 
 .kdna-ei-root .kdna-ei-product__open:hover {
-	color: var(--kdna-ei-accent);
+	color: var(--kdna-ei-accent-text);
 }
 
 .kdna-ei-root .kdna-ei-product__open:focus-visible {
@@ -1713,7 +1713,7 @@ th[aria-sort="ascending"] .kdna-ei-sort__icon {
 	height: 36px;
 	font-size: 13px;
 	font-weight: 600;
-	color: var(--kdna-ei-accent);
+	color: var(--kdna-ei-accent-text);
 	background: color-mix(in srgb, var(--kdna-ei-accent) 15%, transparent);
 	border-radius: 50%;
 }
@@ -1724,7 +1724,7 @@ th[aria-sort="ascending"] .kdna-ei-sort__icon {
 }
 
 .kdna-ei-root .kdna-ei-customer a:hover {
-	color: var(--kdna-ei-accent);
+	color: var(--kdna-ei-accent-text);
 }
 
 /* Locations. */
@@ -2207,9 +2207,9 @@ th[aria-sort="ascending"] .kdna-ei-sort__icon {
 	width: 40px;
 	height: 40px;
 	font-weight: 700;
-	color: #FFFFFF;
+	color: var(--kdna-ei-on-accent);
 	border-radius: var(--kdna-ei-radius-md);
-	background: var(--kdna-ei-accent);
+	background: var(--kdna-ei-accent-fill);
 }
 
 .kdna-ei-connection__logo.is-meta {
@@ -2416,7 +2416,7 @@ th[aria-sort="ascending"] .kdna-ei-sort__icon {
 
 .kdna-ei-tax__guide .kdna-ei-icon {
 	flex: none;
-	color: var(--kdna-ei-accent);
+	color: var(--kdna-ei-accent-text);
 }
 
 .kdna-ei-tax__guide p {
@@ -2473,7 +2473,7 @@ th[aria-sort="ascending"] .kdna-ei-sort__icon {
 	padding: 0 6px;
 	font-size: 12px;
 	font-weight: 600;
-	color: var(--kdna-ei-accent);
+	color: var(--kdna-ei-accent-text);
 	background: color-mix(in srgb, var(--kdna-ei-accent) 14%, transparent);
 	border-radius: 6px;
 }
@@ -2808,7 +2808,7 @@ th[aria-sort="ascending"] .kdna-ei-sort__icon {
 
 .kdna-ei-exports__item .kdna-ei-icon {
 	flex: none;
-	color: var(--kdna-ei-accent);
+	color: var(--kdna-ei-accent-text);
 }
 
 .kdna-ei-exports__item .kdna-ei-muted {
@@ -3392,8 +3392,8 @@ th[aria-sort="ascending"] .kdna-ei-sort__icon {
 	padding: 5px 14px;
 	font-size: 11px;
 	font-weight: 600;
-	color: #ffffff;
-	background: var(--kdna-ei-accent);
+	color: var(--kdna-ei-on-accent);
+	background: var(--kdna-ei-accent-fill);
 	border-radius: 999px;
 }
 

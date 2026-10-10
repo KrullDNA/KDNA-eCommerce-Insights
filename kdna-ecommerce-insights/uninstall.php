@@ -2,8 +2,10 @@
 /**
  * Runs when KDNA eCommerce Insights is deleted from the Plugins screen.
  *
- * By default nothing is removed: tables, settings, cost prices and logs all
- * stay, so reinstalling picks up exactly where it left off. Only when
+ * By default your data stays: tables, settings, cost prices and logs are
+ * kept, so reinstalling picks up exactly where it left off. The one thing
+ * always removed is the encrypted Meta and Google Ads access keys, so no
+ * live credentials are left behind; reconnect after reinstalling. Only when
  * Settings > Data > "Delete all plugin data on uninstall" is switched on is
  * everything the plugin created removed:
  *
@@ -94,6 +96,15 @@ function kdna_ei_uninstall_site(): void {
 	wp_cache_flush();
 }
 
+/**
+ * Removes the encrypted ad platform keys and the cached Google access token
+ * from the current site. Runs on every uninstall, even when data is kept.
+ */
+function kdna_ei_uninstall_secrets(): void {
+	delete_option( 'kdna_ei_secrets' );
+	delete_transient( 'kdna_ei_google_access' );
+}
+
 if ( is_multisite() ) {
 	$kdna_ei_site_ids = get_sites(
 		array(
@@ -103,13 +114,17 @@ if ( is_multisite() ) {
 	);
 	foreach ( $kdna_ei_site_ids as $kdna_ei_site_id ) {
 		switch_to_blog( (int) $kdna_ei_site_id );
+		kdna_ei_uninstall_secrets();
 		if ( kdna_ei_uninstall_wanted() ) {
 			kdna_ei_uninstall_site();
 		}
 		restore_current_blog();
 	}
-} elseif ( kdna_ei_uninstall_wanted() ) {
-	kdna_ei_uninstall_site();
+} else {
+	kdna_ei_uninstall_secrets();
+	if ( kdna_ei_uninstall_wanted() ) {
+		kdna_ei_uninstall_site();
+	}
 }
 
 // Dashboard preferences are stored per person, shared by every site on a

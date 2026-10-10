@@ -589,12 +589,16 @@ class KDNA_EcommerceInsights_Digest {
 		}
 
 		return array(
-			'store'    => KDNA_EcommerceInsights_Settings::store_name(),
-			'logo'     => (string) $logo,
-			'accent'   => $pick( 'accent' ),
-			'positive' => $pick( 'positive' ),
-			'negative' => $pick( 'negative' ),
-			'warning'  => $pick( 'warning' ),
+			'store'     => KDNA_EcommerceInsights_Settings::store_name(),
+			'logo'      => (string) $logo,
+			'accent'    => $pick( 'accent' ),
+			// Readable versions of the accent for links, the eyebrow and the button (WCAG AA on white).
+			'link'      => KDNA_EcommerceInsights_Admin::mix_colour( $pick( 'accent' ), '#000000', 0.8 ),
+			'button'    => KDNA_EcommerceInsights_Admin::mix_colour( $pick( 'accent' ), '#000000', 0.85 ),
+			'on_button' => KDNA_EcommerceInsights_Admin::contrast( KDNA_EcommerceInsights_Admin::mix_colour( $pick( 'accent' ), '#000000', 0.85 ), '#FFFFFF' ) >= 4.5 ? '#FFFFFF' : '#17181C',
+			'positive'  => $pick( 'positive' ),
+			'negative'  => $pick( 'negative' ),
+			'warning'   => $pick( 'warning' ),
 		);
 	}
 

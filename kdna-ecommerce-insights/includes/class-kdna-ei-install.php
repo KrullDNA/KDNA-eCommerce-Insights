@@ -115,7 +115,33 @@ class KDNA_EcommerceInsights_Install {
 	 * @return array<string, callable>
 	 */
 	private static function migrations(): array {
-		return array();
+		return array(
+			'1.0.2' => array( __CLASS__, 'migrate_1_0_2' ),
+		);
+	}
+
+	/**
+	 * 1.0.2: the light theme's green, amber and red were deepened so text
+	 * in them passes the WCAG AA contrast check. Sites that saved Branding
+	 * with the old default colours move to the new ones; any colour the
+	 * site chose itself is left alone.
+	 */
+	public static function migrate_1_0_2(): void {
+		$settings = get_option( 'kdna_ei_settings', array() );
+		if ( ! is_array( $settings ) || empty( $settings['branding']['colours']['light'] ) ) {
+			return;
+		}
+		$retired = array(
+			'positive' => array( '#1F9D62', '#16794A' ),
+			'warning'  => array( '#B7791F', '#8F5C12' ),
+			'negative' => array( '#D64545', '#C13030' ),
+		);
+		foreach ( $retired as $key => $swap ) {
+			if ( strtoupper( (string) ( $settings['branding']['colours']['light'][ $key ] ?? '' ) ) === $swap[0] ) {
+				$settings['branding']['colours']['light'][ $key ] = $swap[1];
+			}
+		}
+		update_option( 'kdna_ei_settings', $settings );
 	}
 
 	/**

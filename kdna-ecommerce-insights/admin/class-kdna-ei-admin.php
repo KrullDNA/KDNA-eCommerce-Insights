@@ -234,10 +234,17 @@ class KDNA_EcommerceInsights_Admin {
 			wp_enqueue_style( $handle, KDNA_EI_URL . $style[0], $style[1], $this->asset_version( $style[0] ) );
 		}
 
-		$branding_css = self::branding_css();
-		if ( '' !== $branding_css ) {
-			wp_add_inline_style( 'kdna-ei-tokens', $branding_css );
-		}
+		// Brand colours and font. Always printed (even when empty) so the
+		// Branding tab can swap the rules in place after saving.
+		wp_add_inline_style( 'kdna-ei-tokens', self::branding_css() . '/* kdna-ei-branding */' );
+
+		// The client's own CSS from Settings > Branding, loaded last so it wins.
+		wp_register_style( 'kdna-ei-custom', false, array( 'kdna-ei-admin' ), KDNA_EI_VERSION );
+		wp_enqueue_style( 'kdna-ei-custom' );
+		wp_add_inline_style( 'kdna-ei-custom', self::custom_css() . '/* kdna-ei-custom */' );
+
+		// The Media Library window, for choosing a logo in Settings > Branding.
+		wp_enqueue_media();
 
 		wp_enqueue_script( 'kdna-ei-router', KDNA_EI_URL . 'admin/js/kdna-ei-router.js', array(), $this->asset_version( 'admin/js/kdna-ei-router.js' ), true );
 		wp_enqueue_script( 'kdna-ei-format', KDNA_EI_URL . 'admin/js/kdna-ei-format.js', array( 'kdna-ei-router' ), $this->asset_version( 'admin/js/kdna-ei-format.js' ), true );
@@ -249,7 +256,7 @@ class KDNA_EcommerceInsights_Admin {
 
 		// One script per built screen, each registering its Alpine component.
 		$screen_scripts = array( 'kdna-ei-app' );
-		foreach ( array( 'overview', 'profit', 'products', 'customers', 'inventory', 'marketing', 'costs', 'cost-rules', 'overheads', 'reports', 'settings-hero' ) as $screen_id ) {
+		foreach ( array( 'overview', 'profit', 'products', 'customers', 'inventory', 'marketing', 'costs', 'cost-rules', 'overheads', 'reports', 'settings' ) as $screen_id ) {
 			$path   = 'admin/js/screens/' . $screen_id . '.js';
 			$handle = 'kdna-ei-screen-' . $screen_id;
 			wp_enqueue_script( $handle, KDNA_EI_URL . $path, array( 'kdna-ei-app', 'kdna-ei-chart-theme' ), $this->asset_version( $path ), true );
@@ -324,11 +331,7 @@ class KDNA_EcommerceInsights_Admin {
 					'inventory'     => self::inventory_strings(),
 					'marketing'     => self::marketing_strings(),
 					'reports'       => self::reports_strings(),
-					'heroSettings'  => array(
-						'saved'       => __( 'Saved. The Overview has been updated.', 'kdna-ecommerce-insights' ),
-						'amountError' => __( 'Enter an amount of zero or more, for example 25000.', 'kdna-ecommerce-insights' ),
-						'ordersError' => __( 'Enter a whole number of orders, for example 300.', 'kdna-ecommerce-insights' ),
-					),
+					'settings'      => self::settings_strings(),
 					'costs'         => self::costs_strings(),
 					'jobs'          => array(
 						'all'      => __( 'Processing your orders', 'kdna-ecommerce-insights' ),
@@ -601,6 +604,90 @@ class KDNA_EcommerceInsights_Admin {
 			'syncReplaced'      => __( 'This replaced %s added by hand or by CSV for the same dates, so nothing is counted twice.', 'kdna-ecommerce-insights' ),
 			/* translators: %s: platform. */
 			'disconnected'      => __( '%s disconnected. Spend already synced has been kept.', 'kdna-ecommerce-insights' ),
+		);
+	}
+
+	/**
+	 * Text used by the Settings screen script.
+	 *
+	 * @return array
+	 */
+	private static function settings_strings(): array {
+		return array(
+			'save'             => __( 'Save', 'kdna-ecommerce-insights' ),
+			'saving'           => __( 'Saving', 'kdna-ecommerce-insights' ),
+			'sending'          => __( 'Sending', 'kdna-ecommerce-insights' ),
+			'saved'            => __( 'Saved.', 'kdna-ecommerce-insights' ),
+			'savedBranding'    => __( 'Saved. The new look is applied everywhere.', 'kdna-ecommerce-insights' ),
+			'resetDone'        => __( 'Back to the defaults.', 'kdna-ecommerce-insights' ),
+			'fixFields'        => __( 'Please check the highlighted fields.', 'kdna-ecommerce-insights' ),
+			'statusError'      => __( 'Choose at least one order status that counts as a sale, usually Processing and Completed.', 'kdna-ecommerce-insights' ),
+			'colourError'      => __( 'Enter a colour code like #5A6FE0.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: number of products. */
+			'missingCosts'     => __( '%s products or variations have no cost price yet.', 'kdna-ecommerce-insights' ),
+			'allCosts'         => __( 'Every product has a cost price.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: number of rules. */
+			'ruleCount'        => __( '%s set up. Everything else uses the actual cost or none.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: order meta key. */
+			'metaKey'          => __( 'Real label costs are read from %s.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: number of costs. */
+			'extraCount'       => __( '%s set up, such as packaging or fulfilment.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: number of overheads. */
+			'overheadCount'    => __( '%s running costs such as rent, software or wages.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: number of ad spend rows. */
+			'channelRows'      => __( '%s days of spend', 'kdna-ecommerce-insights' ),
+			'channelUnused'    => __( 'No spend yet', 'kdna-ecommerce-insights' ),
+			'channelNew'       => __( 'New', 'kdna-ecommerce-insights' ),
+			'channelLocked'    => __( 'This channel has spend, so it cannot be removed. You can rename it.', 'kdna-ecommerce-insights' ),
+			'removeChannel'    => __( 'Remove channel', 'kdna-ecommerce-insights' ),
+			'anyChannel'       => __( 'Channel chosen when importing', 'kdna-ecommerce-insights' ),
+			/* translators: %s: channel name. */
+			'presetGst'        => __( '%s, amounts include GST', 'kdna-ecommerce-insights' ),
+			/* translators: %s: layout name. */
+			'presetDeleted'    => __( 'Deleted "%s".', 'kdna-ecommerce-insights' ),
+			'notConnected'     => __( 'Not connected.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: date and time. */
+			'lastSync'         => __( 'last synced %s', 'kdna-ecommerce-insights' ),
+			'states'           => array(
+				'not_set_up' => __( 'Not set up', 'kdna-ecommerce-insights' ),
+				'ready'      => __( 'Ready', 'kdna-ecommerce-insights' ),
+				'connected'  => __( 'Connected', 'kdna-ecommerce-insights' ),
+				'error'      => __( 'Needs attention', 'kdna-ecommerce-insights' ),
+			),
+			/* translators: %s: store currency code, such as AUD. */
+			'rateHelp'         => __( 'How much 1 unit of the ad account\'s currency is worth in %s. Use 1 when the ad account spends in the same currency as the store.', 'kdna-ecommerce-insights' ),
+			'colours'          => array(
+				'accent'       => __( 'Accent', 'kdna-ecommerce-insights' ),
+				'accentHelp'   => __( 'Main chart lines, buttons and highlights', 'kdna-ecommerce-insights' ),
+				'accent_2'     => __( 'Second accent', 'kdna-ecommerce-insights' ),
+				'accent_2Help' => __( 'Comparison lines and second segments', 'kdna-ecommerce-insights' ),
+				'positive'     => __( 'Positive', 'kdna-ecommerce-insights' ),
+				'positiveHelp' => __( 'Good changes and healthy stock', 'kdna-ecommerce-insights' ),
+				'warning'      => __( 'Warning', 'kdna-ecommerce-insights' ),
+				'warningHelp'  => __( 'Low stock and missing costs', 'kdna-ecommerce-insights' ),
+				'negative'     => __( 'Negative', 'kdna-ecommerce-insights' ),
+				'negativeHelp' => __( 'Losses, bad changes and out of stock', 'kdna-ecommerce-insights' ),
+			),
+			'lowContrastDark'  => __( 'Hard to see on dark cards. Try a lighter shade.', 'kdna-ecommerce-insights' ),
+			'lowContrastLight' => __( 'Hard to see on white cards. Try a darker shade.', 'kdna-ecommerce-insights' ),
+			'chooseLogo'       => __( 'Choose a logo', 'kdna-ecommerce-insights' ),
+			'changeLogo'       => __( 'Change logo', 'kdna-ecommerce-insights' ),
+			'logoTitle'        => __( 'Choose a logo for Insights', 'kdna-ecommerce-insights' ),
+			'logoButton'       => __( 'Use this logo', 'kdna-ecommerce-insights' ),
+			'noMedia'          => __( 'The Media Library could not be opened. Please reload the page and try again.', 'kdna-ecommerce-insights' ),
+			'previewLabel'     => __( 'Preview of the dashboard with the chosen name, logo, font and colours', 'kdna-ecommerce-insights' ),
+			'noGoal'           => __( 'The Goals tracker needs a target for the goal you track. Add one above, or it will ask for one on the Overview.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: the store-wide WooCommerce low stock amount. */
+			'lowStockHelp'     => __( 'Use 0 to follow each product\'s own low stock amount, or the WooCommerce store setting (%s units) where a product has none.', 'kdna-ecommerce-insights' ),
+			'testAlert'        => __( 'Send a test stock alert', 'kdna-ecommerce-insights' ),
+			'testDigest'       => __( 'Send a test digest', 'kdna-ecommerce-insights' ),
+			'saveFirst'        => __( 'Save first, so the test goes to the new addresses.', 'kdna-ecommerce-insights' ),
+			'digestOff'        => __( 'Digest emails are switched off.', 'kdna-ecommerce-insights' ),
+			'digestSoon'       => __( 'The next digest will be scheduled within a minute or two.', 'kdna-ecommerce-insights' ),
+			/* translators: %s: date and time. */
+			'digestNext'       => __( 'The next digest goes out %s.', 'kdna-ecommerce-insights' ),
+			/* translators: 1: page number, 2: number of pages. */
+			'pageOf'           => __( 'Page %1$s of %2$s', 'kdna-ecommerce-insights' ),
 		);
 	}
 
@@ -1059,14 +1146,27 @@ class KDNA_EcommerceInsights_Admin {
 			}
 		}
 
-		// Figtree is bundled now. The other fonts in the Branding list are bundled in Stage 12.
+		// Every font in the Branding list is bundled (assets/fonts). "Inherit"
+		// uses the computer's own interface font in wp-admin.
 		$font  = (string) KDNA_EcommerceInsights_Settings::get( 'branding.font', 'figtree' );
 		$fonts = KDNA_EcommerceInsights_Settings::fonts();
-		if ( 'figtree' !== $font && 'inherit' !== $font && isset( $fonts[ $font ] ) ) {
+		if ( 'inherit' === $font ) {
+			$css .= '.kdna-ei-root{--kdna-ei-font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;}';
+		} elseif ( 'figtree' !== $font && isset( $fonts[ $font ] ) ) {
 			$css .= '.kdna-ei-root{--kdna-ei-font:"' . esc_attr( $fonts[ $font ] ) . '",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;}';
 		}
 
 		return $css;
+	}
+
+	/**
+	 * The client's custom CSS from Settings > Branding, cleaned again on the
+	 * way out so it can never close the style block.
+	 *
+	 * @return string
+	 */
+	public static function custom_css(): string {
+		return KDNA_EcommerceInsights_Settings::clean_css( (string) KDNA_EcommerceInsights_Settings::get( 'branding.custom_css', '' ) );
 	}
 
 	/*

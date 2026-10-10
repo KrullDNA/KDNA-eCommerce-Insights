@@ -332,6 +332,9 @@ class KDNA_EcommerceInsights_Settings {
 		update_option( self::OPTION, $settings, true );
 		self::$cache = null;
 
+		/** This action is documented in update(). */
+		do_action( 'kdna_ei_settings_updated', self::all() );
+
 		return self::all();
 	}
 
@@ -498,7 +501,7 @@ class KDNA_EcommerceInsights_Settings {
 			'font'          => self::choice( $b['font'] ?? '', array_keys( self::fonts() ), $d['branding']['font'] ),
 			'colours'       => $colours,
 			'default_theme' => self::choice( $b['default_theme'] ?? '', array( 'dark', 'light' ), $d['branding']['default_theme'] ),
-			'custom_css'    => wp_strip_all_tags( (string) ( $b['custom_css'] ?? '' ) ),
+			'custom_css'    => self::clean_css( (string) ( $b['custom_css'] ?? '' ) ),
 		);
 
 		// Hero card and Goals.
@@ -547,17 +550,310 @@ class KDNA_EcommerceInsights_Settings {
 	 * English, anything that needs fixing. sanitise() would quietly correct
 	 * bad values; this tells the person instead, so nothing surprises them.
 	 *
-	 * Only the Costs tab is checked in detail so far. Stage 12 adds the rest.
+	 * Only the tabs included in $changes are checked, and within a tab only
+	 * the fields sent, so each tab can be saved on its own.
 	 *
 	 * @param array $changes Settings changes, grouped by tab.
-	 * @return array<string, string> Problems keyed by field path. Empty when all is well.
+	 * @return array<string, string> Problems keyed by field path, such as
+	 *                               "branding.colours.dark.accent". Empty when all is well.
 	 */
 	public static function validate( array $changes ): array {
 		$errors = array();
-		$costs  = $changes['costs'] ?? null;
+		$checks = array(
+			'general'   => 'validate_general',
+			'costs'     => 'validate_costs',
+			'marketing' => 'validate_marketing',
+			'tax'       => 'validate_tax',
+			'branding'  => 'validate_branding',
+			'hero'      => 'validate_hero',
+			'alerts'    => 'validate_alerts',
+		);
+		foreach ( $checks as $tab => $method ) {
+			if ( isset( $changes[ $tab ] ) ) {
+				$errors = array_merge( $errors, is_array( $changes[ $tab ] ) ? self::$method( $changes[ $tab ] ) : array( $tab => __( 'These settings could not be read. Please reload the page and try again.', 'kdna-ecommerce-insights' ) ) );
+			}
+		}
+		return $errors;
+	}
 
-		if ( ! is_array( $costs ) ) {
-			return $errors;
+	/**
+	 * Whether a value is a plain number (as text or a number), optionally
+	 * within limits.
+	 *
+	 * @param mixed      $value Value.
+	 * @param float      $min   Lowest allowed.
+	 * @param float|null $max   Highest allowed, or null for no limit.
+	 * @return bool
+	 */
+	private static function is_number( $value, float $min = 0, ?float $max = null ): bool {
+		if ( is_bool( $value ) || ! is_numeric( $value ) ) {
+			return false;
+		}
+		$value = (float) $value;
+		return $value >= $min && ( null === $max || $value <= $max );
+	}
+
+	/**
+	 * Whether a value is a whole number within limits.
+	 *
+	 * @param mixed $value Value.
+	 * @param int   $min   Lowest allowed.
+	 * @param int   $max   Highest allowed.
+	 * @return bool
+	 */
+	private static function is_whole( $value, int $min, int $max ): bool {
+		return self::is_number( $value, $min, $max ) && (float) $value === floor( (float) $value );
+	}
+
+	/**
+	 * Finds the entries in a comma separated list that are not email
+	 * addresses.
+	 *
+	 * @param mixed $value Addresses, as a list or comma separated text.
+	 * @return array{0: string[], 1: string[]} Good addresses and bad ones.
+	 */
+	public static function split_emails( $value ): array {
+		$list = is_array( $value ) ? $value : explode( ',', str_replace( array( ';', "\n" ), ',', is_scalar( $value ) ? (string) $value : '' ) );
+		$list = array_values( array_filter( array_map( 'trim', array_map( 'strval', $list ) ), 'strlen' ) );
+		$bad  = array_values( array_filter( $list, static fn( $email ) => ! is_email( $email ) ) );
+		return array( array_values( array_diff( $list, $bad ) ), $bad );
+	}
+
+	/**
+	 * Checks the General tab.
+	 *
+	 * @param array $g Submitted General settings.
+	 * @return array<string, string>
+	 */
+	private static function validate_general( array $g ): array {
+		$errors = array();
+		$choose = __( 'Choose one of the options.', 'kdna-ecommerce-insights' );
+
+		if ( array_key_exists( 'order_statuses', $g ) ) {
+			$statuses = array_filter( array_map( array( __CLASS__, 'clean_status' ), (array) $g['order_statuses'] ) );
+			$known    = function_exists( 'wc_get_order_statuses' ) ? array_map( array( __CLASS__, 'clean_status' ), array_keys( wc_get_order_statuses() ) ) : $statuses;
+			if ( ! $statuses ) {
+				$errors['general.order_statuses'] = __( 'Choose at least one order status that counts as a sale, usually Processing and Completed.', 'kdna-ecommerce-insights' );
+			} elseif ( array_diff( $statuses, $known ) ) {
+				$errors['general.order_statuses'] = __( 'One of the chosen order statuses no longer exists on this store. Please choose again.', 'kdna-ecommerce-insights' );
+			}
+		}
+
+		$choices = array(
+			'date_basis'        => array( 'paid', 'created', 'completed' ),
+			'refund_dating'     => array( 'refund_date', 'order_date' ),
+			'restock_treatment' => array( 'restocked', 'written_off' ),
+			'revenue_display'   => array( 'excl_tax', 'incl_tax' ),
+			'comparison'        => array_keys( self::comparison_modes() ),
+		);
+		foreach ( $choices as $key => $allowed ) {
+			if ( array_key_exists( $key, $g ) && ! in_array( (string) $g[ $key ], $allowed, true ) ) {
+				$errors[ 'general.' . $key ] = $choose;
+			}
+		}
+
+		if ( array_key_exists( 'week_start', $g ) && ! self::is_whole( $g['week_start'], 0, 6 ) ) {
+			$errors['general.week_start'] = __( 'Choose the day your week starts on.', 'kdna-ecommerce-insights' );
+		}
+		if ( array_key_exists( 'default_range', $g ) ) {
+			if ( 'custom' === $g['default_range'] ) {
+				$errors['general.default_range'] = __( 'Custom dates cannot be the default. Choose a preset such as This month.', 'kdna-ecommerce-insights' );
+			} elseif ( ! array_key_exists( (string) $g['default_range'], self::range_presets() ) ) {
+				$errors['general.default_range'] = $choose;
+			}
+		}
+
+		return $errors;
+	}
+
+	/**
+	 * Checks the Marketing tab: channel names, the currency rate and how
+	 * often to sync. Connection details are checked by the connection routes.
+	 *
+	 * @param array $m Submitted Marketing settings.
+	 * @return array<string, string>
+	 */
+	private static function validate_marketing( array $m ): array {
+		$errors = array();
+
+		if ( array_key_exists( 'channels', $m ) ) {
+			$seen = array();
+			foreach ( array_values( (array) $m['channels'] ) as $i => $channel ) {
+				$label = trim( (string) ( $channel['label'] ?? '' ) );
+				$key   = sanitize_key( (string) ( $channel['key'] ?? '' ) );
+				if ( '' === $label ) {
+					$errors[ "marketing.channels.$i.label" ] = __( 'Give this channel a name, for example "Snapchat".', 'kdna-ecommerce-insights' );
+				} elseif ( mb_strlen( $label ) > 40 ) {
+					$errors[ "marketing.channels.$i.label" ] = __( 'Keep channel names to 40 characters or fewer.', 'kdna-ecommerce-insights' );
+				} elseif ( isset( $seen[ strtolower( $label ) ] ) ) {
+					$errors[ "marketing.channels.$i.label" ] = __( 'Another channel already has this name.', 'kdna-ecommerce-insights' );
+				}
+				if ( '' === $key ) {
+					$errors[ "marketing.channels.$i.label" ] = $errors[ "marketing.channels.$i.label" ] ?? __( 'This channel name needs at least one letter or number.', 'kdna-ecommerce-insights' );
+				}
+				$seen[ strtolower( $label ) ] = true;
+			}
+			if ( ! $m['channels'] ) {
+				$errors['marketing.channels'] = __( 'Keep at least one channel.', 'kdna-ecommerce-insights' );
+			}
+		}
+
+		if ( array_key_exists( 'ad_currency_rate', $m ) && ( ! self::is_number( $m['ad_currency_rate'], 0.000001, 100000 ) ) ) {
+			$errors['marketing.ad_currency_rate'] = __( 'Enter a rate above zero, for example 1.52. Use 1 when the ad account spends in your store currency.', 'kdna-ecommerce-insights' );
+		}
+		if ( array_key_exists( 'sync_frequency', $m ) && ! in_array( (string) $m['sync_frequency'], array( 'daily', 'twice_daily', 'manual' ), true ) ) {
+			$errors['marketing.sync_frequency'] = __( 'Choose one of the options.', 'kdna-ecommerce-insights' );
+		}
+
+		return $errors;
+	}
+
+	/**
+	 * Checks the Tax tab.
+	 *
+	 * @param array $t Submitted Tax settings.
+	 * @return array<string, string>
+	 */
+	private static function validate_tax( array $t ): array {
+		$errors = array();
+		if ( array_key_exists( 'system', $t ) && ! in_array( (string) $t['system'], array( 'au_gst', 'vat', 'sales_tax', 'none' ), true ) ) {
+			$errors['tax.system'] = __( 'Choose one of the options.', 'kdna-ecommerce-insights' );
+		}
+		if ( array_key_exists( 'rate', $t ) && ! self::is_number( $t['rate'], 0, 100 ) ) {
+			$errors['tax.rate'] = __( 'Enter a rate between 0 and 100, for example 10.', 'kdna-ecommerce-insights' );
+		}
+		if ( array_key_exists( 'reporting_period', $t ) && ! in_array( (string) $t['reporting_period'], array( 'monthly', 'quarterly' ), true ) ) {
+			$errors['tax.reporting_period'] = __( 'Choose monthly or quarterly.', 'kdna-ecommerce-insights' );
+		}
+		return $errors;
+	}
+
+	/**
+	 * Checks the Branding tab: name, logo, font, colours, theme and custom CSS.
+	 *
+	 * @param array $b Submitted Branding settings.
+	 * @return array<string, string>
+	 */
+	private static function validate_branding( array $b ): array {
+		$errors = array();
+
+		if ( array_key_exists( 'store_name', $b ) && mb_strlen( trim( (string) $b['store_name'] ) ) > 60 ) {
+			$errors['branding.store_name'] = __( 'Keep the display name to 60 characters or fewer.', 'kdna-ecommerce-insights' );
+		}
+		if ( ! empty( $b['logo_id'] ) && ( ! self::is_whole( $b['logo_id'], 1, PHP_INT_MAX ) || ! wp_attachment_is_image( (int) $b['logo_id'] ) ) ) {
+			$errors['branding.logo_id'] = __( 'Choose an image from the Media Library for the logo.', 'kdna-ecommerce-insights' );
+		}
+		if ( array_key_exists( 'font', $b ) && ! array_key_exists( (string) $b['font'], self::fonts() ) ) {
+			$errors['branding.font'] = __( 'Choose one of the fonts in the list.', 'kdna-ecommerce-insights' );
+		}
+		foreach ( self::default_colours() as $theme => $set ) {
+			foreach ( array_keys( $set ) as $key ) {
+				if ( isset( $b['colours'][ $theme ][ $key ] ) && ! sanitize_hex_color( (string) $b['colours'][ $theme ][ $key ] ) ) {
+					$errors[ "branding.colours.$theme.$key" ] = __( 'Enter a colour code like #5A6FE0.', 'kdna-ecommerce-insights' );
+				}
+			}
+		}
+		if ( array_key_exists( 'default_theme', $b ) && ! in_array( (string) $b['default_theme'], array( 'dark', 'light' ), true ) ) {
+			$errors['branding.default_theme'] = __( 'Choose dark or light.', 'kdna-ecommerce-insights' );
+		}
+		if ( array_key_exists( 'custom_css', $b ) ) {
+			$css = (string) $b['custom_css'];
+			if ( strlen( $css ) > 20000 ) {
+				$errors['branding.custom_css'] = __( 'Custom CSS is limited to 20,000 characters.', 'kdna-ecommerce-insights' );
+			} elseif ( false !== strpos( $css, '<' ) ) {
+				$errors['branding.custom_css'] = __( 'Custom CSS cannot contain HTML tags such as <style>. Paste only the CSS rules.', 'kdna-ecommerce-insights' );
+			}
+		}
+
+		return $errors;
+	}
+
+	/**
+	 * Checks the Hero card and Goals tab.
+	 *
+	 * @param array $h Submitted hero settings.
+	 * @return array<string, string>
+	 */
+	private static function validate_hero( array $h ): array {
+		$errors = array();
+		if ( array_key_exists( 'type', $h ) && ! in_array( (string) $h['type'], array( 'top_products', 'profit_breakdown', 'goals' ), true ) ) {
+			$errors['hero.type'] = __( 'Choose one of the options.', 'kdna-ecommerce-insights' );
+		}
+		if ( array_key_exists( 'goal_metric', $h ) && ! in_array( (string) $h['goal_metric'], array( 'revenue', 'profit', 'orders' ), true ) ) {
+			$errors['hero.goal_metric'] = __( 'Choose one of the options.', 'kdna-ecommerce-insights' );
+		}
+		foreach ( array( 'revenue', 'profit' ) as $key ) {
+			if ( isset( $h['goal_targets'][ $key ] ) && '' !== $h['goal_targets'][ $key ] && ! self::is_number( $h['goal_targets'][ $key ], 0 ) ) {
+				$errors[ "hero.goal_targets.$key" ] = __( 'Enter an amount of zero or more, for example 25000.', 'kdna-ecommerce-insights' );
+			}
+		}
+		if ( isset( $h['goal_targets']['orders'] ) && '' !== $h['goal_targets']['orders'] && ! self::is_whole( $h['goal_targets']['orders'], 0, PHP_INT_MAX ) ) {
+			$errors['hero.goal_targets.orders'] = __( 'Enter a whole number of orders, for example 300.', 'kdna-ecommerce-insights' );
+		}
+		return $errors;
+	}
+
+	/**
+	 * Checks the Alerts and digests tab.
+	 *
+	 * @param array $a Submitted alert settings.
+	 * @return array<string, string>
+	 */
+	private static function validate_alerts( array $a ): array {
+		$errors = array();
+
+		if ( array_key_exists( 'low_stock_threshold', $a ) && '' !== $a['low_stock_threshold'] && ! self::is_whole( $a['low_stock_threshold'], 0, 100000 ) ) {
+			$errors['alerts.low_stock_threshold'] = __( 'Enter a whole number of units, or 0 to use each product\'s own low stock amount.', 'kdna-ecommerce-insights' );
+		}
+		if ( array_key_exists( 'dead_stock_days', $a ) && ! self::is_whole( $a['dead_stock_days'], 1, 3650 ) ) {
+			$errors['alerts.dead_stock_days'] = __( 'Enter a number of days between 1 and 3650, for example 90.', 'kdna-ecommerce-insights' );
+		}
+		if ( array_key_exists( 'reorder_lead_days', $a ) && ! self::is_whole( $a['reorder_lead_days'], 0, 365 ) ) {
+			$errors['alerts.reorder_lead_days'] = __( 'Enter a number of days between 0 and 365, for example 14.', 'kdna-ecommerce-insights' );
+		}
+
+		foreach ( array( 'alert_recipients', 'digest_recipients' ) as $key ) {
+			if ( array_key_exists( $key, $a ) ) {
+				list( , $bad ) = self::split_emails( $a[ $key ] );
+				if ( $bad ) {
+					/* translators: %s: the entries that are not email addresses. */
+					$errors[ 'alerts.' . $key ] = sprintf( __( 'These are not email addresses: %s. Separate addresses with commas.', 'kdna-ecommerce-insights' ), implode( ', ', $bad ) );
+				}
+			}
+		}
+
+		$alerts_on = ! empty( $a['low_stock_emails'] ) || ! empty( $a['sync_failure_emails'] );
+		if ( $alerts_on && array_key_exists( 'alert_recipients', $a ) && ! isset( $errors['alerts.alert_recipients'] ) && ! self::split_emails( $a['alert_recipients'] )[0] ) {
+			$errors['alerts.alert_recipients'] = __( 'Add at least one email address for the alerts to go to.', 'kdna-ecommerce-insights' );
+		}
+
+		if ( array_key_exists( 'digest_frequency', $a ) ) {
+			if ( ! in_array( (string) $a['digest_frequency'], array( 'off', 'weekly', 'monthly' ), true ) ) {
+				$errors['alerts.digest_frequency'] = __( 'Choose one of the options.', 'kdna-ecommerce-insights' );
+			} elseif ( 'off' !== $a['digest_frequency'] ) {
+				if ( array_key_exists( 'digest_recipients', $a ) && ! isset( $errors['alerts.digest_recipients'] ) && ! self::split_emails( $a['digest_recipients'] )[0] ) {
+					$errors['alerts.digest_recipients'] = __( 'Add at least one email address for the digest to go to.', 'kdna-ecommerce-insights' );
+				}
+				if ( array_key_exists( 'digest_sections', $a ) && ! array_intersect( (array) $a['digest_sections'], array( 'kpis', 'profit', 'top_products', 'inventory', 'marketing', 'alerts' ) ) ) {
+					$errors['alerts.digest_sections'] = __( 'Choose at least one thing to include.', 'kdna-ecommerce-insights' );
+				}
+			}
+		}
+
+		return $errors;
+	}
+
+	/**
+	 * Checks the Costs tab.
+	 *
+	 * @param array $costs Submitted Costs settings.
+	 * @return array<string, string>
+	 */
+	private static function validate_costs( array $costs ): array {
+		$errors = array();
+
+		if ( array_key_exists( 'cost_field_placement', $costs ) && ! in_array( (string) $costs['cost_field_placement'], array( 'after_regular_price', 'after_sale_price' ), true ) ) {
+			$errors['costs.cost_field_placement'] = __( 'Choose one of the options.', 'kdna-ecommerce-insights' );
 		}
 
 		foreach ( (array) ( $costs['gateway_fees'] ?? array() ) as $gateway => $rule ) {
@@ -675,9 +971,23 @@ class KDNA_EcommerceInsights_Settings {
 	 * @return string
 	 */
 	private static function emails( $value ): string {
-		$list = is_array( $value ) ? $value : explode( ',', is_scalar( $value ) ? (string) $value : '' );
-		$list = array_filter( array_map( 'sanitize_email', array_map( 'trim', $list ) ), 'is_email' );
+		$list = array_filter( array_map( 'sanitize_email', self::split_emails( $value )[0] ), 'is_email' );
 		return implode( ', ', array_unique( $list ) );
+	}
+
+	/**
+	 * Cleans custom CSS: no HTML tags, nothing that could close the style
+	 * block, no old Internet Explorer expressions or script addresses, and at
+	 * most 20,000 characters.
+	 *
+	 * @param string $css Submitted CSS.
+	 * @return string
+	 */
+	public static function clean_css( string $css ): string {
+		$css = wp_strip_all_tags( $css );
+		$css = str_replace( '<', '', $css );
+		$css = preg_replace( '/expression\s*\(|javascript\s*:|behavior\s*:|-moz-binding/i', '', $css );
+		return trim( mb_substr( (string) $css, 0, 20000 ) );
 	}
 
 	/**

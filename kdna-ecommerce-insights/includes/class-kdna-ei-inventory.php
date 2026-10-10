@@ -612,7 +612,7 @@ class KDNA_EcommerceInsights_Inventory {
 				$sent ? 'success' : 'error',
 				$sent
 					/* translators: %d: number of products. */
-					? sprintf( __( 'Low stock email sent for %d products.', 'kdna-ecommerce-insights' ), count( $rows ) )
+					? sprintf( _n( 'Low stock email sent for %d product.', 'Low stock email sent for %d products.', count( $rows ), 'kdna-ecommerce-insights' ), count( $rows ) )
 					: __( 'Low stock email could not be sent. Check that this site can send email.', 'kdna-ecommerce-insights' )
 			);
 		}

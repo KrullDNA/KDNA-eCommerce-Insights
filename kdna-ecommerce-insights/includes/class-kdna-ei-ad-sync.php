@@ -280,7 +280,52 @@ class KDNA_EcommerceInsights_Ad_Sync {
 	 * @param string $key Platform key.
 	 */
 	public static function run( string $key ): void {
-		self::sync( $key );
+		$before = self::status( $key )['state'];
+		$result = self::sync( $key );
+
+		// Email once when a working connection starts failing, not on every retry.
+		if ( is_wp_error( $result ) && 'error' !== $before ) {
+			self::email_failure( $key, $result );
+		}
+	}
+
+	/**
+	 * Emails the alert recipients that a scheduled sync failed, when
+	 * Settings > Alerts and digests asks for it.
+	 *
+	 * @param string   $key   Platform key.
+	 * @param WP_Error $error What went wrong.
+	 * @return bool Whether an email was sent.
+	 */
+	public static function email_failure( string $key, WP_Error $error ): bool {
+		if ( ! KDNA_EcommerceInsights_Settings::get( 'alerts.sync_failure_emails', false ) ) {
+			return false;
+		}
+		$platform = self::platform( $key );
+		$label    = $platform ? $platform->label() : $key;
+		$store    = KDNA_EcommerceInsights_Settings::store_name();
+
+		$sent = KDNA_EcommerceInsights_Mailer::send(
+			KDNA_EcommerceInsights_Settings::get( 'alerts.alert_recipients', '' ),
+			/* translators: 1: store name, 2: platform name. */
+			sprintf( __( '[%1$s] %2$s ad spend could not sync', 'kdna-ecommerce-insights' ), $store, $label ),
+			/* translators: %s: platform name. */
+			sprintf( __( '%s needs attention', 'kdna-ecommerce-insights' ), $label ),
+			__( 'The daily ad spend sync did not work, so the latest spend is missing from your profit figures. Nothing already saved has changed, and Insights will try again at the next sync.', 'kdna-ecommerce-insights' ),
+			'<p style="margin:0;padding:14px 16px;background:#F7F8FA;border-left:3px solid #D64545;font-size:15px;line-height:1.5;">' . esc_html( $error->get_error_message() ) . '</p>',
+			admin_url( 'admin.php?page=' . KDNA_EcommerceInsights_Admin::MENU_SLUG . '#/marketing' ),
+			__( 'Open Marketing', 'kdna-ecommerce-insights' )
+		);
+
+		KDNA_EcommerceInsights_Log::add(
+			'sync_alert',
+			$sent ? 'success' : 'error',
+			$sent
+				/* translators: %s: platform name. */
+				? sprintf( __( 'Sync failure email sent for %s.', 'kdna-ecommerce-insights' ), $label )
+				: __( 'Sync failure email could not be sent. Check that this site can send email.', 'kdna-ecommerce-insights' )
+		);
+		return $sent;
 	}
 
 	/**

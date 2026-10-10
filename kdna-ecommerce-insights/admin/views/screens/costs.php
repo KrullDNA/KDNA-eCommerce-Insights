@@ -22,7 +22,7 @@ $kdna_ei_cost_tabs = array(
 	'recalc'    => __( 'Recalculate', 'kdna-ecommerce-insights' ),
 );
 ?>
-<div class="kdna-ei-costs-screen" x-data="{ tab: 'products' }">
+<div class="kdna-ei-costs-screen" x-data="{ tab: 'products' }" @kdna:ei-costs-tab.window="tab = $event.detail">
 	<div class="kdna-ei-tabs kdna-ei-tabs--screen" role="tablist" aria-label="<?php esc_attr_e( 'Cost types', 'kdna-ecommerce-insights' ); ?>">
 		<?php foreach ( $kdna_ei_cost_tabs as $kdna_ei_key => $kdna_ei_label ) : ?>
 			<button

@@ -3455,3 +3455,645 @@ th[aria-sort="ascending"] .kdna-ei-sort__icon {
 	margin-left: auto;
 	font-size: var(--kdna-ei-fs-small);
 }
+
+/* ==========================================================================
+   Settings screen (Stage 12)
+   ========================================================================== */
+
+.kdna-ei-root .kdna-ei-settings__tab {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.kdna-ei-settings__dirty {
+	flex: none;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--kdna-ei-warning);
+}
+
+.kdna-ei-settings__panel {
+	display: grid;
+	gap: var(--kdna-ei-gap);
+	min-width: 0;
+}
+
+/* One setting: label and help on the left, the control on the right. */
+.kdna-ei-setting {
+	display: grid;
+	grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+	gap: 12px 32px;
+	padding: 20px 0;
+	border-top: 1px solid var(--kdna-ei-border);
+}
+
+.kdna-ei-setting__label .kdna-ei-field-label {
+	display: block;
+	margin: 0 0 4px;
+	font-size: var(--kdna-ei-fs-body);
+	font-weight: 500;
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-setting__label .kdna-ei-help {
+	margin: 0;
+}
+
+.kdna-ei-root .kdna-ei-setting__narrow {
+	max-width: 220px;
+}
+
+.kdna-ei-setting__pair {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 220px));
+	gap: 12px;
+}
+
+.kdna-ei-setting__stack {
+	display: grid;
+	gap: 12px;
+	justify-items: start;
+}
+
+.kdna-ei-setting__actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 14px;
+	margin-top: 12px;
+	font-size: var(--kdna-ei-fs-small);
+}
+
+.kdna-ei-setting .kdna-ei-choice-list {
+	max-width: 560px;
+}
+
+.kdna-ei-settings-panel__heading {
+	margin: 28px 0 0;
+	font-size: var(--kdna-ei-fs-eyebrow);
+	font-weight: 500;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-settings-panel__note {
+	margin: 16px 0 0;
+}
+
+.kdna-ei-checks {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+	gap: 10px 16px;
+	padding: 2px;
+	border-radius: var(--kdna-ei-radius-sm);
+}
+
+.kdna-ei-checks.is-invalid {
+	outline: 1px solid var(--kdna-ei-negative);
+	outline-offset: 6px;
+}
+
+.kdna-ei-checks--two {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	max-width: 480px;
+}
+
+.kdna-ei-text-negative {
+	color: var(--kdna-ei-negative);
+}
+
+.kdna-ei-text-warning {
+	color: var(--kdna-ei-warning);
+}
+
+/* Save bar at the bottom of each tab. */
+.kdna-ei-settings-footer {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px 16px;
+	margin-top: 8px;
+	padding-top: 20px;
+	border-top: 1px solid var(--kdna-ei-border);
+}
+
+.kdna-ei-settings-footer__status {
+	display: flex;
+	gap: 12px;
+	margin: 0 0 0 auto;
+	font-size: var(--kdna-ei-fs-small);
+	text-align: right;
+}
+
+/* Summaries with a button on the right (Costs, Marketing). */
+.kdna-ei-summary-list {
+	display: grid;
+	margin: 0 0 4px;
+	padding: 0;
+	list-style: none;
+	border-top: 1px solid var(--kdna-ei-border);
+}
+
+.kdna-ei-summary-list > li {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 14px 0;
+	border-bottom: 1px solid var(--kdna-ei-border);
+}
+
+.kdna-ei-summary-list p {
+	margin: 0;
+}
+
+.kdna-ei-summary-list .kdna-ei-muted {
+	font-size: var(--kdna-ei-fs-small);
+}
+
+.kdna-ei-summary-list__title {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	font-weight: 500;
+}
+
+.kdna-ei-summary-list__title .kdna-ei-badge {
+	padding: 2px 10px;
+	font-size: 12px;
+}
+
+.kdna-ei-summary-list--compact {
+	border-top: 0;
+}
+
+.kdna-ei-summary-list--compact > li {
+	padding: 10px 0;
+}
+
+.kdna-ei-summary-list--compact > li:first-child {
+	padding-top: 0;
+}
+
+.kdna-ei-summary-list .kdna-ei-btn {
+	flex: none;
+	text-decoration: none;
+}
+
+/* Ad channels editor. */
+.kdna-ei-channel-list {
+	display: grid;
+	gap: 8px;
+	margin: 0 0 12px;
+	padding: 0;
+	list-style: none;
+	max-width: 520px;
+}
+
+.kdna-ei-channel-list li {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto auto;
+	align-items: center;
+	gap: 4px 12px;
+}
+
+.kdna-ei-channel-list__use {
+	font-size: var(--kdna-ei-fs-small);
+	white-space: nowrap;
+}
+
+.kdna-ei-channel-list__error {
+	grid-column: 1 / -1;
+	margin: 0;
+}
+
+/* Branding: fields on the left, live preview on the right. */
+.kdna-ei-branding__layout {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+	gap: 32px;
+	align-items: start;
+}
+
+.kdna-ei-branding__fields {
+	display: grid;
+	gap: 26px;
+}
+
+.kdna-ei-branding__preview {
+	position: sticky;
+	top: calc(var(--kdna-ei-admin-bar) + 20px);
+	display: grid;
+	gap: 12px;
+}
+
+.kdna-ei-field {
+	display: grid;
+	gap: 8px;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	min-width: 0;
+}
+
+.kdna-ei-field .kdna-ei-segmented {
+	justify-self: start;
+}
+
+.kdna-ei-field .kdna-ei-help,
+.kdna-ei-field .kdna-ei-field-label {
+	margin: 0;
+}
+
+.kdna-ei-logo-picker {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+}
+
+.kdna-ei-logo-picker__preview {
+	display: grid;
+	place-items: center;
+	width: 56px;
+	height: 56px;
+	overflow: hidden;
+	font-size: 22px;
+	font-weight: 600;
+	color: var(--kdna-ei-text);
+	background: var(--kdna-ei-surface-raised);
+	border: 1px solid var(--kdna-ei-border);
+	border-radius: var(--kdna-ei-radius-md);
+}
+
+.kdna-ei-logo-picker__preview img {
+	max-width: 100%;
+	max-height: 100%;
+	object-fit: contain;
+}
+
+.kdna-ei-font-list {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+	gap: 10px;
+}
+
+.kdna-ei-font {
+	position: relative;
+	display: grid;
+	gap: 4px;
+	padding: 12px 14px;
+	cursor: pointer;
+	border: 1px solid var(--kdna-ei-border-strong);
+	border-radius: var(--kdna-ei-radius-md);
+	transition: border-color var(--kdna-ei-duration-fast) ease, background-color var(--kdna-ei-duration-fast) ease;
+}
+
+.kdna-ei-font.is-selected {
+	border-color: var(--kdna-ei-accent);
+	background: color-mix(in srgb, var(--kdna-ei-accent) 8%, transparent);
+}
+
+.kdna-ei-font:focus-within {
+	outline: 2px solid var(--kdna-ei-accent);
+	outline-offset: 2px;
+}
+
+.kdna-ei-font__sample {
+	font-size: 22px;
+	font-weight: 500;
+	line-height: 1.2;
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-font__name {
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-colours {
+	gap: 4px;
+}
+
+.kdna-ei-colour {
+	display: grid;
+	grid-template-columns: 44px minmax(0, 1fr) 104px;
+	align-items: center;
+	gap: 4px 14px;
+	padding: 8px 0;
+	border-bottom: 1px solid var(--kdna-ei-border);
+}
+
+.kdna-ei-root .kdna-ei-colour__swatch {
+	width: 44px;
+	height: 36px;
+	padding: 0;
+	cursor: pointer;
+	background: none;
+	border: 1px solid var(--kdna-ei-border-strong);
+	border-radius: var(--kdna-ei-radius-sm);
+}
+
+.kdna-ei-colour__swatch::-webkit-color-swatch-wrapper {
+	padding: 3px;
+}
+
+.kdna-ei-colour__swatch::-webkit-color-swatch {
+	border: 0;
+	border-radius: 6px;
+}
+
+.kdna-ei-colour__swatch::-moz-color-swatch {
+	border: 0;
+	border-radius: 6px;
+}
+
+.kdna-ei-colour__text {
+	display: grid;
+	gap: 1px;
+	font-size: var(--kdna-ei-fs-small);
+}
+
+.kdna-ei-colour__label {
+	font-size: var(--kdna-ei-fs-body);
+	font-weight: 500;
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-colour__warning {
+	color: var(--kdna-ei-warning);
+}
+
+.kdna-ei-root .kdna-ei-colour__hex {
+	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	text-transform: uppercase;
+}
+
+.kdna-ei-colour__error {
+	grid-column: 2 / -1;
+	margin: 0;
+}
+
+.kdna-ei-root textarea.kdna-ei-code {
+	min-height: 120px;
+	padding: 12px 14px;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	font-size: 13px;
+	line-height: 1.5;
+	border-radius: var(--kdna-ei-radius-md);
+	resize: vertical;
+}
+
+/* The live preview: a small copy of the dashboard using its own tokens. */
+.kdna-ei-preview-card__bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.kdna-ei-preview-card__bar .kdna-ei-field-label {
+	margin: 0;
+}
+
+.kdna-ei-preview-card {
+	display: grid;
+	grid-template-columns: 44px minmax(0, 1fr);
+	overflow: hidden;
+	color: var(--kdna-ei-text);
+	background: var(--kdna-ei-bg);
+	border: 1px solid var(--kdna-ei-border-strong);
+	border-radius: var(--kdna-ei-radius);
+	transition: background-color var(--kdna-ei-duration) ease, color var(--kdna-ei-duration) ease;
+}
+
+.kdna-ei-preview-card__side {
+	display: grid;
+	align-content: start;
+	justify-items: center;
+	gap: 10px;
+	padding: 14px 0;
+	border-right: 1px solid var(--kdna-ei-border);
+}
+
+.kdna-ei-preview-card__logo {
+	display: grid;
+	place-items: center;
+	width: 26px;
+	height: 26px;
+	overflow: hidden;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--kdna-ei-text);
+	background: var(--kdna-ei-surface);
+	border-radius: 8px;
+}
+
+.kdna-ei-preview-card__logo img {
+	max-width: 100%;
+	max-height: 100%;
+	object-fit: contain;
+}
+
+.kdna-ei-preview-card__nav {
+	width: 22px;
+	height: 22px;
+	border-radius: 7px;
+	background: var(--kdna-ei-border);
+}
+
+.kdna-ei-preview-card__nav.is-active {
+	background: var(--kdna-ei-surface-raised);
+	box-shadow: inset 0 0 0 2px var(--kdna-ei-accent);
+}
+
+.kdna-ei-preview-card__main {
+	display: grid;
+	gap: 10px;
+	padding: 14px;
+	min-width: 0;
+}
+
+.kdna-ei-preview-card__eyebrow {
+	margin: 0;
+	overflow: hidden;
+	font-size: 9px;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-preview-card__title {
+	margin: -6px 0 0;
+	font-size: 24px;
+	font-weight: 300;
+	line-height: 1.2;
+}
+
+.kdna-ei-preview-card__kpis {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	background: var(--kdna-ei-surface);
+	border: 1px solid var(--kdna-ei-border);
+	border-radius: 12px;
+}
+
+.kdna-ei-preview-card__kpis > div {
+	display: grid;
+	gap: 2px;
+	padding: 10px 12px;
+}
+
+.kdna-ei-preview-card__kpis > div + div {
+	border-left: 1px solid var(--kdna-ei-border);
+}
+
+.kdna-ei-preview-card__label {
+	font-size: 10px;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-preview-card__value {
+	font-size: 17px;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+
+.kdna-ei-preview-card__up,
+.kdna-ei-preview-card__down {
+	font-size: 10px;
+	font-weight: 600;
+	color: var(--kdna-ei-positive);
+}
+
+.kdna-ei-preview-card__down {
+	color: var(--kdna-ei-negative);
+}
+
+.kdna-ei-preview-card__panels {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 92px;
+	gap: 10px;
+}
+
+.kdna-ei-preview-card__chart,
+.kdna-ei-preview-card__donut {
+	display: block;
+	width: 100%;
+	padding: 8px;
+	background: var(--kdna-ei-surface);
+	border: 1px solid var(--kdna-ei-border);
+	border-radius: 12px;
+	box-sizing: border-box;
+}
+
+.kdna-ei-preview-card__donut {
+	padding: 12px;
+	transform: rotate(-90deg);
+}
+
+.kdna-ei-preview-card__badges {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+}
+
+.kdna-ei-preview-card__badge {
+	padding: 3px 9px;
+	font-size: 10px;
+	font-weight: 500;
+	border-radius: 999px;
+}
+
+.kdna-ei-preview-card__badge.is-positive {
+	color: var(--kdna-ei-positive);
+	background: color-mix(in srgb, var(--kdna-ei-positive) 16%, transparent);
+}
+
+.kdna-ei-preview-card__badge.is-warning {
+	color: var(--kdna-ei-warning);
+	background: color-mix(in srgb, var(--kdna-ei-warning) 16%, transparent);
+}
+
+.kdna-ei-preview-card__badge.is-negative {
+	color: var(--kdna-ei-negative);
+	background: color-mix(in srgb, var(--kdna-ei-negative) 16%, transparent);
+}
+
+.kdna-ei-preview-card__button {
+	margin-left: auto;
+	padding: 5px 14px;
+	font-size: 11px;
+	font-weight: 600;
+	color: #ffffff;
+	background: var(--kdna-ei-accent);
+	border-radius: 999px;
+}
+
+/* Sync log. */
+.kdna-ei-log__header {
+	flex-wrap: wrap;
+}
+
+.kdna-ei-log__filters {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+
+.kdna-ei-log__when {
+	white-space: nowrap;
+}
+
+.kdna-ei-log__table td:nth-child(3) {
+	min-width: 260px;
+}
+
+.kdna-ei-pager {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 12px;
+	margin-top: 14px;
+	font-size: var(--kdna-ei-fs-small);
+}
+
+@media (max-width: 1280px) {
+	.kdna-ei-branding__layout {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.kdna-ei-branding__preview {
+		position: static;
+		max-width: 460px;
+	}
+}
+
+@media (max-width: 782px) {
+	.kdna-ei-setting {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.kdna-ei-setting__pair,
+	.kdna-ei-checks--two {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.kdna-ei-settings-footer__status {
+		flex-basis: 100%;
+		margin: 0;
+		text-align: left;
+	}
+
+	.kdna-ei-summary-list > li {
+		flex-wrap: wrap;
+	}
+}

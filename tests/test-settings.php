@@ -159,7 +159,8 @@ KDNA_EcommerceInsights_Settings::update(
 	)
 );
 $kdna_ei_ts_brand = KDNA_EcommerceInsights_Admin::branding_css();
-kdna_ei_ts( 'Brand CSS carries the new accent for dark mode only', false !== strpos( $kdna_ei_ts_brand, '.kdna-ei-root{--kdna-ei-accent:#E13172;}' ) && false === strpos( $kdna_ei_ts_brand, 'light"]{--kdna-ei-accent' ), $kdna_ei_ts_brand );
+kdna_ei_ts( 'Brand CSS carries the new accent for dark mode only', false !== strpos( $kdna_ei_ts_brand, '.kdna-ei-root{--kdna-ei-accent:#E13172;' ) && false === strpos( $kdna_ei_ts_brand, 'light"]{--kdna-ei-accent' ), $kdna_ei_ts_brand );
+kdna_ei_ts( 'Brand CSS picks readable button text for the brand accent', false !== strpos( $kdna_ei_ts_brand, '--kdna-ei-on-accent:#FFFFFF;' ) );
 kdna_ei_ts( 'Brand CSS switches the font', false !== strpos( $kdna_ei_ts_brand, '"Manrope"' ) );
 kdna_ei_ts( 'Emails use the light accent, not the dark one', '#5A6FE0' === strtoupper( KDNA_EcommerceInsights_Digest::brand()['accent'] ) );
 $kdna_ei_ts_events = 0;

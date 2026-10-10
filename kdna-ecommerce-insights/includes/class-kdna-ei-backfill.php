@@ -148,6 +148,13 @@ class KDNA_EcommerceInsights_Backfill {
 			'started_at'  => current_time( 'mysql', true ),
 			'finished_at' => '',
 		);
+
+		// Nothing to work through (a brand new store): finished straight away.
+		if ( 0 === (int) $state['total'] ) {
+			self::finish( $state );
+			return self::state();
+		}
+
 		self::save( $state );
 		self::schedule_next();
 

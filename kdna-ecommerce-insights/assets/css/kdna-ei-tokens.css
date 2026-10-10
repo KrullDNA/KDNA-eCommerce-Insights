@@ -1,0 +1,138 @@
+/*
+ * KDNA eCommerce Insights: design tokens.
+ *
+ * Every colour, size and timing used by the wp-admin app and the Elementor
+ * widgets is a CSS custom property defined here (section 4.2 of the brief).
+ * Tokens are scoped to .kdna-ei-root rather than the whole page, so they
+ * never affect anything outside Insights. Settings > Branding and the
+ * Elementor style controls override these per client or per widget.
+ *
+ * Dark is the default. Add data-kdna-ei-theme="light" to the root for light.
+ */
+
+/* Dark theme (default). */
+.kdna-ei-root {
+	color-scheme: dark;
+
+	/* Colours sampled from the reference design. */
+	--kdna-ei-bg: #202125;
+	--kdna-ei-surface: #26272B;
+	--kdna-ei-surface-raised: #2E2F34;
+	--kdna-ei-border: rgba(255, 255, 255, 0.07);
+	--kdna-ei-border-strong: rgba(255, 255, 255, 0.14);
+	--kdna-ei-text: #F3F3F5;
+	--kdna-ei-text-muted: #9C9DA4;
+	--kdna-ei-accent: #7188EE;
+	--kdna-ei-accent-2: #C9C2F8;
+	--kdna-ei-positive: #B6F2D0;
+	--kdna-ei-warning: #F5D58A;
+	--kdna-ei-negative: #F2A7A7;
+
+	/* Text that sits on a filled status colour, such as the mint Active badge. */
+	--kdna-ei-on-status: #17181C;
+
+	/*
+	 * Accessible versions of the accent (WCAG AA, 4.5 to 1). Text in the
+	 * accent colour is lifted a little so it reads on dark cards and tinted
+	 * alerts; buttons filled with the accent get dark text. Both follow the
+	 * brand accent automatically.
+	 */
+	--kdna-ei-accent-text: color-mix(in srgb, var(--kdna-ei-accent) 70%, #FFFFFF);
+	--kdna-ei-accent-fill: var(--kdna-ei-accent);
+	--kdna-ei-on-accent: #17181C;
+
+	/* Badge fills. Dark mode uses solid pastel pills like the reference. */
+	--kdna-ei-badge-positive-bg: var(--kdna-ei-positive);
+	--kdna-ei-badge-positive-text: var(--kdna-ei-on-status);
+	--kdna-ei-badge-warning-bg: var(--kdna-ei-warning);
+	--kdna-ei-badge-warning-text: var(--kdna-ei-on-status);
+	--kdna-ei-badge-negative-bg: var(--kdna-ei-negative);
+	--kdna-ei-badge-negative-text: var(--kdna-ei-on-status);
+	--kdna-ei-badge-neutral-bg: var(--kdna-ei-surface-raised);
+	--kdna-ei-badge-neutral-text: var(--kdna-ei-text);
+
+	/* Shadows: cards rely on hairline borders, popovers float above. */
+	--kdna-ei-card-shadow: none;
+	--kdna-ei-popover-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.3);
+
+	/* Loading skeletons. */
+	--kdna-ei-skeleton: rgba(255, 255, 255, 0.05);
+	--kdna-ei-skeleton-shine: rgba(255, 255, 255, 0.07);
+
+	/* Shape. */
+	--kdna-ei-radius: 16px;
+	--kdna-ei-radius-md: 12px;
+	--kdna-ei-radius-sm: 8px;
+	--kdna-ei-radius-pill: 999px;
+
+	/* Typography (section 4.3). */
+	--kdna-ei-font: "Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+	--kdna-ei-fs-title: 44px;
+	--kdna-ei-fs-card-title: 20px;
+	--kdna-ei-fs-kpi: 30px;
+	--kdna-ei-fs-body: 14px;
+	--kdna-ei-fs-label: 14px;
+	--kdna-ei-fs-small: 12px;
+	--kdna-ei-fs-eyebrow: 11px;
+	--kdna-ei-fw-title: 300;
+	--kdna-ei-fw-card-title: 400;
+	--kdna-ei-fw-kpi: 600;
+	--kdna-ei-tracking-eyebrow: 0.2em;
+
+	/* Spacing. */
+	--kdna-ei-gap: 20px;
+	--kdna-ei-card-padding: 24px;
+	--kdna-ei-control-height: 40px;
+
+	/* Layout. */
+	--kdna-ei-sidebar-width: 76px;
+
+	/* Motion (section 4.4). */
+	--kdna-ei-duration: 500ms;
+	--kdna-ei-duration-fast: 160ms;
+	--kdna-ei-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+	/* Keyboard focus ring. */
+	--kdna-ei-focus-ring: 0 0 0 2px var(--kdna-ei-bg), 0 0 0 4px var(--kdna-ei-accent);
+}
+
+/* Light theme: designed in its own right, not an inversion of dark. */
+.kdna-ei-root[data-kdna-ei-theme="light"] {
+	color-scheme: light;
+
+	--kdna-ei-bg: #F4F5F7;
+	--kdna-ei-surface: #FFFFFF;
+	--kdna-ei-surface-raised: #F0F1F4;
+	--kdna-ei-border: rgba(17, 18, 22, 0.08);
+	--kdna-ei-border-strong: rgba(17, 18, 22, 0.14);
+	--kdna-ei-text: #15161A;
+	--kdna-ei-text-muted: #6B6E78;
+	--kdna-ei-accent: #5A6FE0;
+	--kdna-ei-accent-2: #9C92E8;
+	--kdna-ei-positive: #16794A;
+	--kdna-ei-warning: #8F5C12;
+	--kdna-ei-negative: #C13030;
+
+	--kdna-ei-on-status: #FFFFFF;
+
+	/* Accent text and buttons are deepened a little to read on white. */
+	--kdna-ei-accent-text: color-mix(in srgb, var(--kdna-ei-accent) 80%, #000000);
+	--kdna-ei-accent-fill: color-mix(in srgb, var(--kdna-ei-accent) 85%, #000000);
+	--kdna-ei-on-accent: #FFFFFF;
+
+	/* Light mode uses soft tinted pills so text stays readable. */
+	--kdna-ei-badge-positive-bg: rgba(22, 121, 74, 0.12);
+	--kdna-ei-badge-positive-text: var(--kdna-ei-positive);
+	--kdna-ei-badge-warning-bg: rgba(143, 92, 18, 0.1);
+	--kdna-ei-badge-warning-text: var(--kdna-ei-warning);
+	--kdna-ei-badge-negative-bg: rgba(193, 48, 48, 0.09);
+	--kdna-ei-badge-negative-text: var(--kdna-ei-negative);
+	--kdna-ei-badge-neutral-bg: var(--kdna-ei-surface-raised);
+	--kdna-ei-badge-neutral-text: var(--kdna-ei-text);
+
+	--kdna-ei-card-shadow: 0 1px 2px rgba(17, 18, 22, 0.04), 0 4px 16px rgba(17, 18, 22, 0.03);
+	--kdna-ei-popover-shadow: 0 16px 40px rgba(17, 18, 22, 0.12), 0 2px 6px rgba(17, 18, 22, 0.06);
+
+	--kdna-ei-skeleton: rgba(17, 18, 22, 0.05);
+	--kdna-ei-skeleton-shine: rgba(17, 18, 22, 0.03);
+}

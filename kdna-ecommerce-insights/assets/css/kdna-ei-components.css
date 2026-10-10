@@ -1,0 +1,2124 @@
+/*
+ * KDNA eCommerce Insights: shared components.
+ *
+ * Cards, KPI strip, badges, tables, buttons, dropdowns and loading skeletons.
+ * Used by both the wp-admin app and the Elementor widgets, so nothing here
+ * depends on the admin layout. Every value comes from kdna-ei-tokens.css.
+ */
+
+/* ==========================================================================
+   Base and reset
+   Keeps WordPress admin styles (and theme styles on the front end) from
+   leaking into Insights.
+   ========================================================================== */
+
+.kdna-ei-root {
+	font-family: var(--kdna-ei-font);
+	font-size: var(--kdna-ei-fs-body);
+	line-height: 1.5;
+	color: var(--kdna-ei-text);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-rendering: optimizeLegibility;
+}
+
+.kdna-ei-root *,
+.kdna-ei-root *::before,
+.kdna-ei-root *::after {
+	box-sizing: border-box;
+}
+
+.kdna-ei-root :where(h1, h2, h3, h4, h5, h6, p, ul, ol, li, figure, table) {
+	margin: 0;
+	padding: 0;
+	font-size: inherit;
+	font-weight: inherit;
+	line-height: inherit;
+	color: inherit;
+}
+
+.kdna-ei-root :where(ul, ol) {
+	list-style: none;
+}
+
+.kdna-ei-root a {
+	color: inherit;
+	text-decoration: none;
+	box-shadow: none;
+	outline: none;
+	transition: color var(--kdna-ei-duration-fast) ease, background-color var(--kdna-ei-duration-fast) ease;
+}
+
+.kdna-ei-root button,
+.kdna-ei-root input,
+.kdna-ei-root select,
+.kdna-ei-root textarea {
+	font: inherit;
+	color: inherit;
+	letter-spacing: inherit;
+	margin: 0;
+	box-shadow: none;
+	outline: none;
+}
+
+.kdna-ei-root button {
+	background: none;
+	border: 0;
+	padding: 0;
+	cursor: pointer;
+	-webkit-appearance: none;
+	appearance: none;
+}
+
+.kdna-ei-root :is(a, button, input, select, textarea, [tabindex]):focus-visible {
+	box-shadow: var(--kdna-ei-focus-ring);
+	outline: none;
+}
+
+.kdna-ei-root [x-cloak] {
+	display: none !important;
+}
+
+.kdna-ei-visually-hidden {
+	position: absolute !important;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+.kdna-ei-num {
+	font-variant-numeric: tabular-nums;
+	font-feature-settings: "tnum" 1;
+}
+
+/* ==========================================================================
+   Icons
+   ========================================================================== */
+
+.kdna-ei-icon {
+	display: inline-block;
+	flex: none;
+	width: 20px;
+	height: 20px;
+	fill: none;
+	stroke: currentColor;
+	vertical-align: middle;
+}
+
+.kdna-ei-icon--sm {
+	width: 16px;
+	height: 16px;
+}
+
+.kdna-ei-icon--lg {
+	width: 28px;
+	height: 28px;
+}
+
+/* ==========================================================================
+   Headings
+   ========================================================================== */
+
+.kdna-ei-eyebrow {
+	font-size: var(--kdna-ei-fs-eyebrow);
+	font-weight: 500;
+	line-height: 1.4;
+	letter-spacing: var(--kdna-ei-tracking-eyebrow);
+	text-transform: uppercase;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-title {
+	font-size: var(--kdna-ei-fs-title);
+	font-weight: var(--kdna-ei-fw-title);
+	line-height: 1.1;
+	letter-spacing: -0.01em;
+	color: var(--kdna-ei-text);
+}
+
+/* ==========================================================================
+   Cards
+   ========================================================================== */
+
+.kdna-ei-card {
+	position: relative;
+	min-width: 0;
+	padding: var(--kdna-ei-card-padding);
+	background: var(--kdna-ei-surface);
+	border: 1px solid var(--kdna-ei-border);
+	border-radius: var(--kdna-ei-radius);
+	box-shadow: var(--kdna-ei-card-shadow);
+}
+
+.kdna-ei-card__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	margin-bottom: 20px;
+}
+
+.kdna-ei-card__title {
+	font-size: var(--kdna-ei-fs-card-title);
+	font-weight: var(--kdna-ei-fw-card-title);
+	line-height: 1.3;
+	letter-spacing: -0.005em;
+	color: var(--kdna-ei-text);
+}
+
+/* ==========================================================================
+   KPI strip
+   One card across the top: line icon, muted label, big number, change.
+   ========================================================================== */
+
+.kdna-ei-kpi-strip {
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: minmax(0, 1fr);
+	padding: 26px 0;
+}
+
+.kdna-ei-kpi {
+	display: flex;
+	align-items: center;
+	gap: 20px;
+	min-width: 0;
+	padding: 0 32px;
+	border-left: 1px solid var(--kdna-ei-border);
+}
+
+.kdna-ei-kpi:first-child {
+	border-left: 0;
+}
+
+.kdna-ei-kpi__icon {
+	display: grid;
+	place-items: center;
+	flex: none;
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-kpi__icon .kdna-ei-icon {
+	width: 28px;
+	height: 28px;
+}
+
+.kdna-ei-kpi__body {
+	min-width: 0;
+}
+
+.kdna-ei-kpi__label {
+	font-size: var(--kdna-ei-fs-label);
+	color: var(--kdna-ei-text-muted);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.kdna-ei-kpi__row {
+	display: flex;
+	align-items: baseline;
+	flex-wrap: wrap;
+	gap: 6px 16px;
+	margin-top: 2px;
+}
+
+.kdna-ei-kpi__value {
+	font-size: var(--kdna-ei-fs-kpi);
+	font-weight: var(--kdna-ei-fw-kpi);
+	line-height: 1.15;
+	letter-spacing: -0.01em;
+	font-variant-numeric: tabular-nums;
+	color: var(--kdna-ei-text);
+}
+
+@media (max-width: 1100px) {
+	.kdna-ei-kpi-strip {
+		grid-auto-flow: row;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		row-gap: 24px;
+	}
+
+	.kdna-ei-kpi:nth-child(odd) {
+		border-left: 0;
+	}
+}
+
+@media (max-width: 600px) {
+	.kdna-ei-kpi-strip {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.kdna-ei-kpi {
+		border-left: 0;
+		padding: 0 24px;
+	}
+}
+
+/* ==========================================================================
+   Change indicator
+   Colour follows whether the change is good or bad, not up or down, because
+   rising costs are bad news (section 4.2, smart change colours).
+   ========================================================================== */
+
+.kdna-ei-change {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	font-size: var(--kdna-ei-fs-label);
+	font-weight: 500;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+.kdna-ei-change .kdna-ei-icon {
+	width: 15px;
+	height: 15px;
+}
+
+.kdna-ei-change--good {
+	color: var(--kdna-ei-positive);
+}
+
+.kdna-ei-change--bad {
+	color: var(--kdna-ei-negative);
+}
+
+.kdna-ei-change--neutral {
+	color: var(--kdna-ei-text-muted);
+}
+
+/* ==========================================================================
+   Badges
+   Pill-shaped status labels, like the mint "Active" badge in the reference.
+   ========================================================================== */
+
+.kdna-ei-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 5px 14px;
+	font-size: 13px;
+	font-weight: 500;
+	line-height: 1.4;
+	white-space: nowrap;
+	border-radius: var(--kdna-ei-radius-pill);
+	background: var(--kdna-ei-badge-neutral-bg);
+	color: var(--kdna-ei-badge-neutral-text);
+}
+
+.kdna-ei-badge::before {
+	content: "";
+	flex: none;
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: currentColor;
+}
+
+.kdna-ei-badge--plain::before {
+	display: none;
+}
+
+.kdna-ei-badge--positive {
+	background: var(--kdna-ei-badge-positive-bg);
+	color: var(--kdna-ei-badge-positive-text);
+}
+
+.kdna-ei-badge--warning {
+	background: var(--kdna-ei-badge-warning-bg);
+	color: var(--kdna-ei-badge-warning-text);
+}
+
+.kdna-ei-badge--negative {
+	background: var(--kdna-ei-badge-negative-bg);
+	color: var(--kdna-ei-badge-negative-text);
+}
+
+/* ==========================================================================
+   Tables
+   Clean rows with hairline dividers and lined-up numbers.
+   ========================================================================== */
+
+.kdna-ei-table-wrap {
+	width: 100%;
+	overflow-x: auto;
+}
+
+/* Wide tables can be focused with the keyboard so they can be scrolled. */
+.kdna-ei-table-wrap[tabindex]:focus-visible {
+	outline: none;
+	box-shadow: var(--kdna-ei-focus-ring);
+	border-radius: var(--kdna-ei-radius-sm);
+}
+
+.kdna-ei-table {
+	width: 100%;
+	border-collapse: collapse;
+	border-spacing: 0;
+	font-size: var(--kdna-ei-fs-body);
+	background: transparent;
+	border: 0;
+}
+
+.kdna-ei-table th,
+.kdna-ei-table td {
+	padding: 14px 16px;
+	text-align: left;
+	vertical-align: middle;
+	border: 0;
+	border-bottom: 1px solid var(--kdna-ei-border);
+	background: transparent;
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-table th {
+	padding-top: 10px;
+	padding-bottom: 10px;
+	font-size: var(--kdna-ei-fs-small);
+	font-weight: 500;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-table tbody tr:last-child td {
+	border-bottom: 0;
+}
+
+.kdna-ei-table tbody tr {
+	transition: background-color var(--kdna-ei-duration-fast) ease;
+}
+
+.kdna-ei-table--hover tbody tr:hover td {
+	background: var(--kdna-ei-surface-raised);
+}
+
+.kdna-ei-table :is(th, td).is-numeric {
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}
+
+.kdna-ei-table th:first-child,
+.kdna-ei-table td:first-child {
+	padding-left: 0;
+}
+
+.kdna-ei-table th:last-child,
+.kdna-ei-table td:last-child {
+	padding-right: 0;
+}
+
+/* Legend table beside a donut: dot, label, value, percentage. */
+.kdna-ei-legend td {
+	padding-top: 16px;
+	padding-bottom: 16px;
+}
+
+.kdna-ei-legend__dot {
+	display: inline-block;
+	width: 12px;
+	height: 12px;
+	margin-right: 14px;
+	border-radius: 50%;
+	vertical-align: -1px;
+	background: var(--kdna-ei-accent);
+}
+
+.kdna-ei-legend__value {
+	font-weight: 600;
+}
+
+.kdna-ei-legend__percent {
+	color: var(--kdna-ei-text-muted);
+}
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+
+.kdna-ei-root .kdna-ei-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	height: var(--kdna-ei-control-height);
+	padding: 0 18px;
+	font-size: var(--kdna-ei-fs-body);
+	font-weight: 500;
+	line-height: 1;
+	white-space: nowrap;
+	color: var(--kdna-ei-text);
+	background: transparent;
+	border: 1px solid var(--kdna-ei-border-strong);
+	border-radius: var(--kdna-ei-radius-pill);
+	transition: background-color var(--kdna-ei-duration-fast) ease, border-color var(--kdna-ei-duration-fast) ease, color var(--kdna-ei-duration-fast) ease;
+}
+
+.kdna-ei-root .kdna-ei-btn:hover {
+	background: var(--kdna-ei-surface-raised);
+}
+
+.kdna-ei-root .kdna-ei-btn[aria-pressed="true"],
+.kdna-ei-root .kdna-ei-btn.is-active {
+	background: var(--kdna-ei-surface-raised);
+	border-color: var(--kdna-ei-border-strong);
+}
+
+.kdna-ei-root .kdna-ei-btn:disabled,
+.kdna-ei-root .kdna-ei-btn[aria-disabled="true"] {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+.kdna-ei-root .kdna-ei-btn--primary {
+	background: var(--kdna-ei-accent-fill);
+	border-color: var(--kdna-ei-accent-fill);
+	color: var(--kdna-ei-on-accent);
+}
+
+.kdna-ei-root .kdna-ei-btn--primary:hover {
+	background: var(--kdna-ei-accent-fill);
+	filter: brightness(1.08);
+}
+
+.kdna-ei-root .kdna-ei-btn--icon {
+	width: var(--kdna-ei-control-height);
+	padding: 0;
+}
+
+/* ==========================================================================
+   Dropdown
+   Pill trigger with a thin outline, floating menu card below.
+   ========================================================================== */
+
+.kdna-ei-dropdown {
+	position: relative;
+}
+
+.kdna-ei-dropdown__trigger {
+	min-width: 152px;
+	justify-content: space-between;
+}
+
+.kdna-ei-dropdown__trigger .kdna-ei-icon {
+	width: 16px;
+	height: 16px;
+	transition: transform var(--kdna-ei-duration-fast) ease;
+}
+
+.kdna-ei-dropdown__trigger[aria-expanded="true"] .kdna-ei-icon {
+	transform: rotate(180deg);
+}
+
+.kdna-ei-dropdown__menu {
+	position: absolute;
+	top: calc(100% + 8px);
+	right: 0;
+	z-index: 50;
+	min-width: 220px;
+	padding: 6px;
+	background: var(--kdna-ei-surface-raised);
+	border: 1px solid var(--kdna-ei-border);
+	border-radius: var(--kdna-ei-radius-md);
+	box-shadow: var(--kdna-ei-popover-shadow);
+}
+
+.kdna-ei-dropdown__group + .kdna-ei-dropdown__group {
+	margin-top: 6px;
+	padding-top: 6px;
+	border-top: 1px solid var(--kdna-ei-border);
+}
+
+.kdna-ei-dropdown__heading {
+	padding: 8px 12px 4px;
+	font-size: var(--kdna-ei-fs-eyebrow);
+	font-weight: 500;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-root .kdna-ei-dropdown__item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	width: 100%;
+	padding: 9px 12px;
+	font-size: var(--kdna-ei-fs-body);
+	text-align: left;
+	color: var(--kdna-ei-text);
+	border-radius: var(--kdna-ei-radius-sm);
+}
+
+.kdna-ei-root .kdna-ei-dropdown__item:hover {
+	background: var(--kdna-ei-border);
+}
+
+.kdna-ei-dropdown__item .kdna-ei-icon {
+	width: 16px;
+	height: 16px;
+	color: var(--kdna-ei-accent-text);
+	visibility: hidden;
+}
+
+.kdna-ei-dropdown__item[aria-checked="true"] .kdna-ei-icon {
+	visibility: visible;
+}
+
+.kdna-ei-dropdown__item:disabled {
+	color: var(--kdna-ei-text-muted);
+	cursor: not-allowed;
+}
+
+.kdna-ei-dropdown__item:disabled:hover {
+	background: transparent;
+}
+
+.kdna-ei-dropdown__note {
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-text-muted);
+}
+
+/* ==========================================================================
+   Loading skeletons
+   Soft shimmer placeholders while data loads, never a spinner (section 4.4).
+   ========================================================================== */
+
+.kdna-ei-skeleton {
+	position: relative;
+	display: block;
+	overflow: hidden;
+	background: var(--kdna-ei-skeleton);
+	border-radius: var(--kdna-ei-radius-sm);
+}
+
+.kdna-ei-skeleton::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	transform: translateX(-100%);
+	background: linear-gradient(90deg, transparent 0%, var(--kdna-ei-skeleton-shine) 50%, transparent 100%);
+	animation: kdna-ei-shimmer 1.6s ease-in-out infinite;
+}
+
+.kdna-ei-skeleton--text {
+	height: 12px;
+	width: 100%;
+}
+
+.kdna-ei-skeleton--label {
+	height: 12px;
+	width: 64px;
+}
+
+.kdna-ei-skeleton--title {
+	height: 20px;
+	width: 42%;
+	max-width: 220px;
+}
+
+.kdna-ei-skeleton--value {
+	height: 30px;
+	width: 120px;
+}
+
+.kdna-ei-skeleton--pill {
+	height: 26px;
+	width: 72px;
+	border-radius: var(--kdna-ei-radius-pill);
+}
+
+.kdna-ei-skeleton--icon {
+	width: 28px;
+	height: 28px;
+	border-radius: var(--kdna-ei-radius-sm);
+}
+
+.kdna-ei-skeleton--circle {
+	border-radius: 50%;
+}
+
+.kdna-ei-skeleton--block {
+	width: 100%;
+	border-radius: var(--kdna-ei-radius-md);
+}
+
+@keyframes kdna-ei-shimmer {
+	100% {
+		transform: translateX(100%);
+	}
+}
+
+/* ==========================================================================
+   Card extras and summary stats
+   ========================================================================== */
+
+.kdna-ei-card__subtitle {
+	margin-top: 4px;
+	font-size: var(--kdna-ei-fs-body);
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-stat__label {
+	font-size: var(--kdna-ei-fs-label);
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-stat__value {
+	margin: 6px 0 8px;
+	font-size: var(--kdna-ei-fs-kpi);
+	font-weight: var(--kdna-ei-fw-kpi);
+	line-height: 1.15;
+	letter-spacing: -0.01em;
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-stat .kdna-ei-skeleton--value {
+	margin: 8px 0 10px;
+}
+
+.kdna-ei-stat__note {
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-stat.is-warning .kdna-ei-stat__value {
+	color: var(--kdna-ei-warning);
+}
+
+.kdna-ei-muted {
+	color: var(--kdna-ei-text-muted);
+}
+
+/* Text button that looks like a link. */
+.kdna-ei-root .kdna-ei-link {
+	font-size: inherit;
+	font-weight: 500;
+	color: var(--kdna-ei-accent-text);
+	text-decoration: underline;
+	text-decoration-color: transparent;
+	text-underline-offset: 3px;
+	transition: text-decoration-color var(--kdna-ei-duration-fast) ease;
+}
+
+.kdna-ei-root .kdna-ei-link:hover {
+	text-decoration-color: currentColor;
+}
+
+/* ==========================================================================
+   Form controls
+   ========================================================================== */
+
+.kdna-ei-root .kdna-ei-input,
+.kdna-ei-root .kdna-ei-select {
+	width: 100%;
+	min-height: var(--kdna-ei-control-height);
+	height: var(--kdna-ei-control-height);
+	padding: 0 14px;
+	font-size: var(--kdna-ei-fs-body);
+	line-height: 1.2;
+	color: var(--kdna-ei-text);
+	background: var(--kdna-ei-bg);
+	border: 1px solid var(--kdna-ei-border-strong);
+	border-radius: var(--kdna-ei-radius-pill);
+	box-shadow: none;
+	transition: border-color var(--kdna-ei-duration-fast) ease, box-shadow var(--kdna-ei-duration-fast) ease, background-color var(--kdna-ei-duration-fast) ease;
+}
+
+.kdna-ei-root .kdna-ei-input::placeholder {
+	color: var(--kdna-ei-text-muted);
+	opacity: 0.8;
+}
+
+.kdna-ei-root .kdna-ei-input:hover,
+.kdna-ei-root .kdna-ei-select:hover {
+	border-color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-root .kdna-ei-input:focus,
+.kdna-ei-root .kdna-ei-select:focus {
+	border-color: var(--kdna-ei-accent);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--kdna-ei-accent) 25%, transparent);
+	outline: none;
+}
+
+.kdna-ei-root .kdna-ei-select {
+	width: auto;
+	max-width: 100%;
+	padding-right: 38px;
+	-webkit-appearance: none;
+	appearance: none;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239C9DA4' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 14px center;
+	background-size: 16px;
+	cursor: pointer;
+}
+
+.kdna-ei-root .kdna-ei-select option {
+	color: var(--kdna-ei-text);
+	background: var(--kdna-ei-surface);
+}
+
+/* Search box with a magnifying glass inside. */
+.kdna-ei-search {
+	position: relative;
+	display: block;
+	flex: 1 1 260px;
+	max-width: 360px;
+}
+
+.kdna-ei-search .kdna-ei-icon {
+	position: absolute;
+	left: 14px;
+	top: 50%;
+	transform: translateY(-50%);
+	color: var(--kdna-ei-text-muted);
+	pointer-events: none;
+}
+
+.kdna-ei-root .kdna-ei-search .kdna-ei-input {
+	padding-left: 40px;
+}
+
+.kdna-ei-root .kdna-ei-search .kdna-ei-input::-webkit-search-cancel-button {
+	filter: grayscale(1);
+	cursor: pointer;
+}
+
+/* On and off switch built from a checkbox. */
+.kdna-ei-switch {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	font-size: var(--kdna-ei-fs-body);
+	color: var(--kdna-ei-text);
+	cursor: pointer;
+	user-select: none;
+}
+
+.kdna-ei-switch input {
+	position: absolute;
+	opacity: 0;
+	width: 1px;
+	height: 1px;
+}
+
+.kdna-ei-switch__track {
+	position: relative;
+	flex: none;
+	width: 36px;
+	height: 20px;
+	background: var(--kdna-ei-surface-raised);
+	border: 1px solid var(--kdna-ei-border-strong);
+	border-radius: var(--kdna-ei-radius-pill);
+	transition: background-color var(--kdna-ei-duration-fast) ease, border-color var(--kdna-ei-duration-fast) ease;
+}
+
+.kdna-ei-switch__track::after {
+	content: "";
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: var(--kdna-ei-text-muted);
+	transition: transform var(--kdna-ei-duration-fast) var(--kdna-ei-ease), background-color var(--kdna-ei-duration-fast) ease;
+}
+
+.kdna-ei-switch input:checked + .kdna-ei-switch__track {
+	background: var(--kdna-ei-accent);
+	border-color: var(--kdna-ei-accent);
+}
+
+.kdna-ei-switch input:checked + .kdna-ei-switch__track::after {
+	transform: translateX(16px);
+	background: #FFFFFF;
+}
+
+.kdna-ei-switch input:focus-visible + .kdna-ei-switch__track {
+	box-shadow: var(--kdna-ei-focus-ring);
+}
+
+.kdna-ei-switch input:disabled + .kdna-ei-switch__track {
+	opacity: 0.5;
+}
+
+/* ==========================================================================
+   Toolbar, tabs and pagination
+   ========================================================================== */
+
+.kdna-ei-toolbar {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 12px 16px;
+	margin-bottom: 16px;
+}
+
+.kdna-ei-toolbar__actions {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.kdna-ei-tabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-bottom: 16px;
+	padding: 4px;
+	background: var(--kdna-ei-bg);
+	border: 1px solid var(--kdna-ei-border);
+	border-radius: var(--kdna-ei-radius-pill);
+	width: fit-content;
+	max-width: 100%;
+}
+
+.kdna-ei-root .kdna-ei-tab {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 7px 14px;
+	font-size: var(--kdna-ei-fs-body);
+	font-weight: 500;
+	color: var(--kdna-ei-text-muted);
+	border-radius: var(--kdna-ei-radius-pill);
+	transition: background-color var(--kdna-ei-duration-fast) ease, color var(--kdna-ei-duration-fast) ease;
+}
+
+.kdna-ei-root .kdna-ei-tab:hover {
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-root .kdna-ei-tab[aria-selected="true"] {
+	color: var(--kdna-ei-text);
+	background: var(--kdna-ei-surface-raised);
+}
+
+.kdna-ei-tab__count {
+	min-width: 22px;
+	padding: 1px 7px;
+	font-size: var(--kdna-ei-fs-small);
+	font-variant-numeric: tabular-nums;
+	text-align: center;
+	background: var(--kdna-ei-border);
+	border-radius: var(--kdna-ei-radius-pill);
+}
+
+.kdna-ei-tab__count.is-negative {
+	color: var(--kdna-ei-badge-negative-text);
+	background: var(--kdna-ei-badge-negative-bg);
+}
+
+.kdna-ei-pagination {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 12px;
+	margin-top: 16px;
+	padding-top: 16px;
+	border-top: 1px solid var(--kdna-ei-border);
+	font-size: var(--kdna-ei-fs-body);
+}
+
+.kdna-ei-pagination__buttons {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.kdna-ei-pagination__page {
+	color: var(--kdna-ei-text-muted);
+}
+
+/* ==========================================================================
+   Notices, empty states and progress
+   ========================================================================== */
+
+.kdna-ei-notice {
+	position: relative;
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 8px 16px;
+	margin-bottom: 16px;
+	padding: 14px 44px 14px 18px;
+	font-size: var(--kdna-ei-fs-body);
+	color: var(--kdna-ei-text);
+	background: var(--kdna-ei-surface-raised);
+	border: 1px solid var(--kdna-ei-border);
+	border-left: 3px solid var(--kdna-ei-text-muted);
+	border-radius: var(--kdna-ei-radius-md);
+}
+
+.kdna-ei-notice p {
+	flex: 1 1 auto;
+}
+
+.kdna-ei-notice--positive {
+	border-left-color: var(--kdna-ei-positive);
+}
+
+.kdna-ei-notice--warning {
+	border-left-color: var(--kdna-ei-warning);
+}
+
+.kdna-ei-notice--negative {
+	border-left-color: var(--kdna-ei-negative);
+}
+
+.kdna-ei-notice__list {
+	flex-basis: 100%;
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-root .kdna-ei-notice__close {
+	position: absolute;
+	top: 8px;
+	right: 10px;
+	width: 28px;
+	height: 28px;
+	font-size: 20px;
+	line-height: 1;
+	color: var(--kdna-ei-text-muted);
+	border-radius: 50%;
+}
+
+.kdna-ei-root .kdna-ei-notice__close:hover {
+	color: var(--kdna-ei-text);
+	background: var(--kdna-ei-border);
+}
+
+.kdna-ei-empty {
+	display: grid;
+	justify-items: center;
+	gap: 14px;
+	padding: 48px 16px;
+	text-align: center;
+}
+
+.kdna-ei-empty__title {
+	font-size: 16px;
+	color: var(--kdna-ei-text-muted);
+	padding: 24px 0;
+	text-align: center;
+}
+
+.kdna-ei-progress {
+	height: 8px;
+	margin-top: 16px;
+	overflow: hidden;
+	background: var(--kdna-ei-surface-raised);
+	border-radius: var(--kdna-ei-radius-pill);
+}
+
+.kdna-ei-progress__bar {
+	display: block;
+	height: 100%;
+	background: var(--kdna-ei-accent);
+	border-radius: inherit;
+	transition: width var(--kdna-ei-duration) var(--kdna-ei-ease);
+}
+
+/* ==========================================================================
+   Product cell: thumbnail, name and details
+   ========================================================================== */
+
+.kdna-ei-product {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	min-width: 0;
+}
+
+.kdna-ei-thumb {
+	flex: none;
+	width: 40px;
+	height: 40px;
+	overflow: hidden;
+	background: var(--kdna-ei-surface-raised);
+	border-radius: var(--kdna-ei-radius-sm);
+}
+
+.kdna-ei-thumb img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.kdna-ei-product__text {
+	display: grid;
+	gap: 2px;
+	min-width: 0;
+}
+
+.kdna-ei-product__name {
+	font-weight: 500;
+	color: var(--kdna-ei-text);
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.kdna-ei-root a.kdna-ei-product__name:hover {
+	color: var(--kdna-ei-accent-text);
+}
+
+.kdna-ei-product__meta {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-product__meta .kdna-ei-badge {
+	padding: 1px 8px;
+	font-size: 11px;
+}
+
+/* ==========================================================================
+   Modal window
+   ========================================================================== */
+
+.kdna-ei-modal {
+	position: fixed;
+	inset: 0;
+	z-index: 100000;
+	display: grid;
+	place-items: center;
+	padding: 24px;
+}
+
+.kdna-ei-modal__backdrop {
+	position: absolute;
+	inset: 0;
+	background: rgba(10, 10, 12, 0.6);
+	backdrop-filter: blur(4px);
+}
+
+.kdna-ei-modal__dialog {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	max-width: 560px;
+	max-height: calc(100vh - 48px);
+	background: var(--kdna-ei-surface);
+	border: 1px solid var(--kdna-ei-border);
+	border-radius: var(--kdna-ei-radius);
+	box-shadow: var(--kdna-ei-popover-shadow);
+	outline: none;
+}
+
+.kdna-ei-modal__dialog--wide {
+	max-width: 960px;
+}
+
+.kdna-ei-modal__header,
+.kdna-ei-modal__footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 20px 24px;
+}
+
+.kdna-ei-modal__header {
+	border-bottom: 1px solid var(--kdna-ei-border);
+}
+
+.kdna-ei-modal__header .kdna-ei-btn--icon {
+	font-size: 22px;
+	border-color: transparent;
+}
+
+.kdna-ei-modal__footer {
+	border-top: 1px solid var(--kdna-ei-border);
+	font-size: var(--kdna-ei-fs-small);
+}
+
+.kdna-ei-modal__actions {
+	display: flex;
+	gap: 10px;
+	margin-left: auto;
+}
+
+.kdna-ei-modal__body {
+	display: grid;
+	gap: 16px;
+	padding: 24px;
+	overflow-y: auto;
+}
+
+.kdna-ei-modal__scroll {
+	max-height: 46vh;
+	overflow: auto;
+}
+
+/* Large file picker area. */
+.kdna-ei-dropzone {
+	display: grid;
+	justify-items: center;
+	gap: 8px;
+	padding: 40px 16px;
+	text-align: center;
+	color: var(--kdna-ei-text);
+	border: 1.5px dashed var(--kdna-ei-border-strong);
+	border-radius: var(--kdna-ei-radius-md);
+	cursor: pointer;
+	transition: border-color var(--kdna-ei-duration-fast) ease, background-color var(--kdna-ei-duration-fast) ease;
+}
+
+.kdna-ei-dropzone:hover,
+.kdna-ei-dropzone:focus-within {
+	border-color: var(--kdna-ei-accent);
+	background: var(--kdna-ei-bg);
+}
+
+.kdna-ei-dropzone.is-busy {
+	cursor: progress;
+	opacity: 0.7;
+}
+
+.kdna-ei-dropzone .kdna-ei-icon {
+	color: var(--kdna-ei-accent-text);
+}
+
+/* Radio options shown as cards. */
+.kdna-ei-choice-list {
+	display: grid;
+	gap: 10px;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+.kdna-ei-choice {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 14px 16px;
+	border: 1px solid var(--kdna-ei-border-strong);
+	border-radius: var(--kdna-ei-radius-md);
+	cursor: pointer;
+	transition: border-color var(--kdna-ei-duration-fast) ease, background-color var(--kdna-ei-duration-fast) ease;
+}
+
+.kdna-ei-choice.is-selected {
+	border-color: var(--kdna-ei-accent);
+	background: color-mix(in srgb, var(--kdna-ei-accent) 8%, transparent);
+}
+
+.kdna-ei-choice.is-disabled {
+	cursor: not-allowed;
+	opacity: 0.55;
+}
+
+.kdna-ei-root .kdna-ei-choice input[type="radio"] {
+	flex: none;
+	width: 18px;
+	height: 18px;
+	margin: 0;
+	accent-color: var(--kdna-ei-accent);
+}
+
+.kdna-ei-choice__text {
+	display: grid;
+	gap: 2px;
+	font-size: var(--kdna-ei-fs-small);
+}
+
+.kdna-ei-choice__label {
+	font-size: var(--kdna-ei-fs-body);
+	font-weight: 500;
+}
+
+.kdna-ei-done {
+	padding: 24px 0;
+	text-align: center;
+}
+
+.kdna-ei-done__title {
+	font-size: 18px;
+	font-weight: 500;
+}
+
+/* Smaller table rows for previews. */
+.kdna-ei-table--compact th,
+.kdna-ei-table--compact td {
+	padding-top: 10px;
+	padding-bottom: 10px;
+}
+
+/* ==========================================================================
+   Forms: labels, help, errors and inputs with a symbol inside
+   ========================================================================== */
+
+.kdna-ei-field-label {
+	display: block;
+	margin-bottom: 6px;
+	font-size: var(--kdna-ei-fs-small);
+	font-weight: 500;
+	letter-spacing: 0.02em;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-help {
+	margin-top: 12px;
+	font-size: var(--kdna-ei-fs-small);
+	line-height: 1.5;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-field-error {
+	display: block;
+	margin-top: 6px;
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-negative);
+}
+
+.kdna-ei-root .kdna-ei-input.is-invalid,
+.kdna-ei-root .kdna-ei-select.is-invalid,
+.kdna-ei-root .is-invalid > .kdna-ei-input {
+	border-color: var(--kdna-ei-negative);
+}
+
+.kdna-ei-affix {
+	position: relative;
+	display: block;
+}
+
+.kdna-ei-affix__before,
+.kdna-ei-affix__after {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	font-size: var(--kdna-ei-fs-body);
+	color: var(--kdna-ei-text-muted);
+	pointer-events: none;
+}
+
+.kdna-ei-affix__before {
+	left: 14px;
+}
+
+.kdna-ei-affix__after {
+	right: 14px;
+}
+
+.kdna-ei-root .kdna-ei-affix .kdna-ei-input {
+	padding-right: 32px;
+	font-variant-numeric: tabular-nums;
+}
+
+.kdna-ei-root .kdna-ei-affix--before .kdna-ei-input {
+	padding-left: 30px;
+	padding-right: 14px;
+}
+
+.kdna-ei-root input[type="date"].kdna-ei-input {
+	padding-right: 10px;
+}
+
+.kdna-ei-root input[type="date"].kdna-ei-input::-webkit-calendar-picker-indicator {
+	opacity: 0.6;
+	cursor: pointer;
+}
+
+.kdna-ei-form {
+	gap: 18px;
+}
+
+.kdna-ei-form__row {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 16px;
+}
+
+.kdna-ei-form__field {
+	display: block;
+	min-width: 0;
+}
+
+.kdna-ei-form .kdna-ei-select {
+	width: 100%;
+}
+
+/* A setting with its explanation on the left and the control on the right. */
+.kdna-ei-field-row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	gap: 16px 32px;
+	align-items: start;
+	padding: 4px 0 24px;
+	margin-bottom: 8px;
+	border-bottom: 1px solid var(--kdna-ei-border);
+}
+
+.kdna-ei-field-row label {
+	font-weight: 500;
+}
+
+.kdna-ei-field-row .kdna-ei-help {
+	margin-top: 4px;
+}
+
+.kdna-ei-subheading {
+	margin: 16px 0 8px;
+	font-size: 16px;
+	font-weight: 500;
+}
+
+.kdna-ei-card__footer {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	flex-wrap: wrap;
+	gap: 12px 20px;
+	margin-top: 20px;
+	padding-top: 20px;
+	border-top: 1px solid var(--kdna-ei-border);
+}
+
+.kdna-ei-card__footer > p {
+	margin-right: auto;
+	font-size: var(--kdna-ei-fs-body);
+}
+
+/* Rows that can be added and removed. */
+.kdna-ei-repeater {
+	display: grid;
+	gap: 14px;
+}
+
+.kdna-ei-repeater__row {
+	display: grid;
+	grid-template-columns: minmax(0, 2fr) minmax(0, 1.3fr) minmax(0, 1fr) auto;
+	gap: 14px;
+	align-items: start;
+	padding: 16px;
+	background: var(--kdna-ei-bg);
+	border: 1px solid var(--kdna-ei-border);
+	border-radius: var(--kdna-ei-radius-md);
+}
+
+.kdna-ei-repeater__row .kdna-ei-select {
+	width: 100%;
+}
+
+.kdna-ei-root .kdna-ei-repeater__remove {
+	align-self: end;
+	font-size: 20px;
+	border-color: transparent;
+}
+
+/* Delete buttons and confirmations. */
+.kdna-ei-root .kdna-ei-link--danger {
+	color: var(--kdna-ei-negative);
+}
+
+.kdna-ei-root .kdna-ei-btn--danger {
+	color: var(--kdna-ei-on-status);
+	background: var(--kdna-ei-negative);
+	border-color: var(--kdna-ei-negative);
+}
+
+.kdna-ei-confirm {
+	display: inline-flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 10px;
+	font-size: var(--kdna-ei-fs-body);
+}
+
+@media (max-width: 782px) {
+	.kdna-ei-form__row,
+	.kdna-ei-field-row,
+	.kdna-ei-repeater__row {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+/* ==========================================================================
+   Reduced motion
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+	.kdna-ei-root *,
+	.kdna-ei-root *::before,
+	.kdna-ei-root *::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+
+	.kdna-ei-skeleton::after {
+		display: none;
+	}
+}
+
+/* ==========================================================================
+   Overview building blocks
+   Shared by the wp-admin app and the Elementor widgets: alerts, KPI extras,
+   chart legend and tooltip, donut, hero card, top products, waterfall,
+   goals ring and empty state. Moved here from the admin stylesheet in
+   Stage 13 so both use one copy.
+   ========================================================================== */
+
+/* ==========================================================================
+   Date range dropdown: calendar icon and custom dates
+   ========================================================================== */
+
+.kdna-ei-dropdown__lead {
+	flex: none;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-custom-range {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 10px;
+	padding: 10px 10px 6px;
+}
+
+.kdna-ei-custom-range label {
+	display: grid;
+	gap: 6px;
+}
+
+.kdna-ei-custom-range .kdna-ei-input {
+	width: 100%;
+	min-width: 0;
+}
+
+.kdna-ei-custom-range .kdna-ei-field-error,
+.kdna-ei-custom-range .kdna-ei-btn {
+	grid-column: 1 / -1;
+}
+
+
+/* Alerts strip: slim rows with a tinted icon, text, action and close. */
+.kdna-ei-alerts {
+	display: grid;
+	gap: 8px;
+}
+
+.kdna-ei-alert {
+	--kdna-ei-alert-tone: var(--kdna-ei-accent);
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 10px 12px 10px 14px;
+	font-size: var(--kdna-ei-fs-body);
+	color: var(--kdna-ei-text);
+	background: color-mix(in srgb, var(--kdna-ei-alert-tone) 9%, var(--kdna-ei-surface));
+	border: 1px solid color-mix(in srgb, var(--kdna-ei-alert-tone) 22%, transparent);
+	border-radius: var(--kdna-ei-radius-md);
+	animation: kdna-ei-fade-up var(--kdna-ei-duration) var(--kdna-ei-ease) both;
+}
+
+.kdna-ei-alert--warning { --kdna-ei-alert-tone: var(--kdna-ei-warning); }
+.kdna-ei-alert--negative { --kdna-ei-alert-tone: var(--kdna-ei-negative); }
+.kdna-ei-alert--positive { --kdna-ei-alert-tone: var(--kdna-ei-positive); }
+
+.kdna-ei-alert__icon {
+	display: grid;
+	place-items: center;
+	flex: none;
+	width: 28px;
+	height: 28px;
+	color: var(--kdna-ei-alert-tone);
+	background: color-mix(in srgb, var(--kdna-ei-alert-tone) 16%, transparent);
+	border-radius: 50%;
+}
+
+.kdna-ei-alert__text {
+	flex: 1;
+	min-width: 0;
+}
+
+.kdna-ei-root .kdna-ei-alert__close {
+	flex: none;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	font-size: 18px;
+	line-height: 1;
+	color: var(--kdna-ei-text-muted);
+	background: transparent;
+	border: 0;
+	border-radius: 50%;
+	cursor: pointer;
+}
+
+.kdna-ei-root .kdna-ei-alert__close:hover {
+	color: var(--kdna-ei-text);
+	background: var(--kdna-ei-surface-raised);
+}
+
+@keyframes kdna-ei-fade-up {
+	from { opacity: 0; transform: translateY(4px); }
+	to { opacity: 1; transform: none; }
+}
+
+/* KPI strip extras: the fifth KPI picker and the estimate marker. */
+.kdna-ei-kpi__label-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+}
+
+.kdna-ei-root .kdna-ei-kpi__label--button {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	max-width: 100%;
+	padding: 0;
+	font: inherit;
+	font-size: var(--kdna-ei-fs-label);
+	color: var(--kdna-ei-text-muted);
+	background: none;
+	border: 0;
+	cursor: pointer;
+}
+
+.kdna-ei-root .kdna-ei-kpi__label--button:hover {
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-kpi__label--button > span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.kdna-ei-kpi__menu {
+	max-height: 340px;
+	overflow-y: auto;
+}
+
+.kdna-ei-estimate {
+	display: inline-grid;
+	place-items: center;
+	flex: none;
+	width: 18px;
+	height: 18px;
+	color: var(--kdna-ei-warning);
+	border-radius: 50%;
+	cursor: help;
+}
+
+.kdna-ei-estimate .kdna-ei-icon {
+	width: 16px;
+	height: 16px;
+}
+
+.kdna-ei-estimate:focus-visible {
+	outline: none;
+	box-shadow: var(--kdna-ei-focus-ring);
+}
+
+
+.kdna-ei-rank__thumb {
+	display: grid;
+	place-items: center;
+	color: var(--kdna-ei-text-muted);
+}
+
+/* Performance chart. */
+.kdna-ei-performance__controls {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 12px 24px;
+}
+
+.kdna-ei-chart-legend {
+	display: flex;
+	gap: 20px;
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-chart-legend__item {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.kdna-ei-chart-legend__dot {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: var(--kdna-ei-accent);
+}
+
+.kdna-ei-chart-legend__dot--compare {
+	background: var(--kdna-ei-accent-2);
+}
+
+.kdna-ei-segmented {
+	display: inline-flex;
+	padding: 3px;
+	background: var(--kdna-ei-bg);
+	border: 1px solid var(--kdna-ei-border);
+	border-radius: var(--kdna-ei-radius-pill);
+}
+
+.kdna-ei-root .kdna-ei-segmented__item {
+	height: 28px;
+	padding: 0 12px;
+	font: inherit;
+	font-size: var(--kdna-ei-fs-small);
+	font-weight: 500;
+	color: var(--kdna-ei-text-muted);
+	background: transparent;
+	border: 0;
+	border-radius: var(--kdna-ei-radius-pill);
+	cursor: pointer;
+	transition: background-color var(--kdna-ei-duration-fast) ease, color var(--kdna-ei-duration-fast) ease;
+}
+
+.kdna-ei-root .kdna-ei-segmented__item:hover {
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-root .kdna-ei-segmented__item[aria-pressed="true"] {
+	color: var(--kdna-ei-text);
+	background: var(--kdna-ei-surface-raised);
+}
+
+.kdna-ei-chart {
+	position: relative;
+	height: 260px;
+}
+
+.kdna-ei-chart canvas {
+	display: block;
+	width: 100% !important;
+	height: 100% !important;
+}
+
+.kdna-ei-chart__skeleton {
+	position: absolute;
+	inset: 0;
+	height: auto;
+}
+
+/* Chart tooltip card (drawn by kdna-ei-chart-theme.js). */
+.kdna-ei-tooltip {
+	position: absolute;
+	z-index: 20;
+	min-width: 180px;
+	padding: 12px 14px;
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-text);
+	background: var(--kdna-ei-surface-raised);
+	border: 1px solid var(--kdna-ei-border-strong);
+	border-radius: var(--kdna-ei-radius-md);
+	box-shadow: var(--kdna-ei-popover-shadow);
+	pointer-events: none;
+	transition: opacity var(--kdna-ei-duration-fast) ease, transform var(--kdna-ei-duration-fast) ease;
+}
+
+.kdna-ei-tooltip__title {
+	margin-bottom: 8px;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-tooltip__row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.kdna-ei-tooltip__row + .kdna-ei-tooltip__row {
+	margin-top: 6px;
+}
+
+.kdna-ei-tooltip__dot {
+	flex: none;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+}
+
+.kdna-ei-tooltip__label {
+	flex: 1;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-tooltip__value {
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+
+.kdna-ei-tooltip__footer {
+	margin-top: 10px;
+	padding-top: 8px;
+	font-weight: 600;
+	border-top: 1px solid var(--kdna-ei-border);
+}
+
+.kdna-ei-tooltip__footer.is-good { color: var(--kdna-ei-positive); }
+.kdna-ei-tooltip__footer.is-bad { color: var(--kdna-ei-negative); }
+
+/* Inventory donut with the number in the middle. */
+.kdna-ei-donut-row {
+	display: grid;
+	grid-template-columns: 170px minmax(0, 1fr);
+	align-items: center;
+	gap: 40px;
+}
+
+.kdna-ei-donut {
+	position: relative;
+	width: 170px;
+	height: 170px;
+}
+
+.kdna-ei-donut__centre {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-content: center;
+	text-align: center;
+	pointer-events: none;
+}
+
+.kdna-ei-donut__number {
+	font-size: var(--kdna-ei-fs-kpi);
+	font-weight: var(--kdna-ei-fw-kpi);
+	line-height: 1.1;
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-donut__label {
+	font-size: var(--kdna-ei-fs-label);
+	color: var(--kdna-ei-text-muted);
+}
+
+@media (max-width: 600px) {
+	.kdna-ei-donut-row {
+		grid-template-columns: minmax(0, 1fr);
+		justify-items: center;
+		gap: 20px;
+	}
+}
+
+/* Hero card. */
+.kdna-ei-hero {
+	display: flex;
+	flex-direction: column;
+}
+
+.kdna-ei-root .kdna-ei-btn--ghost {
+	height: 32px;
+	width: 32px;
+	border-color: transparent;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-root .kdna-ei-btn--ghost:hover {
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-skel-row {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+}
+
+.kdna-ei-skel-row + .kdna-ei-skel-row {
+	margin-top: 18px;
+}
+
+.kdna-ei-tabs--small {
+	margin-bottom: 18px;
+}
+
+.kdna-ei-tabs--small .kdna-ei-tab {
+	height: 28px;
+	padding: 0 12px;
+	font-size: var(--kdna-ei-fs-small);
+}
+
+/* Top products: ranked list with thumbnail and margin bar. */
+.kdna-ei-root .kdna-ei-rank {
+	display: grid;
+	gap: 18px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.kdna-ei-rank__item {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	margin: 0;
+	animation: kdna-ei-fade-up var(--kdna-ei-duration) var(--kdna-ei-ease) both;
+}
+
+.kdna-ei-rank__item:nth-child(2) { animation-delay: 40ms; }
+.kdna-ei-rank__item:nth-child(3) { animation-delay: 80ms; }
+.kdna-ei-rank__item:nth-child(4) { animation-delay: 120ms; }
+.kdna-ei-rank__item:nth-child(5) { animation-delay: 160ms; }
+
+.kdna-ei-rank__thumb {
+	width: 48px;
+	height: 48px;
+	flex: none;
+}
+
+.kdna-ei-rank__body {
+	display: grid;
+	gap: 4px;
+	flex: 1;
+	min-width: 0;
+}
+
+.kdna-ei-rank__top,
+.kdna-ei-rank__meta {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.kdna-ei-rank__name {
+	overflow: hidden;
+	font-weight: 500;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.kdna-ei-rank__amount {
+	flex: none;
+	font-weight: 600;
+}
+
+.kdna-ei-rank__meta {
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-bar {
+	display: block;
+	height: 4px;
+	margin-top: 4px;
+	overflow: hidden;
+	background: var(--kdna-ei-surface-raised);
+	border-radius: var(--kdna-ei-radius-pill);
+}
+
+.kdna-ei-bar__fill {
+	display: block;
+	height: 100%;
+	background: var(--kdna-ei-positive);
+	border-radius: inherit;
+	transform-origin: left;
+	animation: kdna-ei-grow var(--kdna-ei-duration) var(--kdna-ei-ease) both;
+}
+
+.kdna-ei-bar__fill.is-negative {
+	background: var(--kdna-ei-negative);
+}
+
+@keyframes kdna-ei-grow {
+	from { transform: scaleX(0); }
+	to { transform: scaleX(1); }
+}
+
+/* Profit breakdown: horizontal waterfall from net revenue to net profit. */
+.kdna-ei-waterfall {
+	display: grid;
+	gap: 14px;
+}
+
+.kdna-ei-waterfall__row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: 6px 12px;
+	font-size: var(--kdna-ei-fs-body);
+}
+
+.kdna-ei-waterfall__label {
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-waterfall__row.is-total .kdna-ei-waterfall__label {
+	font-weight: 600;
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-waterfall__amount {
+	font-weight: 600;
+	text-align: right;
+}
+
+.kdna-ei-waterfall__amount.is-negative {
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-waterfall__track {
+	position: relative;
+	grid-column: 1 / -1;
+	height: 8px;
+	background: var(--kdna-ei-surface-raised);
+	border-radius: var(--kdna-ei-radius-pill);
+}
+
+.kdna-ei-waterfall__bar {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	background: var(--kdna-ei-negative);
+	border-radius: inherit;
+	transform-origin: left;
+	animation: kdna-ei-grow var(--kdna-ei-duration) var(--kdna-ei-ease) both;
+}
+
+.kdna-ei-waterfall__row.is-total .kdna-ei-waterfall__bar {
+	background: var(--kdna-ei-accent);
+}
+
+.kdna-ei-waterfall__row:last-child .kdna-ei-waterfall__bar {
+	background: var(--kdna-ei-positive);
+}
+
+/* Goals tracker: progress ring and four facts. */
+.kdna-ei-goal__body {
+	display: grid;
+	justify-items: center;
+	gap: 18px;
+}
+
+.kdna-ei-goal__empty {
+	display: grid;
+	justify-items: start;
+	gap: 14px;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-ring {
+	position: relative;
+	width: 200px;
+	height: 200px;
+}
+
+.kdna-ei-ring svg {
+	width: 100%;
+	height: 100%;
+	transform: rotate(-90deg);
+}
+
+.kdna-ei-ring circle {
+	fill: none;
+	stroke-width: 10;
+}
+
+.kdna-ei-ring__track {
+	stroke: var(--kdna-ei-surface-raised);
+}
+
+.kdna-ei-ring__fill {
+	stroke: var(--kdna-ei-accent);
+	stroke-linecap: round;
+	stroke-dasharray: 326.73;
+	transition: stroke-dashoffset 900ms var(--kdna-ei-ease);
+}
+
+.kdna-ei-ring__fill.is-behind {
+	stroke: var(--kdna-ei-warning);
+}
+
+.kdna-ei-ring__centre {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-content: center;
+	text-align: center;
+}
+
+.kdna-ei-ring__percent {
+	font-size: 36px;
+	font-weight: var(--kdna-ei-fw-kpi);
+	line-height: 1.1;
+}
+
+.kdna-ei-ring__label {
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-root .kdna-ei-goal__facts {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 16px 24px;
+	width: 100%;
+	margin: 0;
+}
+
+.kdna-ei-goal__facts dt {
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-root .kdna-ei-goal__facts dd {
+	margin: 2px 0 0;
+	font-size: 18px;
+	font-weight: 600;
+}
+
+/* Empty state: a store with no orders yet. */
+.kdna-ei-empty-state {
+	display: grid;
+	justify-items: center;
+	gap: 12px;
+	max-width: 560px;
+	margin: 40px auto;
+	padding: 48px 32px;
+	text-align: center;
+}
+
+.kdna-ei-empty-state__icon {
+	display: grid;
+	place-items: center;
+	width: 64px;
+	height: 64px;
+	color: var(--kdna-ei-accent-text);
+	background: color-mix(in srgb, var(--kdna-ei-accent) 14%, transparent);
+	border-radius: 50%;
+}
+
+
+/* Reduced motion: no count-ups, draw-ins or slide-ins. */
+@media (prefers-reduced-motion: reduce) {
+	.kdna-ei-alert,
+	.kdna-ei-rank__item,
+	.kdna-ei-bar__fill,
+	.kdna-ei-waterfall__bar {
+		animation: none;
+	}
+
+	.kdna-ei-ring__fill,
+	.kdna-ei-tooltip {
+		transition: none;
+	}
+}

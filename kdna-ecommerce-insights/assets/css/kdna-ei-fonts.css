@@ -1,0 +1,171 @@
+/*
+ * KDNA eCommerce Insights: bundled fonts.
+ *
+ * Every font is served from the plugin itself rather than Google Fonts, which
+ * is faster and sends no visitor data to a third party. Browsers only download
+ * a font when the page actually uses it, so listing all five costs nothing.
+ *
+ * Figtree is the default; Inter, Montserrat, DM Sans and Manrope can be chosen
+ * in Settings > Branding. All are under the SIL Open Font Licence 1.1 (see
+ * the OFL.txt file in each font's folder).
+ */
+
+@font-face {
+	font-family: "Figtree";
+	font-style: normal;
+	font-weight: 300;
+	font-display: swap;
+	src: url("../fonts/figtree/figtree-latin-300-normal.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Figtree";
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url("../fonts/figtree/figtree-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Figtree";
+	font-style: normal;
+	font-weight: 500;
+	font-display: swap;
+	src: url("../fonts/figtree/figtree-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Figtree";
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url("../fonts/figtree/figtree-latin-600-normal.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Inter";
+	font-style: normal;
+	font-weight: 300;
+	font-display: swap;
+	src: url("../fonts/inter/inter-latin-300-normal.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Inter";
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url("../fonts/inter/inter-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Inter";
+	font-style: normal;
+	font-weight: 500;
+	font-display: swap;
+	src: url("../fonts/inter/inter-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Inter";
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url("../fonts/inter/inter-latin-600-normal.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Montserrat";
+	font-style: normal;
+	font-weight: 300;
+	font-display: swap;
+	src: url("../fonts/montserrat/montserrat-latin-300-normal.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Montserrat";
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url("../fonts/montserrat/montserrat-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Montserrat";
+	font-style: normal;
+	font-weight: 500;
+	font-display: swap;
+	src: url("../fonts/montserrat/montserrat-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Montserrat";
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url("../fonts/montserrat/montserrat-latin-600-normal.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "DM Sans";
+	font-style: normal;
+	font-weight: 300;
+	font-display: swap;
+	src: url("../fonts/dm-sans/dm-sans-latin-300-normal.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "DM Sans";
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url("../fonts/dm-sans/dm-sans-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "DM Sans";
+	font-style: normal;
+	font-weight: 500;
+	font-display: swap;
+	src: url("../fonts/dm-sans/dm-sans-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "DM Sans";
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url("../fonts/dm-sans/dm-sans-latin-600-normal.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Manrope";
+	font-style: normal;
+	font-weight: 300;
+	font-display: swap;
+	src: url("../fonts/manrope/manrope-latin-300-normal.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Manrope";
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url("../fonts/manrope/manrope-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Manrope";
+	font-style: normal;
+	font-weight: 500;
+	font-display: swap;
+	src: url("../fonts/manrope/manrope-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "Manrope";
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url("../fonts/manrope/manrope-latin-600-normal.woff2") format("woff2");
+}

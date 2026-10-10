@@ -54,7 +54,56 @@
 			surface: read( '--kdna-ei-surface', '#26272B' ),
 			raised: read( '--kdna-ei-surface-raised', '#2E2F34' ),
 			font: read( '--kdna-ei-font', 'Figtree, sans-serif' ),
+
+			// Chart style settings. Only the Elementor widgets set these; the
+			// admin app uses the defaults.
+			series1: read( '--kdna-ei-series-1', '' ),
+			series2: read( '--kdna-ei-series-2', '' ),
+			lineWidth: number( read( '--kdna-ei-chart-line-width', '' ), 2.5 ),
+			compareWidth: number( read( '--kdna-ei-chart-compare-width', '' ), 2 ),
+			tension: number( read( '--kdna-ei-chart-tension', '' ), 0.4 ),
+			fillStart: number( read( '--kdna-ei-chart-fill-start', '' ), 0.35 ),
+			fillEnd: number( read( '--kdna-ei-chart-fill-end', '' ), 0 ),
+			pointSize: number( read( '--kdna-ei-chart-point-size', '' ), 0 ),
+			pointStyle: read( '--kdna-ei-chart-point-style', 'circle' ),
+			ring: read( '--kdna-ei-chart-ring', '1' ) !== '0',
+			ringSize: number( read( '--kdna-ei-chart-ring-size', '' ), 6 ),
+			grid: read( '--kdna-ei-chart-grid', '' ),
+			gridStyle: read( '--kdna-ei-chart-grid-style', 'dashed' ),
+			axisColour: read( '--kdna-ei-chart-axis-colour', '' ),
+			axisSize: number( read( '--kdna-ei-chart-axis-size', '' ), 12 ),
+			axisWeight: read( '--kdna-ei-chart-axis-weight', '400' ),
+			seg1: read( '--kdna-ei-segment-1', '' ),
+			seg2: read( '--kdna-ei-segment-2', '' ),
+			seg3: read( '--kdna-ei-segment-3', '' ),
+			seg4: read( '--kdna-ei-segment-4', '' ),
+			seg5: read( '--kdna-ei-segment-5', '' ),
+			donutCutout: read( '--kdna-ei-donut-cutout', '' ),
+			donutSpacing: number( read( '--kdna-ei-donut-spacing', '' ), 3 ),
 		};
+	}
+
+	/**
+	 * Reads a number from a CSS variable value such as "2.5" or "2.5px",
+	 * falling back when it is empty or not a number.
+	 *
+	 * @param {string} value    Variable value.
+	 * @param {number} fallback Number to use instead.
+	 * @return {number}
+	 */
+	function number( value, fallback ) {
+		var parsed = parseFloat( value );
+		return isNaN( parsed ) ? fallback : parsed;
+	}
+
+	/**
+	 * The gridline dash pattern for a gridline style.
+	 *
+	 * @param {string} style dashed, dotted or solid.
+	 * @return {number[]}
+	 */
+	function gridDash( style ) {
+		return { solid: [], dotted: [ 1, 3 ] }[ style ] || [ 4, 4 ];
 	}
 
 	/**
@@ -305,9 +354,10 @@
 		if ( ! area ) {
 			return withOpacity( colour, 0.2 );
 		}
+		var t = chart.$kdnaTokens || {};
 		var gradient = chart.ctx.createLinearGradient( 0, area.top, 0, area.bottom );
-		gradient.addColorStop( 0, withOpacity( colour, 0.35 ) );
-		gradient.addColorStop( 1, withOpacity( colour, 0 ) );
+		gradient.addColorStop( 0, withOpacity( colour, t.fillStart === undefined ? 0.35 : t.fillStart ) );
+		gradient.addColorStop( 1, withOpacity( colour, t.fillEnd === undefined ? 0 : t.fillEnd ) );
 		return gradient;
 	}
 
@@ -330,8 +380,8 @@
 					grid: { display: false },
 					border: { display: false },
 					ticks: {
-						color: t.muted,
-						font: { family: t.font, size: 12 },
+						color: t.axisColour || t.muted,
+						font: { family: t.font, size: t.axisSize, weight: t.axisWeight },
 						maxRotation: 0,
 						autoSkip: true,
 						maxTicksLimit: options.maxXTicks || 6,
@@ -343,11 +393,11 @@
 				},
 				y: {
 					beginAtZero: options.beginAtZero !== false,
-					grid: { color: t.border, drawTicks: false },
-					border: { display: false, dash: [ 4, 4 ] },
+					grid: { display: t.gridStyle !== 'none', color: t.grid || t.border, drawTicks: false },
+					border: { display: false, dash: gridDash( t.gridStyle ) },
 					ticks: {
-						color: t.muted,
-						font: { family: t.font, size: 12 },
+						color: t.axisColour || t.muted,
+						font: { family: t.font, size: t.axisSize, weight: t.axisWeight },
 						padding: 12,
 						maxTicksLimit: 5,
 						callback: function ( value ) {
@@ -359,7 +409,7 @@
 			plugins: {
 				legend: { display: false },
 				tooltip: { enabled: false, external: externalTooltip },
-				kdnaLatestPoint: { fill: t.surface, stroke: t.accent, radius: 6, borderWidth: 2.5 },
+				kdnaLatestPoint: { display: t.ring, fill: t.surface, stroke: t.series1 || t.accent, radius: t.ringSize, borderWidth: 2.5 },
 				kdnaGuideLine: { colour: t.muted },
 			},
 		};
@@ -376,19 +426,23 @@
 		if ( chart.options && chart.options.plugins && chart.options.plugins.kdnaLatestPoint && chart.data.datasets[ 0 ] && chart.data.datasets[ 0 ].kdnaColour ) {
 			chart.options.plugins.kdnaLatestPoint.stroke = t[ chart.data.datasets[ 0 ].kdnaColour ] || chart.data.datasets[ 0 ].kdnaColour;
 		}
+		chart.$kdnaTokens = t;
 		chart.data.datasets.forEach( function ( dataset, index ) {
 			var primary = index === 0;
-			var colour = dataset.kdnaColour ? ( t[ dataset.kdnaColour ] || dataset.kdnaColour ) : ( primary ? t.accent : t.accent2 );
+			var colour = dataset.kdnaColour ? ( t[ dataset.kdnaColour ] || dataset.kdnaColour ) : ( primary ? t.series1 || t.accent : t.series2 || t.accent2 );
 			var filled = dataset.kdnaFill === undefined ? primary : dataset.kdnaFill;
 			dataset.borderColor = colour;
 			dataset.backgroundColor = filled ? function ( ctx ) {
 				return areaGradient( ctx.chart, colour );
 			} : 'transparent';
 			dataset.fill = filled ? 'origin' : false;
-			dataset.borderWidth = primary ? 2.5 : 2;
-			dataset.tension = 0.4;
-			dataset.cubicInterpolationMode = 'monotone';
-			dataset.pointRadius = 0;
+			dataset.borderWidth = primary ? t.lineWidth : t.compareWidth;
+			dataset.tension = t.tension;
+			dataset.cubicInterpolationMode = t.tension > 0 ? 'monotone' : 'default';
+			dataset.pointRadius = t.pointSize;
+			dataset.pointStyle = t.pointStyle;
+			dataset.pointBackgroundColor = t.surface;
+			dataset.pointBorderColor = colour;
 			dataset.pointHoverRadius = 5;
 			dataset.pointHoverBackgroundColor = t.surface;
 			dataset.pointHoverBorderColor = colour;
@@ -441,6 +495,7 @@
 
 		chart.$kdna = options;
 		chart.$kdnaKind = 'line';
+		chart.$kdnaTokens = t;
 		reveal( chart );
 		charts.push( chart );
 		return chart;
@@ -466,6 +521,20 @@
 	}
 
 	/**
+	 * Colours for donut segments: a segment colour set by a widget style
+	 * control wins, otherwise the token named by the chart.
+	 *
+	 * @param {Object}   t     Tokens.
+	 * @param {string[]} names Token names such as "accent" or "positive".
+	 * @return {string[]}
+	 */
+	function donutColours( t, names ) {
+		return names.map( function ( name, index ) {
+			return t[ 'seg' + ( index + 1 ) ] || t[ name ] || name;
+		} );
+	}
+
+	/**
 	 * Creates a chunky donut chart whose segments sweep in.
 	 *
 	 * @param {HTMLCanvasElement} canvas  Canvas inside an Insights root.
@@ -481,20 +550,18 @@
 				labels: options.labels,
 				datasets: [ {
 					data: options.values,
-					backgroundColor: options.colours.map( function ( name ) {
-						return t[ name ] || name;
-					} ),
+					backgroundColor: donutColours( t, options.colours ),
 					borderWidth: 0,
 					spacing: options.values.filter( function ( v ) {
 						return v > 0;
-					} ).length > 1 ? 3 : 0,
+					} ).length > 1 ? t.donutSpacing : 0,
 					hoverOffset: 4,
 				} ],
 			},
 			options: {
 				responsive: true,
 				maintainAspectRatio: false,
-				cutout: options.cutout || '68%',
+				cutout: t.donutCutout || options.cutout || '68%',
 				rotation: options.rotation === undefined ? 0 : options.rotation,
 				animation: reduceMotion ? false : { animateRotate: true, duration: 600, easing: 'easeOutCubic' },
 				plugins: { legend: { display: false }, tooltip: { enabled: false } },
@@ -711,9 +778,7 @@
 				chart.data.datasets[ 0 ].backgroundColor = colours;
 				chart.data.datasets[ 0 ].borderColor = colours;
 			} else if ( chart.$kdnaKind === 'donut' ) {
-				chart.data.datasets[ 0 ].backgroundColor = chart.$kdna.colours.map( function ( name ) {
-					return t[ name ] || name;
-				} );
+				chart.data.datasets[ 0 ].backgroundColor = donutColours( t, chart.$kdna.colours );
 			}
 			chart.update( 'none' );
 		} );

@@ -61,6 +61,9 @@ class KDNA_EcommerceInsights_Plugin {
 		// Report cache, cleared whenever figures change.
 		new KDNA_EcommerceInsights_Cache();
 
+		// Elementor widgets (they only switch on when Elementor is running).
+		new KDNA_EcommerceInsights_Elementor();
+
 		if ( is_admin() ) {
 			new KDNA_EcommerceInsights_Admin();
 			new KDNA_EcommerceInsights_Print_Report();

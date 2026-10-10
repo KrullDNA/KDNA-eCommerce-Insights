@@ -372,7 +372,7 @@ class KDNA_EcommerceInsights_Admin {
 	 *
 	 * @return array
 	 */
-	private static function kpi_options(): array {
+	public static function kpi_options(): array {
 		$skip    = array( 'tax_collected', 'tax_refunded', 'shipping_tax', 'ad_spend_tax' );
 		$options = array();
 		foreach ( KDNA_EcommerceInsights_Metrics::describe() as $key => $metric ) {
@@ -871,7 +871,7 @@ class KDNA_EcommerceInsights_Admin {
 	 *
 	 * @return array
 	 */
-	private static function overview_strings(): array {
+	public static function overview_strings(): array {
 		return array(
 			'performance'          => __( 'Performance', 'kdna-ecommerce-insights' ),
 			'showSeries'           => __( 'Show on chart', 'kdna-ecommerce-insights' ),

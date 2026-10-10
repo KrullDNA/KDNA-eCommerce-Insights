@@ -1,0 +1,634 @@
+/**
+ * KDNA eCommerce Insights: Elementor widgets.
+ *
+ * Builds on kdna-ei-tokens.css and kdna-ei-components.css (the same cards,
+ * KPI strip, donut and hero pieces as wp-admin). Everything is scoped to
+ * .kdna-ei-w so it never touches the rest of the page, and Elementor's
+ * style controls write --kdna-ei- variables onto each widget instance.
+ *
+ * No selector uses .elementor-widget-container (Atomic rules, section 9).
+ */
+
+/* ==========================================================================
+   Widget root
+   ========================================================================== */
+
+.kdna-ei-w {
+	position: relative;
+	display: block;
+	background: var(--kdna-ei-bg);
+	color: var(--kdna-ei-text);
+	padding: 24px;
+	border-radius: var(--kdna-ei-radius);
+}
+
+.kdna-ei-w--date-range {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 8px;
+	background: transparent;
+	padding: 0;
+}
+
+.kdna-ei-w--note {
+	padding: 16px;
+	border: 1px dashed var(--kdna-ei-border-strong);
+	color: var(--kdna-ei-text-muted);
+	font-size: var(--kdna-ei-fs-small);
+}
+
+.kdna-ei-w__note {
+	margin: 0;
+}
+
+/* ==========================================================================
+   Header: eyebrow, title, date range and theme toggle
+   ========================================================================== */
+
+.kdna-ei-w__header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 16px;
+	margin-bottom: var(--kdna-ei-gap);
+}
+
+.kdna-ei-w__heading {
+	min-width: 0;
+}
+
+.kdna-ei-w .kdna-ei-eyebrow {
+	margin: 0 0 6px;
+}
+
+.kdna-ei-w .kdna-ei-title {
+	margin: 0;
+}
+
+.kdna-ei-w .kdna-ei-title:empty {
+	display: none;
+}
+
+.kdna-ei-w__actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.kdna-ei-w__actions--floating {
+	justify-content: flex-end;
+	margin-bottom: 12px;
+}
+
+.kdna-ei-w__actions--floating:empty {
+	display: none;
+}
+
+.kdna-ei-w .kdna-ei-theme-toggle {
+	width: 40px;
+	height: 40px;
+	padding: 0;
+	justify-content: center;
+}
+
+.kdna-ei-w .kdna-ei-theme-toggle__sun,
+.kdna-ei-w .kdna-ei-theme-toggle__moon {
+	display: inline-flex;
+}
+
+.kdna-ei-w[data-kdna-ei-theme="light"] .kdna-ei-theme-toggle__sun,
+.kdna-ei-w:not([data-kdna-ei-theme="light"]) .kdna-ei-theme-toggle__moon {
+	display: none;
+}
+
+/* ==========================================================================
+   Dashboard layouts
+   ========================================================================== */
+
+.kdna-ei-dash {
+	display: grid;
+	gap: var(--kdna-ei-gap);
+	grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr);
+	grid-template-areas:
+		"alerts alerts"
+		"kpis kpis"
+		"chart hero"
+		"inventory hero";
+}
+
+.kdna-ei-dash .kdna-ei-area-alerts { grid-area: alerts; }
+.kdna-ei-dash .kdna-ei-area-kpis { grid-area: kpis; }
+.kdna-ei-dash .kdna-ei-area-chart { grid-area: chart; }
+.kdna-ei-dash .kdna-ei-area-inventory { grid-area: inventory; }
+.kdna-ei-dash .kdna-ei-area-hero { grid-area: hero; }
+
+.kdna-ei-dash .kdna-ei-alerts[hidden] {
+	display: none;
+}
+
+/* Without a hero card, the chart and inventory share the width. */
+.kdna-ei-dash[data-layout="reference"]:not(:has(.kdna-ei-area-hero)) {
+	grid-template-areas:
+		"alerts alerts"
+		"kpis kpis"
+		"chart inventory";
+}
+
+/* Without the chart or inventory, the hero card fills the row. */
+.kdna-ei-dash[data-layout="reference"]:not(:has(.kdna-ei-area-chart)):not(:has(.kdna-ei-area-inventory)) {
+	grid-template-columns: minmax(0, 1fr);
+	grid-template-areas: "alerts" "kpis" "hero";
+}
+
+.kdna-ei-dash[data-layout="reference"]:not(:has(.kdna-ei-area-chart)):has(.kdna-ei-area-inventory) {
+	grid-template-areas:
+		"alerts alerts"
+		"kpis kpis"
+		"inventory hero";
+}
+
+.kdna-ei-dash[data-layout="reference"]:has(.kdna-ei-area-chart):not(:has(.kdna-ei-area-inventory)) {
+	grid-template-areas:
+		"alerts alerts"
+		"kpis kpis"
+		"chart hero";
+}
+
+/* Stacked: one panel under another, full width. */
+.kdna-ei-dash[data-layout="stacked"] {
+	grid-template-columns: minmax(0, 1fr);
+	grid-template-areas: none;
+}
+
+.kdna-ei-dash[data-layout="stacked"] > * {
+	grid-area: auto;
+}
+
+/* Two columns: equal halves, panels flowing in order. */
+.kdna-ei-dash[data-layout="two_column"] {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	grid-template-areas: none;
+}
+
+.kdna-ei-dash[data-layout="two_column"] > * {
+	grid-area: auto;
+}
+
+.kdna-ei-dash[data-layout="two_column"] > .kdna-ei-area-alerts,
+.kdna-ei-dash[data-layout="two_column"] > .kdna-ei-area-kpis {
+	grid-column: 1 / -1;
+}
+
+@media (max-width: 1024px) {
+	.kdna-ei-dash,
+	.kdna-ei-dash[data-layout] {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-areas: none;
+	}
+
+	.kdna-ei-dash > *,
+	.kdna-ei-dash[data-layout] > * {
+		grid-area: auto;
+		grid-column: auto;
+	}
+}
+
+@media (max-width: 767px) {
+	.kdna-ei-w {
+		padding: 16px;
+	}
+
+	.kdna-ei-w__header {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+
+	.kdna-ei-w--date-range {
+		padding: 0;
+	}
+}
+
+/* Card headers wrap on narrow widgets instead of running off the edge. */
+.kdna-ei-w .kdna-ei-card__header,
+.kdna-ei-w .kdna-ei-performance__controls {
+	flex-wrap: wrap;
+	row-gap: 10px;
+}
+
+.kdna-ei-w .kdna-ei-performance__controls {
+	min-width: 0;
+}
+
+/* The first KPI has no divider (skeletons come first in the markup). */
+.kdna-ei-w .kdna-ei-kpi:first-of-type {
+	border-left: 0;
+}
+
+.kdna-ei-w .kdna-ei-legend th {
+	font-size: var(--kdna-ei-fs-body);
+	font-weight: 400;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--kdna-ei-text);
+}
+
+/* ==========================================================================
+   States: loading, ready, empty, error and restricted
+   ========================================================================== */
+
+/* Skeletons only show while loading. */
+.kdna-ei-w:not([data-kdna-ei-state="loading"]) .kdna-ei-kpi--skeleton,
+.kdna-ei-w:not([data-kdna-ei-state="loading"]) .kdna-ei-chart__skeleton,
+.kdna-ei-w:not([data-kdna-ei-state="loading"]) .kdna-ei-donut__skeleton,
+.kdna-ei-w:not([data-kdna-ei-state="loading"]) .kdna-ei-legend__skeleton,
+.kdna-ei-w:not([data-kdna-ei-state="loading"]) .kdna-ei-hero__skeleton {
+	display: none;
+}
+
+.kdna-ei-w .kdna-ei-chart {
+	position: relative;
+}
+
+.kdna-ei-w .kdna-ei-chart__skeleton {
+	position: absolute;
+	inset: 0;
+}
+
+.kdna-ei-w .kdna-ei-donut__skeleton {
+	position: absolute;
+	inset: 0;
+	border-radius: 50%;
+}
+
+.kdna-ei-w[data-kdna-ei-state="loading"] canvas,
+.kdna-ei-w[data-kdna-ei-state="loading"] .kdna-ei-donut__centre,
+.kdna-ei-w[data-kdna-ei-state="loading"] .kdna-ei-alerts {
+	visibility: hidden;
+}
+
+/* Empty and error replace the panels. */
+.kdna-ei-w .kdna-ei-state--empty,
+.kdna-ei-w .kdna-ei-state--error {
+	display: none;
+}
+
+.kdna-ei-w[data-kdna-ei-state="empty"] .kdna-ei-state--empty,
+.kdna-ei-w[data-kdna-ei-state="error"] .kdna-ei-state--error {
+	display: flex;
+}
+
+.kdna-ei-w[data-kdna-ei-state="empty"] .kdna-ei-dash,
+.kdna-ei-w[data-kdna-ei-state="error"] .kdna-ei-dash {
+	display: none;
+}
+
+.kdna-ei-w .kdna-ei-state {
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	padding: 48px 24px;
+	text-align: center;
+	background: var(--kdna-ei-surface);
+	border: 1px solid var(--kdna-ei-border);
+	border-radius: var(--kdna-ei-radius);
+}
+
+.kdna-ei-w .kdna-ei-state--restricted {
+	display: flex;
+}
+
+.kdna-ei-w .kdna-ei-state__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 48px;
+	height: 48px;
+	border-radius: 50%;
+	color: var(--kdna-ei-accent);
+	background: color-mix(in srgb, var(--kdna-ei-accent) 14%, transparent);
+}
+
+.kdna-ei-w .kdna-ei-state__icon .kdna-ei-icon,
+.kdna-ei-w .kdna-ei-state__icon svg {
+	width: 22px;
+	height: 22px;
+}
+
+.kdna-ei-w .kdna-ei-state__title {
+	margin: 0;
+	font-size: var(--kdna-ei-fs-card-title);
+	font-weight: 600;
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-w .kdna-ei-state__message {
+	margin: 0;
+	max-width: 46ch;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-w .kdna-ei-state .kdna-ei-btn {
+	margin-top: 6px;
+}
+
+.kdna-ei-w .kdna-ei-btn__icon {
+	display: inline-flex;
+	align-items: center;
+}
+
+.kdna-ei-w .kdna-ei-btn__icon svg,
+.kdna-ei-w .kdna-ei-btn__icon i {
+	width: 1em;
+	height: 1em;
+	font-size: 1em;
+	fill: currentColor;
+}
+
+.kdna-ei-w .kdna-ei-btn.is-icon-after {
+	flex-direction: row-reverse;
+}
+
+/* ==========================================================================
+   Date range dropdown and calendar
+   ========================================================================== */
+
+.kdna-ei-w .kdna-ei-range {
+	position: relative;
+	display: inline-flex;
+}
+
+.kdna-ei-w .kdna-ei-range__trigger {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	min-height: 40px;
+	padding: 8px 14px;
+	color: var(--kdna-ei-text);
+	background: var(--kdna-ei-surface);
+	border: 1px solid var(--kdna-ei-border);
+	border-radius: var(--kdna-ei-radius-sm);
+	font-size: var(--kdna-ei-fs-body);
+	font-weight: 500;
+	white-space: nowrap;
+	transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.kdna-ei-w .kdna-ei-range__trigger:hover,
+.kdna-ei-w .kdna-ei-range__trigger[aria-expanded="true"] {
+	background: var(--kdna-ei-surface-raised);
+	border-color: var(--kdna-ei-border-strong);
+}
+
+.kdna-ei-w .kdna-ei-range__lead {
+	display: inline-flex;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-w .kdna-ei-range__chevron {
+	color: var(--kdna-ei-text-muted);
+	transition: transform 0.15s ease;
+}
+
+.kdna-ei-w .kdna-ei-range__trigger[aria-expanded="true"] .kdna-ei-range__chevron {
+	transform: rotate(180deg);
+}
+
+.kdna-ei-w .kdna-ei-range__menu {
+	position: absolute;
+	top: calc(100% + 6px);
+	right: 0;
+	z-index: 50;
+	width: 300px;
+	max-width: calc(100vw - 32px);
+	max-height: min(80vh, 640px);
+	overflow-y: auto;
+	padding: 8px;
+	background: var(--kdna-ei-surface-raised);
+	border: 1px solid var(--kdna-ei-border-strong);
+	border-radius: var(--kdna-ei-radius);
+	box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+.kdna-ei-w .kdna-ei-range__menu[hidden] {
+	display: none;
+}
+
+.kdna-ei-w--menu-start .kdna-ei-range__menu {
+	left: 0;
+	right: auto;
+}
+
+.kdna-ei-w--menu-end .kdna-ei-range__menu {
+	left: auto;
+	right: 0;
+}
+
+.kdna-ei-w .kdna-ei-range__group + .kdna-ei-range__group,
+.kdna-ei-w .kdna-ei-range__custom + .kdna-ei-range__group {
+	margin-top: 6px;
+	padding-top: 6px;
+	border-top: 1px solid var(--kdna-ei-border);
+}
+
+.kdna-ei-w .kdna-ei-range__heading {
+	margin: 0;
+	padding: 6px 10px 4px;
+	font-size: var(--kdna-ei-fs-small);
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-w .kdna-ei-range__item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	width: 100%;
+	padding: 8px 10px;
+	color: var(--kdna-ei-text);
+	background: transparent;
+	border: 0;
+	border-radius: 8px;
+	text-align: left;
+	font-size: var(--kdna-ei-fs-body);
+	transition: background-color 0.12s ease;
+}
+
+.kdna-ei-w .kdna-ei-range__item:hover {
+	background: color-mix(in srgb, var(--kdna-ei-text) 7%, transparent);
+}
+
+.kdna-ei-w .kdna-ei-range__item .kdna-ei-icon {
+	visibility: hidden;
+	color: var(--kdna-ei-accent);
+}
+
+.kdna-ei-w .kdna-ei-range__item[aria-checked="true"] {
+	background: color-mix(in srgb, var(--kdna-ei-accent) 14%, transparent);
+	font-weight: 500;
+}
+
+.kdna-ei-w .kdna-ei-range__item[aria-checked="true"] .kdna-ei-icon {
+	visibility: visible;
+}
+
+.kdna-ei-w .kdna-ei-range__custom {
+	padding: 8px 4px 4px;
+}
+
+.kdna-ei-w .kdna-ei-range__custom[hidden] {
+	display: none;
+}
+
+.kdna-ei-w .kdna-ei-range__hint {
+	margin: 8px 6px 0;
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-w .kdna-ei-range__actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 10px;
+}
+
+/* Calendar */
+
+.kdna-ei-w .kdna-ei-cal {
+	--kdna-ei-cal-size: 36px;
+}
+
+.kdna-ei-w .kdna-ei-cal__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 6px;
+}
+
+.kdna-ei-w .kdna-ei-cal__month {
+	margin: 0;
+	font-weight: 600;
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-w .kdna-ei-cal__nav {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	color: var(--kdna-ei-text-muted);
+	background: transparent;
+	border: 0;
+	border-radius: var(--kdna-ei-cal-radius, 8px);
+}
+
+.kdna-ei-w .kdna-ei-cal__nav:hover {
+	color: var(--kdna-ei-text);
+	background: color-mix(in srgb, var(--kdna-ei-text) 7%, transparent);
+}
+
+.kdna-ei-w .kdna-ei-cal__row {
+	display: grid;
+	grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.kdna-ei-w .kdna-ei-cal__weekday {
+	padding: 4px 0;
+	text-align: center;
+	font-size: var(--kdna-ei-fs-small);
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-w .kdna-ei-cal__day {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: var(--kdna-ei-cal-size);
+	padding: 0;
+	color: var(--kdna-ei-cal-day, var(--kdna-ei-text));
+	background: transparent;
+	border: 0;
+	border-radius: var(--kdna-ei-cal-radius, 8px);
+	font-size: var(--kdna-ei-fs-small);
+	font-variant-numeric: tabular-nums;
+}
+
+.kdna-ei-w .kdna-ei-cal__day:hover:not(:disabled) {
+	background: color-mix(in srgb, var(--kdna-ei-text) 8%, transparent);
+}
+
+.kdna-ei-w .kdna-ei-cal__day:disabled {
+	opacity: 0.35;
+	cursor: default;
+}
+
+.kdna-ei-w .kdna-ei-cal__day.is-today {
+	box-shadow: inset 0 0 0 1px var(--kdna-ei-cal-today, var(--kdna-ei-accent));
+}
+
+.kdna-ei-w .kdna-ei-cal__day.is-in-range {
+	background: var(--kdna-ei-cal-range, color-mix(in srgb, var(--kdna-ei-accent) 18%, transparent));
+	border-radius: 0;
+}
+
+.kdna-ei-w .kdna-ei-cal__day.is-start {
+	border-top-left-radius: var(--kdna-ei-cal-radius, 8px);
+	border-bottom-left-radius: var(--kdna-ei-cal-radius, 8px);
+}
+
+.kdna-ei-w .kdna-ei-cal__day.is-end {
+	border-top-right-radius: var(--kdna-ei-cal-radius, 8px);
+	border-bottom-right-radius: var(--kdna-ei-cal-radius, 8px);
+}
+
+.kdna-ei-w .kdna-ei-cal__day.is-selected {
+	color: var(--kdna-ei-cal-selected-text, #fff);
+	background: var(--kdna-ei-cal-selected, var(--kdna-ei-accent));
+	font-weight: 600;
+}
+
+/* ==========================================================================
+   Style control switches (Elementor adds these classes to the element)
+   ========================================================================== */
+
+.kdna-ei-hide-kpi-icons-yes .kdna-ei-w .kdna-ei-kpi__icon,
+.kdna-ei-hide-kpi-icons-yes .kdna-ei-w .kdna-ei-kpi--skeleton .kdna-ei-skeleton--icon {
+	display: none;
+}
+
+.kdna-ei-hide-ring-yes .kdna-ei-w {
+	--kdna-ei-chart-ring: 0;
+}
+
+.kdna-ei-hide-range-icon-yes .kdna-ei-w .kdna-ei-range__lead {
+	display: none;
+}
+
+.kdna-ei-square-ends-yes .kdna-ei-w .kdna-ei-ring__fill {
+	stroke-linecap: butt;
+}
+
+.kdna-ei-square-ends-yes .kdna-ei-w :is(.kdna-ei-bar, .kdna-ei-bar__fill, .kdna-ei-waterfall__track, .kdna-ei-waterfall__bar) {
+	border-radius: 0;
+}
+
+/* The same rules when Elementor puts the class on the widget root itself. */
+.kdna-ei-w.kdna-ei-hide-kpi-icons-yes .kdna-ei-kpi__icon {
+	display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.kdna-ei-w .kdna-ei-range__chevron,
+	.kdna-ei-w .kdna-ei-range__trigger,
+	.kdna-ei-w .kdna-ei-range__item {
+		transition: none;
+	}
+}

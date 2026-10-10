@@ -372,6 +372,17 @@ class KDNA_EcommerceInsights_Inventory {
 	 * @return array[]
 	 */
 	private static function with_links( array $rows ): array {
+		// Load every listed product, then every product image, in two
+		// queries rather than a few per row (matters on large catalogues).
+		$ids = array_values( array_unique( array_filter( array_merge( array_map( 'intval', wp_list_pluck( $rows, 'id' ) ), array_map( 'intval', wp_list_pluck( $rows, 'product_id' ) ) ) ) ) );
+		if ( $ids ) {
+			_prime_post_caches( $ids, false, true );
+			$images = array_values( array_unique( array_filter( array_map( 'get_post_thumbnail_id', $ids ) ) ) );
+			if ( $images ) {
+				_prime_post_caches( $images, false, true );
+			}
+		}
+
 		foreach ( $rows as &$row ) {
 			$thumb            = get_the_post_thumbnail_url( $row['id'], 'thumbnail' );
 			$row['thumbnail'] = $thumb ? $thumb : (string) get_the_post_thumbnail_url( $row['product_id'], 'thumbnail' );

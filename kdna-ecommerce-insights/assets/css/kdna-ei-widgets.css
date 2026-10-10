@@ -235,6 +235,192 @@
 }
 
 /* ==========================================================================
+   Modular widgets (KPI Cards, Chart, Breakdown, Table, Hero Card)
+   The card is the visible part; the root only holds it.
+   ========================================================================== */
+
+.kdna-ei-w--module {
+	background: transparent;
+	padding: 0;
+	border-radius: 0;
+}
+
+.kdna-ei-w--module .kdna-ei-w__actions--floating {
+	margin-bottom: 8px;
+}
+
+.kdna-ei-w .kdna-ei-card__actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 12px;
+	min-width: 0;
+}
+
+.kdna-ei-w .kdna-ei-card__header:has(.kdna-ei-performance__controls) .kdna-ei-card__actions {
+	flex: 1;
+}
+
+/* KPI figures as separate cards. */
+.kdna-ei-w .kdna-ei-kpi-cards {
+	display: grid;
+	gap: var(--kdna-ei-gap);
+	grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+.kdna-ei-w .kdna-ei-kpi-cards .kdna-ei-kpi {
+	padding: 22px 24px;
+	border-left: 1px solid var(--kdna-ei-border);
+}
+
+.kdna-ei-w .kdna-ei-kpi-strip .kdna-ei-kpi:first-child {
+	border-left: 0;
+}
+
+/* A strip that wraps onto several rows keeps space between the rows. */
+.kdna-ei-w .kdna-ei-kpi-strip {
+	row-gap: 24px;
+}
+
+.kdna-ei-hide-change-yes .kdna-ei-w .kdna-ei-change {
+	display: none;
+}
+
+/* Breakdown without percentages. */
+.kdna-ei-w .kdna-ei-no-percent .kdna-ei-legend__percent {
+	display: none;
+}
+
+/* Report tables. */
+.kdna-ei-w .kdna-ei-table-card .kdna-ei-table-wrap {
+	position: relative; /* keeps screen reader labels inside the scroll area */
+	margin: 0;
+}
+
+.kdna-ei-w .kdna-ei-data-table th[scope="row"] {
+	font-size: var(--kdna-ei-fs-body);
+	font-weight: 500;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-w .kdna-ei-data-table tbody tr:hover > * {
+	background: color-mix(in srgb, var(--kdna-ei-text) 4%, transparent);
+}
+
+.kdna-ei-w .kdna-ei-data-table td,
+.kdna-ei-w .kdna-ei-data-table th {
+	white-space: nowrap;
+}
+
+.kdna-ei-w .kdna-ei-cell-main {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-width: 0;
+}
+
+.kdna-ei-w .kdna-ei-cell-name {
+	min-width: 0;
+	max-width: 320px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	color: inherit;
+	text-decoration: none;
+}
+
+.kdna-ei-w a.kdna-ei-cell-name:hover {
+	color: var(--kdna-ei-accent);
+}
+
+.kdna-ei-w .kdna-ei-data-table .kdna-ei-thumb {
+	display: grid;
+	place-items: center;
+	flex: none;
+	width: 36px;
+	height: 36px;
+	color: var(--kdna-ei-text-muted);
+}
+
+.kdna-ei-w .kdna-ei-data-table .kdna-ei-thumb .kdna-ei-icon {
+	width: 18px;
+	height: 18px;
+}
+
+/* No divider under the last row of any table, including its row heading. */
+.kdna-ei-w .kdna-ei-table tbody tr:last-child > * {
+	border-bottom: 0;
+}
+
+.kdna-ei-w .kdna-ei-data-table .kdna-ei-badge {
+	flex: none;
+}
+
+.kdna-ei-w .kdna-ei-data-table tr.is-total > *,
+.kdna-ei-w .kdna-ei-data-table tr.is-margin > * {
+	font-weight: 600;
+}
+
+.kdna-ei-w .kdna-ei-data-table tr.is-total > th,
+.kdna-ei-w .kdna-ei-data-table tr.is-margin > th {
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-w .kdna-ei-data-table tr.is-subtract > th {
+	padding-left: 14px;
+	color: var(--kdna-ei-text-muted);
+	font-weight: 400;
+}
+
+.kdna-ei-w .kdna-ei-data-table td.is-negative {
+	color: var(--kdna-ei-negative);
+}
+
+.kdna-ei-w .kdna-ei-sort {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 0;
+	font: inherit;
+	letter-spacing: inherit;
+	text-transform: inherit;
+	color: inherit;
+	background: none;
+	border: 0;
+	cursor: pointer;
+}
+
+.kdna-ei-w .kdna-ei-sort:hover,
+.kdna-ei-w .kdna-ei-sort.is-active {
+	color: var(--kdna-ei-text);
+}
+
+.kdna-ei-w th.is-numeric .kdna-ei-sort {
+	flex-direction: row-reverse;
+}
+
+.kdna-ei-w .kdna-ei-sort-icon {
+	width: 13px;
+	height: 13px;
+	opacity: 0;
+	transition: opacity 0.15s ease;
+}
+
+.kdna-ei-w .kdna-ei-sort:hover .kdna-ei-sort-icon {
+	opacity: 0.45;
+}
+
+.kdna-ei-w .kdna-ei-sort.is-active .kdna-ei-sort-icon {
+	opacity: 1;
+}
+
+.kdna-ei-w .kdna-ei-export-btn:disabled {
+	cursor: progress;
+}
+
+/* ==========================================================================
    States: loading, ready, empty, error and restricted
    ========================================================================== */
 
@@ -243,7 +429,8 @@
 .kdna-ei-w:not([data-kdna-ei-state="loading"]) .kdna-ei-chart__skeleton,
 .kdna-ei-w:not([data-kdna-ei-state="loading"]) .kdna-ei-donut__skeleton,
 .kdna-ei-w:not([data-kdna-ei-state="loading"]) .kdna-ei-legend__skeleton,
-.kdna-ei-w:not([data-kdna-ei-state="loading"]) .kdna-ei-hero__skeleton {
+.kdna-ei-w:not([data-kdna-ei-state="loading"]) .kdna-ei-hero__skeleton,
+.kdna-ei-w:not([data-kdna-ei-state="loading"]) .kdna-ei-table__skeleton {
 	display: none;
 }
 
@@ -279,8 +466,8 @@
 	display: flex;
 }
 
-.kdna-ei-w[data-kdna-ei-state="empty"] .kdna-ei-dash,
-.kdna-ei-w[data-kdna-ei-state="error"] .kdna-ei-dash {
+.kdna-ei-w[data-kdna-ei-state="empty"] .kdna-ei-w__body,
+.kdna-ei-w[data-kdna-ei-state="error"] .kdna-ei-w__body {
 	display: none;
 }
 
@@ -631,4 +818,9 @@
 	.kdna-ei-w .kdna-ei-range__item {
 		transition: none;
 	}
+}
+
+/* Metric switch labels stay on one line; the switch moves under the title instead. */
+.kdna-ei-w .kdna-ei-segmented__item {
+	white-space: nowrap;
 }

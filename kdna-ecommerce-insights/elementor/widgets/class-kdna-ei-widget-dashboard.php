@@ -224,10 +224,7 @@ class KDNA_EcommerceInsights_Widget_Dashboard extends KDNA_EcommerceInsights_Wid
 	protected function render_widget( array $settings, string $state ): void {
 		$t    = KDNA_EcommerceInsights_Admin::overview_strings();
 		$show = static fn( $key ) => 'yes' === ( $settings[ $key ] ?? 'yes' );
-		$hero = (string) ( $settings['kdna_hero'] ?? 'settings' );
-		if ( 'settings' === $hero ) {
-			$hero = (string) KDNA_EcommerceInsights_Settings::get( 'hero.type', 'top_products' );
-		}
+		$hero = $this->hero_type( (string) ( $settings['kdna_hero'] ?? 'settings' ) );
 		$links = $show( 'kdna_show_links' ) && KDNA_EcommerceInsights_Elementor::can_view();
 
 		$this->open_root(
@@ -278,108 +275,38 @@ class KDNA_EcommerceInsights_Widget_Dashboard extends KDNA_EcommerceInsights_Wid
 			echo '</div>';
 		}
 		?>
-		<div class="kdna-ei-dash" data-layout="<?php echo esc_attr( (string) ( $settings['kdna_layout'] ?? 'reference' ) ); ?>">
+		<div class="kdna-ei-dash kdna-ei-w__body" data-layout="<?php echo esc_attr( (string) ( $settings['kdna_layout'] ?? 'reference' ) ); ?>">
 			<?php if ( $show( 'kdna_show_alerts' ) ) : ?>
 				<div class="kdna-ei-area-alerts kdna-ei-alerts" data-kdna-ei-part="alerts" role="region" aria-label="<?php esc_attr_e( 'Things that need attention', 'kdna-ecommerce-insights' ); ?>"></div>
 			<?php endif; ?>
-
-			<?php if ( $show( 'kdna_show_kpis' ) ) : ?>
-				<section class="kdna-ei-card kdna-ei-kpi-strip kdna-ei-area-kpis" data-kdna-ei-part="kpis" aria-label="<?php esc_attr_e( 'Key figures', 'kdna-ecommerce-insights' ); ?>">
-					<?php for ( $i = 0; $i < 5; $i++ ) : ?>
-						<div class="kdna-ei-kpi kdna-ei-kpi--skeleton" aria-hidden="true">
-							<span class="kdna-ei-skeleton kdna-ei-skeleton--icon"></span>
-							<div class="kdna-ei-kpi__body kdna-ei-skel-stack">
-								<span class="kdna-ei-skeleton kdna-ei-skeleton--label"></span>
-								<span class="kdna-ei-skeleton kdna-ei-skeleton--value"></span>
-							</div>
-						</div>
-					<?php endfor; ?>
-				</section>
-			<?php endif; ?>
-
-			<?php if ( $show( 'kdna_show_chart' ) ) : ?>
-				<section class="kdna-ei-card kdna-ei-area-chart kdna-ei-performance" aria-label="<?php echo esc_attr( $t['performance'] ); ?>">
-					<div class="kdna-ei-card__header">
-						<h3 class="kdna-ei-card__title"><?php echo esc_html( $t['performance'] ); ?></h3>
-						<div class="kdna-ei-performance__controls">
-							<div class="kdna-ei-chart-legend" aria-hidden="true">
-								<span class="kdna-ei-chart-legend__item"><span class="kdna-ei-chart-legend__dot"></span><span data-kdna-ei-legend="current"></span></span>
-								<span class="kdna-ei-chart-legend__item" data-kdna-ei-legend-compare hidden><span class="kdna-ei-chart-legend__dot kdna-ei-chart-legend__dot--compare"></span><span data-kdna-ei-legend="compare"></span></span>
-							</div>
-							<div class="kdna-ei-segmented" role="group" aria-label="<?php echo esc_attr( $t['showSeries'] ); ?>">
-								<?php foreach ( array( 'net_revenue' => $t['revenue'], 'net_profit' => $t['profit'], 'orders' => $t['orders'] ) as $key => $label ) : ?>
-									<button type="button" class="kdna-ei-segmented__item" aria-pressed="false" data-kdna-ei-series="<?php echo esc_attr( $key ); ?>"><?php echo esc_html( $label ); ?></button>
-								<?php endforeach; ?>
-							</div>
-						</div>
-					</div>
-					<div class="kdna-ei-chart">
-						<span class="kdna-ei-skeleton kdna-ei-skeleton--block kdna-ei-chart__skeleton" aria-hidden="true"></span>
-						<canvas data-kdna-ei-part="chart" role="img" aria-label="<?php echo esc_attr( $t['performance'] ); ?>"></canvas>
-					</div>
-				</section>
-			<?php endif; ?>
-
-			<?php if ( $show( 'kdna_show_inventory' ) ) : ?>
-				<section class="kdna-ei-card kdna-ei-area-inventory kdna-ei-inventory-card" aria-label="<?php echo esc_attr( $t['inventory'] ); ?>">
-					<div class="kdna-ei-card__header">
-						<h3 class="kdna-ei-card__title"><?php echo esc_html( $t['inventory'] ); ?></h3>
-						<?php if ( $links ) : ?>
-							<a class="kdna-ei-link" href="<?php echo esc_url( admin_url( 'admin.php?page=' . KDNA_EcommerceInsights_Admin::MENU_SLUG . '#/inventory' ) ); ?>"><?php echo esc_html( $t['viewInventory'] ); ?></a>
-						<?php endif; ?>
-					</div>
-					<div class="kdna-ei-donut-row">
-						<div class="kdna-ei-donut">
-							<span class="kdna-ei-skeleton kdna-ei-skeleton--circle kdna-ei-donut__skeleton" aria-hidden="true"></span>
-							<canvas data-kdna-ei-part="donut" role="img" aria-label="<?php echo esc_attr( $t['inventory'] ); ?>"></canvas>
-							<div class="kdna-ei-donut__centre" aria-hidden="true">
-								<span class="kdna-ei-donut__number kdna-ei-num" data-kdna-ei-part="donut-number"></span>
-								<span class="kdna-ei-donut__label"><?php echo esc_html( $t['inStock'] ); ?></span>
-							</div>
-						</div>
-						<table class="kdna-ei-table kdna-ei-legend">
-							<caption class="kdna-ei-visually-hidden"><?php echo esc_html( $t['inventory'] ); ?></caption>
-							<tbody>
-								<?php
-								foreach ( array(
-									'in_stock'     => array( $t['inStockLegend'], 'accent' ),
-									'low_stock'    => array( $t['lowStock'], 'positive' ),
-									'out_of_stock' => array( $t['outOfStock'], 'accent-2' ),
-								) as $key => $row ) :
-									$segment = array_search( $key, array( 'in_stock', 'low_stock', 'out_of_stock' ), true ) + 1;
-									?>
-									<tr data-kdna-ei-stock="<?php echo esc_attr( $key ); ?>">
-										<th scope="row"><span class="kdna-ei-legend__dot" style="background: var(--kdna-ei-segment-<?php echo esc_attr( (string) $segment ); ?>, var(--kdna-ei-<?php echo esc_attr( $row[1] ); ?>))"></span><span><?php echo esc_html( $row[0] ); ?></span></th>
-										<td class="is-numeric kdna-ei-legend__value"><span class="kdna-ei-skeleton kdna-ei-skeleton--text kdna-ei-legend__skeleton" aria-hidden="true"></span></td>
-										<td class="is-numeric kdna-ei-legend__percent"></td>
-									</tr>
-								<?php endforeach; ?>
-							</tbody>
-						</table>
-					</div>
-				</section>
-			<?php endif; ?>
-
-			<?php if ( $show( 'kdna_show_hero' ) ) : ?>
-				<section class="kdna-ei-card kdna-ei-area-hero kdna-ei-hero" aria-label="<?php echo esc_attr( $t['heroTypes'][ $hero ] ?? '' ); ?>">
-					<div class="kdna-ei-card__header">
-						<h3 class="kdna-ei-card__title"><?php echo esc_html( $t['heroTypes'][ $hero ] ?? '' ); ?></h3>
-					</div>
-					<?php if ( 'top_products' === $hero ) : ?>
-						<div class="kdna-ei-tabs kdna-ei-tabs--small" role="group" aria-label="<?php echo esc_attr( $t['rankBy'] ); ?>">
-							<button type="button" class="kdna-ei-tab" aria-selected="false" data-kdna-ei-sort="profit"><?php echo esc_html( $t['byProfit'] ); ?></button>
-							<button type="button" class="kdna-ei-tab" aria-selected="false" data-kdna-ei-sort="revenue"><?php echo esc_html( $t['byRevenue'] ); ?></button>
-						</div>
-					<?php endif; ?>
-					<div class="kdna-ei-hero__body" data-kdna-ei-part="hero">
-						<div class="kdna-ei-skel-stack kdna-ei-hero__skeleton" aria-hidden="true">
-							<?php for ( $i = 0; $i < 5; $i++ ) : ?>
-								<div class="kdna-ei-skel-row"><span class="kdna-ei-skeleton" style="width: 44px; height: 44px; flex: none;"></span><span class="kdna-ei-skeleton kdna-ei-skeleton--text"></span></div>
-							<?php endfor; ?>
-						</div>
-					</div>
-				</section>
-			<?php endif; ?>
+			<?php
+			if ( $show( 'kdna_show_kpis' ) ) {
+				$this->render_kpis( 5, 'strip', 'kdna-ei-area-kpis' );
+			}
+			if ( $show( 'kdna_show_chart' ) ) {
+				$this->render_chart_card(
+					$t['performance'],
+					array(
+						'net_revenue' => $t['revenue'],
+						'net_profit'  => $t['profit'],
+						'orders'      => $t['orders'],
+					),
+					'kdna-ei-area-chart'
+				);
+			}
+			if ( $show( 'kdna_show_inventory' ) ) {
+				$this->render_breakdown_card(
+					$t['inventory'],
+					$t['inStock'],
+					array( $t['inStockLegend'], $t['lowStock'], $t['outOfStock'] ),
+					$links ? admin_url( 'admin.php?page=' . KDNA_EcommerceInsights_Admin::MENU_SLUG . '#/inventory' ) : '',
+					'kdna-ei-area-inventory kdna-ei-inventory-card'
+				);
+			}
+			if ( $show( 'kdna_show_hero' ) ) {
+				$this->render_hero_card( $hero, '', true, 5, 'kdna-ei-area-hero' );
+			}
+			?>
 		</div>
 		<?php
 		$this->render_state_blocks();

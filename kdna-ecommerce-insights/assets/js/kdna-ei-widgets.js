@@ -490,14 +490,23 @@
 		sync();
 		return { sync: sync };
 	}
-
 	/*
 	 * ---------------------------------------------------------------------
 	 * Parts: shared renderers
+	 *
+	 * Every widget draws with these, so the Dashboard and the modular
+	 * widgets always look and behave the same.
 	 * ---------------------------------------------------------------------
 	 */
 
 	var parts = KDNAEI.widgetParts = {};
+
+	// Metrics where going down is good news, for the chart tooltip colour.
+	var lowerIsBetter = [ 'cogs', 'payment_fees', 'shipping_costs', 'extra_costs', 'ad_spend', 'overheads', 'discounts', 'refunds', 'refund_rate', 'discount_rate', 'cpa' ];
+
+	// Token names for donut segments, in order (the same order as the PHP legend dots).
+	var segmentColours = [ 'accent', 'positive', 'accent2', 'warning', 'negative', 'muted' ];
+	var segmentVars = [ 'accent', 'positive', 'accent-2', 'warning', 'negative', 'text-muted' ];
 
 	/**
 	 * Counts a number up from zero, like the admin app's KPI strip.
@@ -532,16 +541,18 @@
 	};
 
 	/**
-	 * Fills a KPI strip: icon, label, value and the change.
+	 * Fills the KPI figures: icon, label, value and the change. As a strip
+	 * the figures share one card; as cards each is its own card.
 	 *
-	 * @param {HTMLElement} strip          The .kdna-ei-kpi-strip element.
+	 * @param {HTMLElement} strip          The [data-kdna-ei-part="kpis"] element.
 	 * @param {Object[]}    metrics        Metrics from /summary.
 	 * @param {string}      comparisonName For example "Previous period".
 	 */
 	parts.kpis = function ( strip, metrics, comparisonName ) {
+		var cards = strip.getAttribute( 'data-kdna-ei-layout' ) === 'cards';
 		strip.textContent = '';
 		metrics.forEach( function ( metric ) {
-			var item = el( 'div', 'kdna-ei-kpi' );
+			var item = el( 'div', 'kdna-ei-kpi' + ( cards ? ' kdna-ei-card' : '' ) );
 			var iconBox = el( 'span', 'kdna-ei-kpi__icon' );
 			iconBox.setAttribute( 'aria-hidden', 'true' );
 			iconBox.appendChild( icon( KDNAEI.kpi.icon( metric.key ) ) );
@@ -576,115 +587,270 @@
 	};
 
 	/**
-	 * Chart.js options for the performance chart, matching the admin app's.
+	 * Formats a value for a chart axis: short money and numbers ("12K"),
+	 * percentages with a % sign.
 	 *
-	 * @param {Object} series     Response from /timeseries.
-	 * @param {string} key        Series key: net_revenue, net_profit or orders.
-	 * @param {string} comparison Comparison mode.
+	 * @param {number} value Value.
+	 * @param {string} kind  Metric format.
+	 * @return {string}
+	 */
+	function axisValue( value, kind ) {
+		if ( kind === 'percent' ) {
+			return format.number( value, 0 ) + '%';
+		}
+		if ( kind === 'ratio' ) {
+			return format.number( value, 1 );
+		}
+		return format.compact( value );
+	}
+
+	/**
+	 * Chart.js options for a chart of metrics over time, matching the admin
+	 * app's Performance chart.
+	 *
+	 * @param {Object}   series Response from /timeseries.
+	 * @param {string[]} keys   Metrics to draw: one (with its comparison) or several together.
+	 * @param {Object}   opts   comparison (mode), compare (bool), type (area, line or bar).
 	 * @return {Object}
 	 */
-	parts.chartOptions = function ( series, key, comparison ) {
-		var current = series.series[ key ].current;
-		var previous = series.series[ key ].previous;
-		var kind = key === 'orders' ? 'number' : 'currency';
-		var compareName = KDNAEI.kpi.comparisonLabel( comparison );
-		var list = [ { label: t.thisPeriod, data: current.slice() } ];
-		if ( previous && series.previous_buckets ) {
-			list.push( { label: compareName, data: current.map( function ( v, i ) {
-				return previous[ i ] === undefined ? null : previous[ i ];
-			} ) } );
-		}
-		var title = function ( i ) {
-			var bucket = series.buckets[ i ];
-			if ( ! bucket ) {
-				return '';
-			}
-			if ( series.granularity === 'month' ) {
-				return dates.text( bucket.start, { month: 'long', year: 'numeric' } );
-			}
-			if ( series.granularity === 'week' ) {
-				return sprintf( t.weekOf, dates.text( bucket.start, { day: 'numeric', month: 'short', year: 'numeric' } ) );
-			}
-			return dates.text( bucket.start, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' } );
+	parts.chartOptions = function ( series, keys, opts ) {
+		opts = opts || {};
+		keys = keys.filter( function ( key ) {
+			return series.series[ key ];
+		} );
+		var together = keys.length > 1;
+		var first = series.series[ keys[ 0 ] ];
+		var kindOf = function ( key ) {
+			var f = series.series[ key ] && series.series[ key ].format;
+			return f === 'currency' || f === 'percent' || f === 'ratio' || f === 'days' ? f : 'number';
 		};
+		var compareName = KDNAEI.kpi.comparisonLabel( opts.comparison );
+		var area = opts.type !== 'line';
+		var list;
+
+		if ( together ) {
+			list = keys.map( function ( key, i ) {
+				return { label: series.series[ key ].label, data: series.series[ key ].current.slice(), colour: 'line' + ( i + 1 ), fill: area && i === 0 };
+			} );
+		} else {
+			list = [ { label: t.thisPeriod, data: first.current.slice(), colour: 'line1', fill: area } ];
+			if ( opts.compare !== false && first.previous && series.previous_buckets ) {
+				list.push( { label: compareName, data: first.current.map( function ( v, i ) {
+					return first.previous[ i ] === undefined ? null : first.previous[ i ];
+				} ), colour: 'line2', fill: false } );
+			}
+		}
+
 		return {
 			labels: series.buckets.map( function ( b ) {
 				return b.key;
 			} ),
 			series: list,
+			stacked: false,
 			maxXTicks: series.granularity === 'day' && series.buckets.length > 20 ? 5 : 7,
 			xLabel: function ( i ) {
-				return dates.axis ? dates.axis( series.buckets, i, series.granularity ) : series.buckets[ i ].start;
+				return series.buckets[ i ] ? dates.axis( series.buckets, i, series.granularity ) : '';
 			},
 			yLabel: function ( value ) {
-				return format.compact( value );
+				return axisValue( value, kindOf( keys[ 0 ] ) );
 			},
-			title: title,
+			title: function ( i ) {
+				var bucket = series.buckets[ i ];
+				if ( ! bucket ) {
+					return '';
+				}
+				if ( series.granularity === 'month' ) {
+					return dates.text( bucket.start, { month: 'long', year: 'numeric' } );
+				}
+				if ( series.granularity === 'week' ) {
+					return sprintf( t.weekOf, dates.text( bucket.start, { day: 'numeric', month: 'short', year: 'numeric' } ) );
+				}
+				return dates.text( bucket.start, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' } );
+			},
 			seriesLabel: function ( datasetIndex, i ) {
+				if ( together ) {
+					return list[ datasetIndex ].label;
+				}
 				if ( datasetIndex === 0 ) {
 					return t.thisPeriod;
 				}
 				var bucket = series.previous_buckets && series.previous_buckets[ i ];
 				return bucket ? dates.text( bucket.start, { day: 'numeric', month: 'short', year: 'numeric' } ) : compareName;
 			},
-			value: function ( v ) {
-				return format.metric( v, kind );
+			value: function ( v, i, datasetIndex ) {
+				return format.metric( v, kindOf( together ? keys[ datasetIndex || 0 ] : keys[ 0 ] ) );
 			},
 			footer: function ( i ) {
-				var now = current[ i ];
-				var before = previous ? previous[ i ] : null;
+				if ( together || list.length < 2 ) {
+					return null;
+				}
+				var now = first.current[ i ];
+				var before = first.previous ? first.previous[ i ] : null;
 				if ( before === null || before === undefined || ! before || now === null ) {
 					return null;
 				}
 				var change = ( now - before ) / Math.abs( before ) * 100;
-				return { text: ( change >= 0 ? '+' : '−' ) + format.number( Math.abs( change ), 1 ) + '%', className: change >= 0 ? 'is-good' : 'is-bad' };
+				var good = lowerIsBetter.indexOf( keys[ 0 ] ) === -1 ? change >= 0 : change <= 0;
+				return { text: ( change >= 0 ? '+' : '−' ) + format.number( Math.abs( change ), 1 ) + '%', className: good ? 'is-good' : 'is-bad' };
 			},
 		};
 	};
 
 	/**
-	 * Inventory legend rows and the donut.
+	 * Draws (or redraws) a chart card: the chart itself and its legend.
 	 *
-	 * @param {HTMLElement} card   The inventory card.
-	 * @param {Object}      status in_stock, low_stock, out_of_stock.
-	 * @param {Object}      held   Where the chart is kept between redraws.
+	 * @param {HTMLElement} card   The .kdna-ei-performance card.
+	 * @param {Object}      series Response from /timeseries.
+	 * @param {string[]}    keys   Metrics to draw.
+	 * @param {Object}      opts   comparison, compare, type (area, line or bar), held (keeps the chart).
 	 */
-	parts.inventory = function ( card, status, held ) {
-		var total = status.in_stock + status.low_stock + status.out_of_stock;
-		[ 'in_stock', 'low_stock', 'out_of_stock' ].forEach( function ( key ) {
-			var row = card.querySelector( '[data-kdna-ei-stock="' + key + '"]' );
-			if ( ! row ) {
-				return;
+	parts.chart = function ( card, series, keys, opts ) {
+		var canvas = card.querySelector( '[data-kdna-ei-part="chart"]' );
+		if ( ! canvas || ! series || ! charts || ! charts.available ) {
+			return;
+		}
+		var options = parts.chartOptions( series, keys, opts );
+		var held = opts.held;
+		var bar = opts.type === 'bar';
+		if ( held.chart && held.chart.canvas === canvas ) {
+			if ( bar ) {
+				charts.updateBarChart( held.chart, options );
+			} else {
+				charts.updateLineChart( held.chart, options );
 			}
-			var pct = total ? Math.round( status[ key ] / total * 100 ) : 0;
-			row.cells[ 1 ].textContent = format.number( status[ key ], 0 );
-			row.cells[ 2 ].textContent = ( status[ key ] > 0 && pct === 0 ? '<1' : pct ) + '%';
+		} else {
+			held.chart = bar ? charts.barChart( canvas, options ) : charts.lineChart( canvas, options );
+		}
+
+		// The legend: this period and the comparison, or one entry per metric.
+		var legend = card.querySelector( '[data-kdna-ei-part="legend"]' );
+		if ( ! legend ) {
+			return;
+		}
+		if ( options.series.length > 2 || ( keys.length > 1 && options.series.length === keys.length ) ) {
+			var colours = charts.tokens( canvas );
+			legend.textContent = '';
+			options.series.forEach( function ( item ) {
+				var entry = el( 'span', 'kdna-ei-chart-legend__item' );
+				var dot = el( 'span', 'kdna-ei-chart-legend__dot' );
+				dot.style.background = colours[ item.colour ] || item.colour;
+				entry.appendChild( dot );
+				entry.appendChild( el( 'span', '', item.label ) );
+				legend.appendChild( entry );
+			} );
+			return;
+		}
+		var current = legend.querySelector( '[data-kdna-ei-legend="current"]' );
+		if ( current ) {
+			current.textContent = series.series[ keys[ 0 ] ] ? series.series[ keys[ 0 ] ].label : '';
+		}
+		var compare = legend.querySelector( '[data-kdna-ei-legend-compare]' );
+		if ( compare ) {
+			compare.hidden = options.series.length < 2;
+			compare.querySelector( '[data-kdna-ei-legend="compare"]' ).textContent = KDNAEI.kpi.comparisonLabel( opts.comparison );
+		}
+		card.querySelectorAll( '[data-kdna-ei-series]' ).forEach( function ( button ) {
+			button.setAttribute( 'aria-pressed', button.getAttribute( 'data-kdna-ei-series' ) === keys[ 0 ] ? 'true' : 'false' );
 		} );
+	};
+
+	/**
+	 * A donut and legend: one row per part with its value and share, and
+	 * the total (or a chosen figure) in the middle.
+	 *
+	 * @param {HTMLElement} card Card with a donut canvas and legend table.
+	 * @param {Object[]}    rows Parts: { label, value }.
+	 * @param {Object}      opts format (metric format), centre (number for the
+	 *                           middle; the total when left out), held.
+	 */
+	parts.breakdown = function ( card, rows, opts ) {
+		var kind = opts.format || 'number';
+		var total = rows.reduce( function ( sum, row ) {
+			return sum + Math.max( 0, Number( row.value ) || 0 );
+		}, 0 );
+		var body = card.querySelector( '[data-kdna-ei-part="legend-rows"]' );
+		if ( body ) {
+			body.textContent = '';
+			rows.forEach( function ( row, i ) {
+				var value = Math.max( 0, Number( row.value ) || 0 );
+				var pct = total ? Math.round( value / total * 100 ) : 0;
+				var tr = el( 'tr' );
+				var th = el( 'th' );
+				th.setAttribute( 'scope', 'row' );
+				var dot = el( 'span', 'kdna-ei-legend__dot' );
+				dot.style.background = 'var(--kdna-ei-segment-' + ( i + 1 ) + ', var(--kdna-ei-' + segmentVars[ i % segmentVars.length ] + '))';
+				th.appendChild( dot );
+				th.appendChild( el( 'span', '', row.label ) );
+				tr.appendChild( th );
+				tr.appendChild( el( 'td', 'is-numeric kdna-ei-legend__value', format.metric( row.value, kind, kind === 'currency' ? 0 : undefined ) ) );
+				tr.appendChild( el( 'td', 'is-numeric kdna-ei-legend__percent', ( value > 0 && pct === 0 ? '<1' : pct ) + '%' ) );
+				body.appendChild( tr );
+			} );
+			if ( ! rows.length ) {
+				var empty = el( 'tr' );
+				var cell = el( 'td', 'kdna-ei-list-empty', w.noBreakdown );
+				cell.colSpan = 3;
+				empty.appendChild( cell );
+				body.appendChild( empty );
+			}
+		}
 		var number = card.querySelector( '[data-kdna-ei-part="donut-number"]' );
 		if ( number ) {
-			number.textContent = format.number( status.in_stock, 0 );
+			var centre = opts.centre === undefined ? total : opts.centre;
+			number.textContent = kind === 'currency' ? format.money( centre, 0 ) : format.metric( centre, kind );
 		}
 		var canvas = card.querySelector( '[data-kdna-ei-part="donut"]' );
 		if ( ! canvas || ! charts || ! charts.available ) {
 			return;
 		}
-		var values = [ status.in_stock, status.low_stock, status.out_of_stock ];
-		if ( ! values.some( function ( v ) {
-			return v > 0;
-		} ) ) {
-			values = [ 1, 0, 0 ];
+		var values = rows.map( function ( row ) {
+			return Math.max( 0, Number( row.value ) || 0 );
+		} );
+		var names = rows.map( function ( row, i ) {
+			return segmentColours[ i % segmentColours.length ];
+		} );
+		if ( ! total ) {
+			values = [ 1 ];
+			names = [ 'border' ];
 		}
-		if ( held.donut && held.donut.canvas === canvas ) {
+		var held = opts.held;
+		if ( held.donut && held.donut.canvas === canvas && held.donut.data.datasets[ 0 ].data.length === values.length ) {
+			held.donut.$kdna.colours = names;
 			held.donut.data.datasets[ 0 ].data = values;
+			held.donut.data.datasets[ 0 ].backgroundColor = names.map( function ( name, i ) {
+				var tk = charts.tokens( canvas );
+				return tk[ 'seg' + ( i + 1 ) ] || tk[ name ] || name;
+			} );
 			held.donut.update();
 			return;
 		}
+		if ( held.donut ) {
+			held.donut.destroy();
+		}
 		held.donut = charts.donutChart( canvas, {
-			labels: [ t.inStockLegend, t.lowStock, t.outOfStock ],
+			labels: rows.map( function ( row ) {
+				return row.label;
+			} ),
 			values: values,
-			colours: [ 'accent', 'positive', 'accent2' ],
+			colours: names,
 			cutout: '70%',
 		} );
+	};
+
+	/**
+	 * Inventory status as a breakdown (in stock, low stock, out of stock),
+	 * with the in-stock count in the middle.
+	 *
+	 * @param {HTMLElement} card   Breakdown card.
+	 * @param {Object}      status in_stock, low_stock, out_of_stock.
+	 * @param {Object}      held   Where the chart is kept between redraws.
+	 */
+	parts.inventory = function ( card, status, held ) {
+		parts.breakdown( card, [
+			{ label: t.inStockLegend, value: status.in_stock },
+			{ label: t.lowStock, value: status.low_stock },
+			{ label: t.outOfStock, value: status.out_of_stock },
+		], { format: 'number', centre: status.in_stock, held: held } );
 	};
 
 	/**
@@ -848,6 +1014,67 @@
 	};
 
 	/**
+	 * Draws a hero card: top products, profit breakdown or goals tracker.
+	 *
+	 * @param {HTMLElement} card The .kdna-ei-hero card.
+	 * @param {Object}      data products, waterfall and goal.
+	 * @param {Object}      opts hero, sort, count, sample (sort the sample here), link.
+	 */
+	parts.hero = function ( card, data, opts ) {
+		var body = card.querySelector( '[data-kdna-ei-part="hero"]' );
+		if ( ! body ) {
+			return;
+		}
+		if ( opts.hero === 'profit_breakdown' ) {
+			parts.waterfall( body, data.waterfall || [] );
+		} else if ( opts.hero === 'goals' ) {
+			parts.goal( body, data.goal || { metric: 'revenue', value: 0, target: 0 }, opts.link || '' );
+		} else {
+			var rows = ( data.products || [] ).slice();
+			if ( opts.sample ) {
+				rows.sort( function ( a, b ) {
+					return b[ opts.sort ] - a[ opts.sort ];
+				} );
+			}
+			parts.topProducts( body, rows.slice( 0, opts.count || 5 ), opts.sort );
+		}
+		card.querySelectorAll( '[data-kdna-ei-sort]' ).forEach( function ( tab ) {
+			tab.setAttribute( 'aria-selected', tab.getAttribute( 'data-kdna-ei-sort' ) === opts.sort ? 'true' : 'false' );
+		} );
+	};
+
+	/**
+	 * Fetches what a hero card needs.
+	 *
+	 * @param {string} hero  top_products, profit_breakdown or goals.
+	 * @param {Object} query Range query.
+	 * @param {string} sort  profit or revenue.
+	 * @param {number} count How many products.
+	 * @return {Promise<Object>} products, waterfall and goal.
+	 */
+	parts.fetchHero = function ( hero, query, sort, count ) {
+		if ( hero === 'profit_breakdown' ) {
+			return read( 'profit', query ).then( function ( r ) {
+				return { waterfall: r.data.waterfall };
+			} );
+		}
+		if ( hero === 'goals' ) {
+			var goal = config.hero || {};
+			var metricKey = { revenue: 'net_revenue', profit: 'net_profit', orders: 'orders' }[ goal.goal_metric ] || 'net_revenue';
+			return read( 'summary', { preset: 'this_month', compare: 'none', metrics: metricKey } ).then( function ( r ) {
+				return { goal: {
+					metric: goal.goal_metric || 'revenue',
+					value: Number( r.data.metrics[ 0 ].value || 0 ),
+					target: Number( ( goal.goal_targets || {} )[ goal.goal_metric || 'revenue' ] || 0 ),
+				} };
+			} );
+		}
+		return read( 'products', Object.assign( {}, query, { per_page: count || 5, orderby: sort } ) ).then( function ( r ) {
+			return { products: r.data.rows };
+		} );
+	};
+
+	/**
 	 * The alerts strip: missing costs, stock, loss-making orders, currency
 	 * and sync problems.
 	 *
@@ -904,121 +1131,295 @@
 		} );
 	};
 
+	/**
+	 * Formats one table cell by its column format.
+	 *
+	 * @param {*}      value  Value.
+	 * @param {string} kind   text, date, currency, number, percent, ratio or days.
+	 * @return {string}
+	 */
+	function cellText( value, kind ) {
+		if ( value === null || value === undefined || value === '' ) {
+			return '-';
+		}
+		if ( kind === 'text' ) {
+			return String( value );
+		}
+		if ( kind === 'date' ) {
+			return dates.text( value, { day: 'numeric', month: 'short', year: 'numeric' } );
+		}
+		if ( kind === 'days' ) {
+			return sprintf( ( config.i18n && config.i18n.days ) || '%s days', format.number( value, 0 ) );
+		}
+		if ( kind === 'number' ) {
+			return format.number( value, Math.round( value ) === Number( value ) ? 0 : 1 );
+		}
+		return format.metric( value, kind );
+	}
+
+	/**
+	 * Sorts rows by a column: numbers by size, words alphabetically, and
+	 * empty values always last.
+	 *
+	 * @param {Object[]} rows  Rows.
+	 * @param {string}   key   Column key.
+	 * @param {string}   order asc or desc.
+	 * @return {Object[]} A sorted copy.
+	 */
+	parts.sortRows = function ( rows, key, order ) {
+		var dir = order === 'asc' ? 1 : -1;
+		return rows.slice().sort( function ( a, b ) {
+			var x = a[ key ];
+			var y = b[ key ];
+			var xEmpty = x === null || x === undefined || x === '';
+			var yEmpty = y === null || y === undefined || y === '';
+			if ( xEmpty || yEmpty ) {
+				return xEmpty === yEmpty ? 0 : ( xEmpty ? 1 : -1 );
+			}
+			if ( typeof x === 'number' && typeof y === 'number' ) {
+				return ( x - y ) * dir;
+			}
+			return String( x ).localeCompare( String( y ), config.locale || undefined, { numeric: true } ) * dir;
+		} );
+	};
+
+	/**
+	 * A sortable report table: headings (buttons when sortable), then one row
+	 * per item, with thumbnails, links and badges in the first column.
+	 *
+	 * @param {HTMLElement} wrap    The [data-kdna-ei-part="table"] element.
+	 * @param {Object[]}    columns { key, label, format, sort }.
+	 * @param {Object[]}    rows    Rows.
+	 * @param {Object}      opts    sort, order, sortable, thumbs, links, caption.
+	 */
+	parts.table = function ( wrap, columns, rows, opts ) {
+		var table = el( 'table', 'kdna-ei-table kdna-ei-data-table' );
+		if ( opts.caption ) {
+			table.appendChild( el( 'caption', 'kdna-ei-visually-hidden', opts.caption ) );
+		}
+		var head = el( 'thead' );
+		var headRow = el( 'tr' );
+		columns.forEach( function ( column, i ) {
+			var th = el( 'th', i > 0 && column.format !== 'text' ? 'is-numeric' : '' );
+			th.setAttribute( 'scope', 'col' );
+			if ( opts.sortable && column.sort ) {
+				var active = opts.sort === column.key;
+				th.setAttribute( 'aria-sort', active ? ( opts.order === 'asc' ? 'ascending' : 'descending' ) : 'none' );
+				var button = el( 'button', 'kdna-ei-sort' + ( active ? ' is-active' : '' ) );
+				button.type = 'button';
+				button.setAttribute( 'data-kdna-ei-sort-key', column.key );
+				button.appendChild( el( 'span', '', column.label ) );
+				var arrow = icon( active && opts.order === 'asc' ? 'arrow-up' : 'arrow-down', 'kdna-ei-sort-icon' );
+				button.appendChild( arrow );
+				if ( active ) {
+					button.appendChild( el( 'span', 'kdna-ei-visually-hidden', opts.order === 'asc' ? w.sortedAsc : w.sortedDesc ) );
+				}
+				th.appendChild( button );
+			} else {
+				th.textContent = column.label;
+			}
+			headRow.appendChild( th );
+		} );
+		head.appendChild( headRow );
+		table.appendChild( head );
+
+		var body = el( 'tbody' );
+		rows.forEach( function ( row ) {
+			var tr = el( 'tr' );
+			columns.forEach( function ( column, i ) {
+				var td = el( i === 0 ? 'th' : 'td', i > 0 && column.format !== 'text' ? 'is-numeric kdna-ei-num' : '' );
+				if ( i === 0 ) {
+					td.setAttribute( 'scope', 'row' );
+					var cell = el( 'span', 'kdna-ei-cell-main' );
+					if ( opts.thumbs && row.thumbnail !== undefined ) {
+						var thumb = el( 'span', 'kdna-ei-thumb' );
+						if ( row.thumbnail ) {
+							var img = el( 'img' );
+							img.src = row.thumbnail;
+							img.alt = '';
+							img.loading = 'lazy';
+							thumb.appendChild( img );
+						} else {
+							thumb.appendChild( icon( 'box' ) );
+						}
+						cell.appendChild( thumb );
+					}
+					var text = cellText( row[ column.key ], column.format ) + ( row.variation ? ', ' + row.variation : '' );
+					var link = opts.links ? ( row.edit_url || row.profile_url || '' ) : '';
+					var name;
+					if ( link ) {
+						name = el( 'a', 'kdna-ei-cell-name', text );
+						name.href = link;
+					} else {
+						name = el( 'span', 'kdna-ei-cell-name', text );
+					}
+					cell.appendChild( name );
+					if ( row.guest && text !== w.guest ) {
+						cell.appendChild( el( 'span', 'kdna-ei-badge kdna-ei-badge--plain', w.guest ) );
+					}
+					if ( row.reorder_now ) {
+						cell.appendChild( el( 'span', 'kdna-ei-badge kdna-ei-badge--warning', w.reorderNow ) );
+					}
+					td.appendChild( cell );
+				} else {
+					td.textContent = cellText( row[ column.key ], column.format );
+				}
+				tr.appendChild( td );
+			} );
+			body.appendChild( tr );
+		} );
+		if ( ! rows.length ) {
+			var tr = el( 'tr' );
+			var td = el( 'td', 'kdna-ei-list-empty', w.noRows );
+			td.colSpan = columns.length;
+			tr.appendChild( td );
+			body.appendChild( tr );
+		}
+		table.appendChild( body );
+		wrap.textContent = '';
+		wrap.appendChild( table );
+	};
+
+	/**
+	 * The profit and loss statement: one row per line of the waterfall, one
+	 * column per month and a total column, with net margin at the bottom.
+	 *
+	 * @param {HTMLElement} wrap    The [data-kdna-ei-part="table"] element.
+	 * @param {Object}      profit  Response from /profit.
+	 * @param {string}      caption Table caption.
+	 */
+	parts.pnl = function ( wrap, profit, caption ) {
+		var months = profit.months || [];
+		var columns = [ { key: 'label', label: w.line, format: 'text' } ];
+		months.forEach( function ( month, i ) {
+			columns.push( { key: 'm' + i, label: dates.text( month.start, { month: 'short', year: 'numeric' } ), format: 'currency' } );
+		} );
+		columns.push( { key: 'total', label: w.total, format: 'currency' } );
+
+		var rows = ( profit.waterfall || [] ).map( function ( line ) {
+			var row = { label: line.label, total: line.amount, type: line.type };
+			months.forEach( function ( month, i ) {
+				row[ 'm' + i ] = month.lines[ line.key ];
+			} );
+			return row;
+		} );
+		var lines = {};
+		( profit.waterfall || [] ).forEach( function ( line ) {
+			lines[ line.key ] = line.amount;
+		} );
+		var margin = { label: w.netMargin, type: 'margin', total: lines.net_revenue ? lines.net_profit / lines.net_revenue * 100 : null };
+		months.forEach( function ( month, i ) {
+			margin[ 'm' + i ] = month.lines.net_margin;
+		} );
+		rows.push( margin );
+
+		parts.table( wrap, columns, [], { caption: caption } );
+		var body = wrap.querySelector( 'tbody' );
+		body.textContent = '';
+		rows.forEach( function ( row ) {
+			var tr = el( 'tr', 'is-' + row.type );
+			columns.forEach( function ( column, i ) {
+				var cell = el( i === 0 ? 'th' : 'td', i > 0 ? 'is-numeric kdna-ei-num' : '' );
+				if ( i === 0 ) {
+					cell.setAttribute( 'scope', 'row' );
+					cell.textContent = row.label;
+				} else {
+					cell.textContent = cellText( row[ column.key ], row.type === 'margin' ? 'percent' : 'currency' );
+					if ( row.type !== 'margin' && row[ column.key ] < 0 ) {
+						cell.classList.add( 'is-negative' );
+					}
+				}
+				tr.appendChild( cell );
+			} );
+			body.appendChild( tr );
+		} );
+	};
+
 	/*
 	 * ---------------------------------------------------------------------
-	 * Dashboard widget
+	 * The widget lifecycle every widget with figures shares
 	 * ---------------------------------------------------------------------
 	 */
 
 	/**
-	 * Sets up one Dashboard widget.
+	 * Sets up a widget that shows figures. Handles everything the widgets
+	 * have in common: the editor's preview states, sample data, following
+	 * the page's date range or a fixed one, loading, empty and error states,
+	 * Try again, the theme toggle and the optional header date picker.
+	 *
+	 * The widget itself only says what to fetch and how to draw it.
 	 *
 	 * @param {HTMLElement} root     Widget root.
 	 * @param {Object}      settings From data-kdna-ei-settings.
+	 * @param {Object}      spec     fetch( ctx ) returns a Promise of the data;
+	 *                               draw( ctx ) draws ctx.data; click( ctx, event )
+	 *                               handles buttons and returns true when it did.
+	 * @return {Object} The widget's context.
 	 */
-	function dashboard( root, settings ) {
-		var held = {};
+	function dataWidget( root, settings, spec ) {
+		var range = settings.range || { follow: true };
 		var requestId = 0;
-		var data = null;
-		var seriesKey = settings.series || 'net_revenue';
-		var sort = settings.sort || 'profit';
-		var own = settings.range.follow ? null : { preset: settings.range.preset, compare: settings.range.compare, start: '', end: '' };
-		var picker = null;
+		var ctx = {
+			root: root,
+			settings: settings,
+			held: {},
+			data: null,
+			sample: settings.state === 'sample',
+			own: range.follow ? null : { preset: range.preset, compare: range.compare, start: '', end: '' },
+		};
 
 		/**
 		 * The range this widget shows.
 		 *
 		 * @return {Object}
 		 */
-		function range() {
-			return own || KDNAEI.pageRange.get();
-		}
+		ctx.range = function () {
+			return ctx.own || KDNAEI.pageRange.get();
+		};
+
+		/**
+		 * REST query parameters for this widget's range.
+		 *
+		 * @return {Object}
+		 */
+		ctx.query = function () {
+			return rangeQuery( ctx.range() );
+		};
 
 		/**
 		 * Switches the widget between loading, ready, empty and error.
 		 *
 		 * @param {string} state State.
 		 */
-		function setState( state ) {
+		ctx.setState = function ( state ) {
 			root.setAttribute( 'data-kdna-ei-state', state );
 			root.setAttribute( 'aria-busy', state === 'loading' ? 'true' : 'false' );
-		}
-
-		/**
-		 * Fetches everything the panels need for the current range.
-		 *
-		 * @return {Promise<Object>} Data in the same shape as the sample data.
-		 */
-		function fetchLive() {
-			var query = rangeQuery( range() );
-			var panels = settings.panels;
-			var hero = settings.hero;
-			var jobs = {
-				summary: panels.kpis || panels.alerts ? read( 'summary', Object.assign( {}, query, { metrics: [ 'net_revenue', 'net_profit', 'orders', 'net_margin', settings.fifth ].join( ',' ) } ) ) : null,
-				timeseries: panels.chart ? read( 'timeseries', Object.assign( {}, query, { metrics: 'net_revenue,net_profit,orders' } ) ) : null,
-				inventory: panels.inventory || panels.alerts ? read( 'inventory', query ) : null,
-				status: read( 'status' ),
-				profit: panels.hero && hero === 'profit_breakdown' ? read( 'profit', query ) : null,
-				products: panels.hero && hero === 'top_products' ? read( 'products', Object.assign( {}, query, { per_page: 5, orderby: sort } ) ) : null,
-				goal: null,
-			};
-			if ( panels.hero && hero === 'goals' ) {
-				var goal = config.hero || {};
-				var metricKey = { revenue: 'net_revenue', profit: 'net_profit', orders: 'orders' }[ goal.goal_metric ] || 'net_revenue';
-				jobs.goal = read( 'summary', { preset: 'this_month', compare: 'none', metrics: metricKey } ).then( function ( response ) {
-					return {
-						metric: goal.goal_metric || 'revenue',
-						value: Number( response.data.metrics[ 0 ].value || 0 ),
-						target: Number( ( goal.goal_targets || {} )[ goal.goal_metric || 'revenue' ] || 0 ),
-					};
-				} );
-			}
-			var keys = Object.keys( jobs );
-			return Promise.all( keys.map( function ( key ) {
-				return jobs[ key ];
-			} ) ).then( function ( results ) {
-				var r = {};
-				keys.forEach( function ( key, i ) {
-					r[ key ] = results[ i ];
-				} );
-				return {
-					summary: r.summary ? r.summary.data : null,
-					estimates: r.summary ? r.summary.meta.estimates : {},
-					compare: r.summary ? r.summary.meta.compare : null,
-					timeseries: r.timeseries ? r.timeseries.data : null,
-					inventory: r.inventory ? { status: r.inventory.data.status } : null,
-					products: r.products ? r.products.data.rows : [],
-					waterfall: r.profit ? r.profit.data.waterfall : [],
-					goal: r.goal,
-					status: r.status || {},
-				};
-			} );
-		}
+		};
 
 		/**
 		 * Loads (or, in the editor, fakes) the figures and draws them.
-		 *
-		 * @return {Promise|undefined}
 		 */
-		function load() {
+		ctx.load = function () {
 			var id = ++requestId;
 			if ( [ 'loading', 'empty', 'error' ].indexOf( settings.state ) !== -1 ) {
-				setState( settings.state );
+				ctx.setState( settings.state );
 				return;
 			}
-			setState( 'loading' );
-			var source = settings.state === 'sample' ? Promise.resolve( settings.sample ) : fetchLive();
-			return source.then( function ( result ) {
+			ctx.setState( 'loading' );
+			var source = ctx.sample ? Promise.resolve( settings.sample ) : Promise.all( [ spec.fetch( ctx ), read( 'status' ) ] ).then( function ( results ) {
+				return Object.assign( {}, results[ 0 ], { status: results[ 1 ] || {} } );
+			} );
+			source.then( function ( result ) {
 				if ( id !== requestId ) {
 					return;
 				}
-				data = result;
-				if ( settings.state !== 'sample' && result.status && Number( result.status.orders_processed ) === 0 ) {
-					setState( 'empty' );
+				ctx.data = result;
+				if ( ! ctx.sample && result.status && Number( result.status.orders_processed ) === 0 ) {
+					ctx.setState( 'empty' );
 					return;
 				}
-				setState( 'ready' );
-				draw();
+				ctx.setState( 'ready' );
+				spec.draw( ctx );
 			} ).catch( function ( error ) {
 				if ( id !== requestId ) {
 					return;
@@ -1027,110 +1428,30 @@
 				if ( message && error && error.message ) {
 					message.textContent = error.message;
 				}
-				setState( 'error' );
+				ctx.setState( 'error' );
 			} );
-		}
-
-		/**
-		 * Draws every panel from the loaded data.
-		 */
-		function draw() {
-			var compareName = KDNAEI.kpi.comparisonLabel( range().compare );
-			var strip = root.querySelector( '[data-kdna-ei-part="kpis"]' );
-			if ( strip && data.summary ) {
-				parts.kpis( strip, data.summary.metrics, compareName );
-			}
-			drawChart();
-			var stockCard = root.querySelector( '.kdna-ei-inventory-card' );
-			if ( stockCard && data.inventory ) {
-				parts.inventory( stockCard, data.inventory.status, held );
-			}
-			drawHero();
-			var alerts = root.querySelector( '[data-kdna-ei-part="alerts"]' );
-			if ( alerts ) {
-				parts.alerts( alerts, data.estimates, data.status, data.inventory && data.inventory.status, settings.links ? config.adminUrl : '' );
-			}
-		}
-
-		/**
-		 * Draws the performance chart for the chosen series.
-		 */
-		function drawChart() {
-			var canvas = root.querySelector( '[data-kdna-ei-part="chart"]' );
-			if ( ! canvas || ! data.timeseries || ! charts || ! charts.available ) {
-				return;
-			}
-			var options = parts.chartOptions( data.timeseries, seriesKey, range().compare );
-			if ( held.chart && held.chart.canvas === canvas ) {
-				charts.updateLineChart( held.chart, options );
-			} else {
-				held.chart = charts.lineChart( canvas, options );
-			}
-			var names = { net_revenue: t.revenue, net_profit: t.profit, orders: t.orders };
-			root.querySelector( '[data-kdna-ei-legend="current"]' ).textContent = names[ seriesKey ];
-			var compare = root.querySelector( '[data-kdna-ei-legend-compare]' );
-			compare.hidden = options.series.length < 2;
-			root.querySelector( '[data-kdna-ei-legend="compare"]' ).textContent = KDNAEI.kpi.comparisonLabel( range().compare );
-			root.querySelectorAll( '[data-kdna-ei-series]' ).forEach( function ( button ) {
-				button.setAttribute( 'aria-pressed', button.getAttribute( 'data-kdna-ei-series' ) === seriesKey ? 'true' : 'false' );
-			} );
-		}
-
-		/**
-		 * Draws the hero card.
-		 */
-		function drawHero() {
-			var body = root.querySelector( '[data-kdna-ei-part="hero"]' );
-			if ( ! body ) {
-				return;
-			}
-			if ( settings.hero === 'profit_breakdown' ) {
-				parts.waterfall( body, data.waterfall || [] );
-			} else if ( settings.hero === 'goals' ) {
-				parts.goal( body, data.goal || { metric: 'revenue', value: 0, target: 0 }, settings.links ? config.adminUrl + '#/settings' : '' );
-			} else {
-				var rows = ( data.products || [] ).slice();
-				if ( settings.state === 'sample' ) {
-					rows.sort( function ( a, b ) {
-						return b[ sort ] - a[ sort ];
-					} );
-				}
-				parts.topProducts( body, rows, sort );
-			}
-			root.querySelectorAll( '[data-kdna-ei-sort]' ).forEach( function ( tab ) {
-				tab.setAttribute( 'aria-selected', tab.getAttribute( 'data-kdna-ei-sort' ) === sort ? 'true' : 'false' );
-			} );
-		}
+		};
 
 		// Buttons inside the widget.
 		root.addEventListener( 'click', function ( event ) {
-			var series = event.target.closest( '[data-kdna-ei-series]' );
-			var sortTab = event.target.closest( '[data-kdna-ei-sort]' );
-			var retry = event.target.closest( '[data-kdna-ei-action="retry"]' );
-			if ( series && data ) {
-				seriesKey = series.getAttribute( 'data-kdna-ei-series' );
-				drawChart();
-			} else if ( sortTab && sort !== sortTab.getAttribute( 'data-kdna-ei-sort' ) ) {
-				sort = sortTab.getAttribute( 'data-kdna-ei-sort' );
-				if ( settings.state === 'sample' ) {
-					drawHero();
-				} else {
-					load();
-				}
-			} else if ( retry ) {
-				load();
+			if ( spec.click && spec.click( ctx, event ) ) {
+				return;
+			}
+			if ( event.target.closest( '[data-kdna-ei-action="retry"]' ) ) {
+				ctx.load();
 			}
 		} );
 
 		// The optional date range picker in the header.
 		var box = root.querySelector( '[data-kdna-ei-range]' );
+		var picker = null;
 		if ( box ) {
 			picker = rangePicker( box, {
-				getRange: range,
+				getRange: ctx.range,
 				onChange: function ( change ) {
-					if ( own ) {
-						own = Object.assign( {}, own, change );
-						load();
+					if ( ctx.own ) {
+						ctx.own = Object.assign( {}, ctx.own, change );
+						ctx.load();
 					} else {
 						KDNAEI.pageRange.set( change, root, ! settings.editor );
 					}
@@ -1146,13 +1467,429 @@
 			if ( picker ) {
 				picker.sync();
 			}
-			if ( ! own && settings.state !== 'sample' ) {
-				load();
+			if ( ! ctx.own && ! ctx.sample ) {
+				ctx.load();
 			}
 		} );
 
 		setupTheme( root, settings );
-		load();
+		ctx.load();
+		return ctx;
+	}
+
+	/*
+	 * ---------------------------------------------------------------------
+	 * The widgets
+	 * ---------------------------------------------------------------------
+	 */
+
+	/**
+	 * Insights Dashboard: alerts, KPI strip, chart, inventory and hero card.
+	 *
+	 * @param {HTMLElement} root     Widget root.
+	 * @param {Object}      settings From data-kdna-ei-settings.
+	 */
+	function dashboard( root, settings ) {
+		var seriesKey = settings.series || 'net_revenue';
+		var sort = settings.sort || 'profit';
+		var panels = settings.panels || {};
+
+		/**
+		 * Draws the chart for the chosen series.
+		 *
+		 * @param {Object} ctx Widget context.
+		 */
+		function drawChart( ctx ) {
+			var card = root.querySelector( '.kdna-ei-performance' );
+			if ( card && ctx.data.timeseries ) {
+				parts.chart( card, ctx.data.timeseries, [ seriesKey ], { comparison: ctx.range().compare, type: 'area', held: ctx.held } );
+			}
+		}
+
+		/**
+		 * Draws the hero card.
+		 *
+		 * @param {Object} ctx Widget context.
+		 */
+		function drawHero( ctx ) {
+			var card = root.querySelector( '.kdna-ei-hero' );
+			if ( card ) {
+				parts.hero( card, ctx.data, { hero: settings.hero, sort: sort, count: 5, sample: ctx.sample, link: settings.links ? config.adminUrl + '#/settings' : '' } );
+			}
+		}
+
+		dataWidget( root, settings, {
+			fetch: function ( ctx ) {
+				var query = ctx.query();
+				var jobs = [
+					panels.kpis || panels.alerts ? read( 'summary', Object.assign( {}, query, { metrics: [ 'net_revenue', 'net_profit', 'orders', 'net_margin', settings.fifth ].join( ',' ) } ) ) : null,
+					panels.chart ? read( 'timeseries', Object.assign( {}, query, { metrics: 'net_revenue,net_profit,orders' } ) ) : null,
+					panels.inventory || panels.alerts ? read( 'inventory', query ) : null,
+					panels.hero ? parts.fetchHero( settings.hero, query, sort, 5 ) : null,
+				];
+				return Promise.all( jobs ).then( function ( r ) {
+					return Object.assign( {
+						summary: r[ 0 ] ? r[ 0 ].data : null,
+						estimates: r[ 0 ] ? r[ 0 ].meta.estimates : {},
+						timeseries: r[ 1 ] ? r[ 1 ].data : null,
+						inventory: r[ 2 ] ? { status: r[ 2 ].data.status } : null,
+					}, r[ 3 ] || {} );
+				} );
+			},
+			draw: function ( ctx ) {
+				var data = ctx.data;
+				var strip = root.querySelector( '[data-kdna-ei-part="kpis"]' );
+				if ( strip && data.summary ) {
+					parts.kpis( strip, data.summary.metrics, KDNAEI.kpi.comparisonLabel( ctx.range().compare ) );
+				}
+				drawChart( ctx );
+				var stock = root.querySelector( '.kdna-ei-inventory-card' );
+				if ( stock && data.inventory ) {
+					parts.inventory( stock, data.inventory.status, ctx.held );
+				}
+				drawHero( ctx );
+				var alerts = root.querySelector( '[data-kdna-ei-part="alerts"]' );
+				if ( alerts ) {
+					parts.alerts( alerts, data.estimates, data.status, data.inventory && data.inventory.status, settings.links ? config.adminUrl : '' );
+				}
+			},
+			click: function ( ctx, event ) {
+				var series = event.target.closest( '[data-kdna-ei-series]' );
+				var tab = event.target.closest( '[data-kdna-ei-sort]' );
+				if ( series && ctx.data ) {
+					seriesKey = series.getAttribute( 'data-kdna-ei-series' );
+					drawChart( ctx );
+					return true;
+				}
+				if ( tab && sort !== tab.getAttribute( 'data-kdna-ei-sort' ) ) {
+					sort = tab.getAttribute( 'data-kdna-ei-sort' );
+					if ( ctx.sample ) {
+						drawHero( ctx );
+					} else {
+						ctx.load();
+					}
+					return true;
+				}
+				return false;
+			},
+		} );
+	}
+
+	/**
+	 * Insights KPI Cards: any metrics as a strip or separate cards.
+	 *
+	 * @param {HTMLElement} root     Widget root.
+	 * @param {Object}      settings From data-kdna-ei-settings.
+	 */
+	function kpiCards( root, settings ) {
+		dataWidget( root, settings, {
+			fetch: function ( ctx ) {
+				return read( 'summary', Object.assign( {}, ctx.query(), { metrics: settings.metrics.join( ',' ) } ) ).then( function ( r ) {
+					return { summary: r.data };
+				} );
+			},
+			draw: function ( ctx ) {
+				var strip = root.querySelector( '[data-kdna-ei-part="kpis"]' );
+				if ( strip && ctx.data.summary ) {
+					parts.kpis( strip, ctx.data.summary.metrics, KDNAEI.kpi.comparisonLabel( ctx.range().compare ) );
+				}
+			},
+		} );
+	}
+
+	/**
+	 * Insights Chart: a line, area or bar chart of metrics over time.
+	 *
+	 * @param {HTMLElement} root     Widget root.
+	 * @param {Object}      settings From data-kdna-ei-settings.
+	 */
+	function chartWidget( root, settings ) {
+		var metrics = settings.metrics || [ 'net_revenue' ];
+		var current = metrics[ 0 ];
+
+		/**
+		 * Draws the chosen metric, or every metric together.
+		 *
+		 * @param {Object} ctx Widget context.
+		 */
+		function draw( ctx ) {
+			var card = root.querySelector( '.kdna-ei-performance' );
+			if ( card && ctx.data.timeseries ) {
+				parts.chart( card, ctx.data.timeseries, settings.display === 'together' ? metrics : [ current ], {
+					comparison: ctx.range().compare,
+					compare: settings.compare,
+					type: settings.type,
+					held: ctx.held,
+				} );
+			}
+		}
+
+		dataWidget( root, settings, {
+			fetch: function ( ctx ) {
+				var query = Object.assign( {}, ctx.query(), { metrics: metrics.join( ',' ), granularity: settings.granularity || 'auto' } );
+				if ( ! settings.compare || settings.display === 'together' ) {
+					query.compare = 'none';
+				}
+				return read( 'timeseries', query ).then( function ( r ) {
+					return { timeseries: r.data };
+				} );
+			},
+			draw: draw,
+			click: function ( ctx, event ) {
+				var series = event.target.closest( '[data-kdna-ei-series]' );
+				if ( series && ctx.data ) {
+					current = series.getAttribute( 'data-kdna-ei-series' );
+					draw( ctx );
+					return true;
+				}
+				return false;
+			},
+		} );
+	}
+
+	/**
+	 * Insights Breakdown: a donut and legend for stock, costs, channels or
+	 * new and returning customers.
+	 *
+	 * @param {HTMLElement} root     Widget root.
+	 * @param {Object}      settings From data-kdna-ei-settings.
+	 */
+	function breakdownWidget( root, settings ) {
+		var routes = { inventory: 'inventory', costs: 'profit', channels: 'marketing', customers: 'customers' };
+		var route = routes[ settings.source ] || 'inventory';
+
+		dataWidget( root, settings, {
+			fetch: function ( ctx ) {
+				return read( route, ctx.query() ).then( function ( r ) {
+					var data = {};
+					data[ route ] = r.data;
+					return data;
+				} );
+			},
+			draw: function ( ctx ) {
+				var card = root.querySelector( '.kdna-ei-breakdown-card' );
+				var data = ctx.data[ route ] || {};
+				if ( ! card ) {
+					return;
+				}
+				if ( settings.source === 'costs' ) {
+					parts.breakdown( card, ( data.cost_breakdown || [] ).map( function ( cost ) {
+						return { label: cost.label, value: cost.amount };
+					} ), { format: 'currency', held: ctx.held } );
+				} else if ( settings.source === 'channels' ) {
+					parts.breakdown( card, ( data.channels || [] ).map( function ( channel ) {
+						return { label: channel.label, value: channel.spend };
+					} ), { format: 'currency', held: ctx.held } );
+				} else if ( settings.source === 'customers' ) {
+					var byKey = {};
+					( data.metrics || [] ).forEach( function ( metric ) {
+						byKey[ metric.key ] = metric.value;
+					} );
+					var revenue = settings.measure === 'revenue';
+					parts.breakdown( card, [
+						{ label: w.newCustomers, value: revenue ? byKey.new_customer_revenue : byKey.new_customers },
+						{ label: w.returning, value: revenue ? byKey.returning_customer_revenue : byKey.returning_customers },
+					], { format: revenue ? 'currency' : 'number', held: ctx.held } );
+				} else {
+					parts.inventory( card, data.status || { in_stock: 0, low_stock: 0, out_of_stock: 0 }, ctx.held );
+				}
+			},
+		} );
+	}
+
+	/**
+	 * Insights Table: products, customers, campaigns, low stock or the
+	 * profit and loss statement, sortable, with an optional CSV button.
+	 *
+	 * @param {HTMLElement} root     Widget root.
+	 * @param {Object}      settings From data-kdna-ei-settings.
+	 */
+	function tableWidget( root, settings ) {
+		var sort = settings.sort;
+		var order = settings.order || 'desc';
+		var serverSort = [ 'name', 'units', 'revenue', 'cost', 'profit', 'margin', 'refund_rate', 'orders' ];
+		var caption = ( root.querySelector( '.kdna-ei-card__title' ) || {} ).textContent || '';
+
+		/**
+		 * The rows for the chosen table from the loaded data.
+		 *
+		 * @param {Object} data Loaded data.
+		 * @return {Object[]}
+		 */
+		function rowsFrom( data ) {
+			switch ( settings.source ) {
+				case 'customers':
+					return ( data.customers && data.customers.top_customers ) || [];
+				case 'campaigns':
+					return ( data.marketing && data.marketing.campaigns ) || [];
+				case 'low_stock':
+					return ( data.inventory && data.inventory.low_stock ) || [];
+				default:
+					return ( data.products && data.products.rows ) || [];
+			}
+		}
+
+		/**
+		 * Draws the table from the loaded data.
+		 *
+		 * @param {Object} ctx Widget context.
+		 */
+		function draw( ctx ) {
+			var wrap = root.querySelector( '[data-kdna-ei-part="table"]' );
+			if ( ! wrap ) {
+				return;
+			}
+			if ( settings.source === 'pnl' ) {
+				parts.pnl( wrap, ctx.data.profit || {}, caption );
+				return;
+			}
+			var rows = parts.sortRows( rowsFrom( ctx.data ), sort, order ).slice( 0, settings.rows || 10 );
+			parts.table( wrap, settings.columns, rows, {
+				sort: sort,
+				order: order,
+				sortable: settings.sortable,
+				thumbs: settings.thumbs,
+				links: settings.links,
+				caption: caption,
+			} );
+		}
+
+		/**
+		 * Downloads the CSV for this table and the widget's dates.
+		 *
+		 * @param {Object}      ctx    Widget context.
+		 * @param {HTMLElement} button The export button.
+		 */
+		function exportCsv( ctx, button ) {
+			var label = button.querySelector( 'span:last-child' );
+			var text = label.textContent;
+			if ( settings.editor || ! config.canView || ! config.restUrl ) {
+				button.title = w.exportEditor;
+				return;
+			}
+			var query = ctx.query();
+			if ( settings.source === 'products' ) {
+				query.orderby = serverSort.indexOf( sort ) !== -1 ? sort : 'profit';
+				query.order = order;
+			}
+			button.disabled = true;
+			label.textContent = w.exporting;
+			KDNAEI.exportCsv( settings.export, query ).catch( function () {
+				button.title = w.exportFailed;
+				window.alert( w.exportFailed ); // eslint-disable-line no-alert
+			} ).then( function () {
+				button.disabled = false;
+				label.textContent = text;
+			} );
+		}
+
+		dataWidget( root, settings, {
+			fetch: function ( ctx ) {
+				var query = ctx.query();
+				switch ( settings.source ) {
+					case 'customers':
+						return read( 'customers', query ).then( function ( r ) {
+							return { customers: r.data };
+						} );
+					case 'campaigns':
+						return read( 'marketing', query ).then( function ( r ) {
+							return { marketing: r.data };
+						} );
+					case 'low_stock':
+						return read( 'inventory', query ).then( function ( r ) {
+							return { inventory: r.data };
+						} );
+					case 'pnl':
+						return read( 'profit', query ).then( function ( r ) {
+							return { profit: r.data };
+						} );
+					default:
+						return read( 'products', Object.assign( {}, query, {
+							per_page: settings.rows || 10,
+							orderby: serverSort.indexOf( sort ) !== -1 ? sort : 'profit',
+							order: order,
+						} ) ).then( function ( r ) {
+							return { products: r.data };
+						} );
+				}
+			},
+			draw: draw,
+			click: function ( ctx, event ) {
+				var heading = event.target.closest( '[data-kdna-ei-sort-key]' );
+				var exportButton = event.target.closest( '[data-kdna-ei-action="export"]' );
+				if ( heading ) {
+					var key = heading.getAttribute( 'data-kdna-ei-sort-key' );
+					var column = ( settings.columns || [] ).filter( function ( item ) {
+						return item.key === key;
+					} )[ 0 ];
+					if ( key === sort ) {
+						order = order === 'desc' ? 'asc' : 'desc';
+					} else {
+						// Words start A to Z; numbers start with the highest.
+						order = column && ( column.format === 'text' || column.format === 'date' ) ? 'asc' : 'desc';
+					}
+					sort = key;
+					// Products are ranked by the server, so the right ones are in the top rows.
+					if ( settings.source === 'products' && ! ctx.sample && serverSort.indexOf( key ) !== -1 ) {
+						ctx.load();
+					} else if ( ctx.data ) {
+						draw( ctx );
+					}
+					var again = root.querySelector( '[data-kdna-ei-sort-key="' + key + '"]' );
+					if ( again ) {
+						again.focus();
+					}
+					return true;
+				}
+				if ( exportButton ) {
+					exportCsv( ctx, exportButton );
+					return true;
+				}
+				return false;
+			},
+		} );
+	}
+
+	/**
+	 * Insights Hero Card: top products, profit breakdown or goals tracker.
+	 *
+	 * @param {HTMLElement} root     Widget root.
+	 * @param {Object}      settings From data-kdna-ei-settings.
+	 */
+	function heroCard( root, settings ) {
+		var sort = settings.sort || 'profit';
+
+		/**
+		 * Draws the card.
+		 *
+		 * @param {Object} ctx Widget context.
+		 */
+		function draw( ctx ) {
+			var card = root.querySelector( '.kdna-ei-hero' );
+			if ( card ) {
+				parts.hero( card, ctx.data, { hero: settings.hero, sort: sort, count: settings.count, sample: ctx.sample, link: settings.links ? config.adminUrl + '#/settings' : '' } );
+			}
+		}
+
+		dataWidget( root, settings, {
+			fetch: function ( ctx ) {
+				return parts.fetchHero( settings.hero, ctx.query(), sort, settings.count );
+			},
+			draw: draw,
+			click: function ( ctx, event ) {
+				var tab = event.target.closest( '[data-kdna-ei-sort]' );
+				if ( tab && sort !== tab.getAttribute( 'data-kdna-ei-sort' ) ) {
+					sort = tab.getAttribute( 'data-kdna-ei-sort' );
+					if ( ctx.sample ) {
+						draw( ctx );
+					} else {
+						ctx.load();
+					}
+					return true;
+				}
+				return false;
+			},
+		} );
 	}
 
 	/*
@@ -1200,7 +1937,15 @@
 	 * ---------------------------------------------------------------------
 	 */
 
-	var types = { dashboard: dashboard, 'date-range': dateRange };
+	var types = {
+		dashboard: dashboard,
+		'date-range': dateRange,
+		'kpi-cards': kpiCards,
+		chart: chartWidget,
+		breakdown: breakdownWidget,
+		table: tableWidget,
+		'hero-card': heroCard,
+	};
 	KDNAEI.widgetTypes = types;
 
 	/**

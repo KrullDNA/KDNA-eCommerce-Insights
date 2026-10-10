@@ -1,6 +1,6 @@
 <?php
 /**
- * Tests for Stage 13: the Elementor widgets. Category and widget
+ * Tests for Stages 13 and 14: the Elementor widgets. Category and widget
  * registration, Atomic markup, front-end privacy (Administrators only,
  * Restricted card or nothing for everyone else), noindex and no caching,
  * the editor-only Preview state, sample data adding up, and every style
@@ -118,7 +118,11 @@ kdna_ei_te( 'KDNA Tools category is registered', isset( $cats['kdna-tools'] ) );
 $widgets = $elementor->widgets_manager->get_widget_types();
 kdna_ei_te( 'Insights Dashboard widget is registered', isset( $widgets['kdna-ei-dashboard'] ) );
 kdna_ei_te( 'Insights Date Range widget is registered', isset( $widgets['kdna-ei-date-range'] ) );
-foreach ( array( 'kdna-ei-dashboard', 'kdna-ei-date-range' ) as $name ) {
+$all_widgets = array_keys( KDNA_EcommerceInsights_Elementor::WIDGETS );
+foreach ( array( 'kdna-ei-kpi-cards', 'kdna-ei-chart', 'kdna-ei-breakdown', 'kdna-ei-table', 'kdna-ei-hero-card' ) as $name ) {
+	kdna_ei_te( $name . ' widget is registered', isset( $widgets[ $name ] ) );
+}
+foreach ( $all_widgets as $name ) {
 	kdna_ei_te( $name . ' sits in the KDNA Tools category', in_array( 'kdna-tools', $widgets[ $name ]->get_categories(), true ) );
 	$optimised = $elementor->experiments->is_feature_active( 'e_optimized_markup' );
 	kdna_ei_te( $name . ' has no inner wrapper when optimised markup is on', $widgets[ $name ]->has_widget_inner_wrapper() === ! $optimised );
@@ -132,7 +136,7 @@ kdna_ei_te( 'Registering the category again is harmless', 1 === count( array_fil
 /*
  * Every style control is scoped to its own widget instance.
  */
-foreach ( array( 'kdna-ei-dashboard', 'kdna-ei-date-range' ) as $name ) {
+foreach ( $all_widgets as $name ) {
 	$unscoped = array();
 	$inner    = array();
 	$count    = 0;
@@ -154,6 +158,12 @@ foreach ( array( 'kdna-ei-dashboard', 'kdna-ei-date-range' ) as $name ) {
 		}
 	}
 	kdna_ei_te( $name . ' has style controls (' . $count . ' selectors)', $count > ( 'kdna-ei-dashboard' === $name ? 200 : 40 ) );
+	$ids = array_keys( $widgets[ $name ]->get_controls() );
+	if ( 'kdna-ei-date-range' !== $name ) {
+		kdna_ei_te( $name . ' has Follow page date range and a fixed range', in_array( 'kdna_follow_range', $ids, true ) && in_array( 'kdna_fixed_range', $ids, true ) );
+		kdna_ei_te( $name . ' has the loading, empty, restricted and error state styles', in_array( 'kdna_style_states', $ids, true ) );
+	}
+	kdna_ei_te( $name . ' has the Preview state and Restricted controls', in_array( 'kdna_preview', $ids, true ) && in_array( 'kdna_restricted_mode', $ids, true ) );
 	kdna_ei_te( $name . ' scopes every selector to the widget instance', ! $unscoped, array_unique( $unscoped ) );
 	kdna_ei_te( $name . ' never targets .elementor-widget-container', ! $inner, $inner );
 	$responsive = 0;
@@ -244,6 +254,87 @@ $html = kdna_ei_te_render( 'kdna-ei-dashboard', array( 'kdna_theme' => 'light' )
 kdna_ei_te( 'Theme control can force light mode', false !== strpos( $html, 'data-kdna-ei-theme="light"' ) );
 
 /*
+ * Stage 14: the modular widgets.
+ */
+$section_ids = static function ( string $name ) use ( $widgets ): array {
+	return array_keys( $widgets[ $name ]->get_controls() );
+};
+kdna_ei_te( 'Table has table, button and badge styles', ! array_diff( array( 'kdna_style_tables', 'kdna_style_buttons', 'kdna_table_alt_bg', 'kdna_table_hover_bg', 'kdna_table_cell_padding', 'kdna_table_border', 'kdna_table_border_width', 'kdna_table_head_bg', 'kdna_button_hover_bg', 'kdna_button_disabled_text' ), $section_ids( 'kdna-ei-table' ) ) );
+kdna_ei_te( 'Table has export button text, icon and icon position', ! array_diff( array( 'kdna_export', 'kdna_export_text', 'kdna_export_icon', 'kdna_export_icon_position' ), $section_ids( 'kdna-ei-table' ) ) );
+kdna_ei_te( 'Chart has chart and tooltip styles', ! array_diff( array( 'kdna_style_charts', 'kdna_style_tooltip', 'kdna_series_3' ), $section_ids( 'kdna-ei-chart' ) ) );
+kdna_ei_te( 'Breakdown has donut styles', in_array( 'kdna_style_donut', $section_ids( 'kdna-ei-breakdown' ), true ) );
+kdna_ei_te( 'KPI Cards has KPI styles', in_array( 'kdna_style_kpis', $section_ids( 'kdna-ei-kpi-cards' ), true ) );
+kdna_ei_te( 'Hero Card has progress, table and button styles', ! array_diff( array( 'kdna_style_progress', 'kdna_style_tables', 'kdna_style_buttons' ), $section_ids( 'kdna-ei-hero-card' ) ) );
+
+foreach ( array( 'kdna-ei-kpi-cards', 'kdna-ei-chart', 'kdna-ei-breakdown', 'kdna-ei-table', 'kdna-ei-hero-card' ) as $name ) {
+	wp_set_current_user( 0 );
+	$html = kdna_ei_te_render( $name, array( 'kdna_preview' => 'sample', 'kdna_export' => 'yes' ) );
+	kdna_ei_te( $name . ': logged out sees the Restricted card and no figures', false !== strpos( $html, 'kdna-ei-state--restricted' ) && false === strpos( $html, 'data-kdna-ei-settings' ) && false === strpos( $html, 'Export CSV' ) );
+	$html = kdna_ei_te_render( $name, array( 'kdna_restricted_mode' => 'nothing' ) );
+	kdna_ei_te( $name . ': "Show nothing" leaves no Insights markup', false === strpos( $html, 'kdna-ei-root' ) );
+	wp_set_current_user( $admin );
+	$html     = kdna_ei_te_render( $name, array( 'kdna_preview' => 'sample' ) );
+	$settings = kdna_ei_te_settings( $html );
+	kdna_ei_te( $name . ': Administrators get live figures, and the preview has no effect', is_array( $settings ) && 'live' === $settings['state'] && ! isset( $settings['sample'] ) );
+	kdna_ei_te( $name . ': follows the page range by default', ! empty( $settings['range']['follow'] ) );
+	kdna_ei_te( $name . ': one wrapper with empty and error states', 1 === substr_count( $html, 'data-kdna-ei-widget=' ) && false !== strpos( $html, 'kdna-ei-state--empty' ) && false !== strpos( $html, 'kdna-ei-state--error' ) );
+	$html     = kdna_ei_te_render( $name, array( 'kdna_follow_range' => '', 'kdna_fixed_range' => 'last_quarter', 'kdna_fixed_compare' => 'previous_year' ) );
+	$settings = kdna_ei_te_settings( $html );
+	kdna_ei_te( $name . ': a fixed range is passed on', false === $settings['range']['follow'] && 'last_quarter' === $settings['range']['preset'] && 'previous_year' === $settings['range']['compare'] );
+}
+
+// Each widget's sample data, built the way the editor builds it.
+$sample_for = static function ( string $name, array $settings ) use ( $widgets ) {
+	$widget = $widgets[ $name ];
+	$render = new ReflectionMethod( $widget, 'sample_data' );
+	$render->setAccessible( true );
+	return $render->invoke( $widget, $settings, $settings );
+};
+$kpi = $sample_for( 'kdna-ei-kpi-cards', array( 'metrics' => array( 'gross_profit', 'roas', 'new_customers' ) ) );
+kdna_ei_te( 'KPI sample has the chosen metrics, in order', array( 'gross_profit', 'roas', 'new_customers' ) === array_column( $kpi['summary']['metrics'], 'key' ) );
+$chart = $sample_for( 'kdna-ei-chart', array( 'metrics' => array( 'orders', 'cogs' ) ) );
+kdna_ei_te( 'Chart sample has a series for each metric, with a comparison', array( 'orders', 'cogs' ) === array_keys( $chart['timeseries']['series'] ) && 30 === count( $chart['timeseries']['series']['cogs']['previous'] ) );
+foreach ( array( 'inventory' => 'inventory', 'costs' => 'profit', 'channels' => 'marketing', 'customers' => 'customers' ) as $source => $key ) {
+	$data = $sample_for( 'kdna-ei-breakdown', array( 'source' => $source ) );
+	kdna_ei_te( 'Breakdown sample for ' . $source . ' has ' . $key . ' data', ! empty( $data[ $key ] ) && ! empty( $data['status'] ) );
+}
+$costs = $sample_for( 'kdna-ei-breakdown', array( 'source' => 'costs' ) )['profit']['cost_breakdown'];
+kdna_ei_te( 'Cost breakdown sample shares add up to 100%', abs( array_sum( array_column( $costs, 'share' ) ) - 100 ) < 0.5 );
+foreach ( array( 'products' => array( 'products', 'rows' ), 'customers' => array( 'customers', 'top_customers' ), 'campaigns' => array( 'marketing', 'campaigns' ), 'low_stock' => array( 'inventory', 'low_stock' ), 'pnl' => array( 'profit', 'months' ) ) as $source => $path ) {
+	$data = $sample_for( 'kdna-ei-table', array( 'source' => $source ) );
+	kdna_ei_te( 'Table sample for ' . $source . ' has rows', ! empty( $data[ $path[0] ][ $path[1] ] ) );
+}
+$hero = $sample_for( 'kdna-ei-hero-card', array( 'count' => 8 ) );
+kdna_ei_te( 'Hero sample has products, the waterfall and a goal', 8 === count( $hero['products'] ) && ! empty( $hero['waterfall'] ) && $hero['goal']['target'] > 0 );
+
+// Columns and rows of the table widget.
+wp_set_current_user( $admin );
+$html     = kdna_ei_te_render( 'kdna-ei-table', array( 'kdna_table_source' => 'customers', 'kdna_columns_customers' => array( 'name', 'revenue' ), 'kdna_sort_customers' => 'orders', 'kdna_order' => 'asc', 'kdna_rows' => 7 ) );
+$settings = kdna_ei_te_settings( $html );
+kdna_ei_te( 'Table shows only the chosen columns', array( 'name', 'revenue' ) === array_column( $settings['columns'], 'key' ) );
+kdna_ei_te( 'Table sort, order and rows are passed on', 'orders' === $settings['sort'] && 'asc' === $settings['order'] && 7 === $settings['rows'] && 'customers' === $settings['export'] );
+kdna_ei_te( 'Table headings are printed while loading', false !== strpos( $html, '<th scope="col">Customer</th>' ) );
+$html = kdna_ei_te_render( 'kdna-ei-table', array( 'kdna_export' => 'yes', 'kdna_export_text' => 'Download' ) );
+kdna_ei_te( 'Administrators see the export button', false !== strpos( $html, 'data-kdna-ei-action="export"' ) && false !== strpos( $html, 'Download' ) );
+$html = kdna_ei_te_render( 'kdna-ei-table', array( 'kdna_export' => '' ) );
+kdna_ei_te( 'The export button is off by default', false === strpos( $html, 'data-kdna-ei-action="export"' ) );
+foreach ( array_keys( KDNA_EcommerceInsights_Widget_Table::sources() ) as $source ) {
+	kdna_ei_te( 'Table source ' . $source . ' matches a CSV export', in_array( KDNA_EcommerceInsights_Widget_Table::sources()[ $source ]['export'], KDNA_EcommerceInsights_Rest_Export::TABLES, true ) );
+}
+$html     = kdna_ei_te_render( 'kdna-ei-chart', array( 'kdna_chart_metrics' => array( 'orders', 'net_revenue' ) ) );
+kdna_ei_te( 'Chart switch buttons follow the chosen order', strpos( $html, 'data-kdna-ei-series="orders"' ) < strpos( $html, 'data-kdna-ei-series="net_revenue"' ) );
+$html = kdna_ei_te_render( 'kdna-ei-chart', array( 'kdna_chart_display' => 'together' ) );
+kdna_ei_te( 'Chart with metrics together has no switch buttons', false === strpos( $html, 'data-kdna-ei-series=' ) );
+$html = kdna_ei_te_render( 'kdna-ei-kpi-cards', array( 'kdna_kpi_layout' => 'cards', 'kdna_metrics' => array( 'orders', 'refund_rate', 'roas' ) ) );
+kdna_ei_te( 'KPI cards print one placeholder per metric', 3 === substr_count( $html, 'kdna-ei-kpi--skeleton kdna-ei-card' ) && false !== strpos( $html, 'data-kdna-ei-layout="cards"' ) );
+$html = kdna_ei_te_render( 'kdna-ei-breakdown', array( 'kdna_source' => 'costs' ) );
+kdna_ei_te( 'Cost breakdown has six legend rows while loading', 6 === substr_count( $html, 'kdna-ei-legend__value' ) );
+$html = kdna_ei_te_render( 'kdna-ei-hero-card', array( 'kdna_hero' => 'goals' ) );
+kdna_ei_te( 'Hero Card can show the goals tracker', 'goals' === kdna_ei_te_settings( $html )['hero'] );
+$html = kdna_ei_te_render( 'kdna-ei-dashboard' );
+kdna_ei_te( 'The Dashboard draws its cards with the shared markup', false !== strpos( $html, 'kdna-ei-breakdown-card' ) && false !== strpos( $html, 'data-kdna-ei-part="legend-rows"' ) && false !== strpos( $html, 'kdna-ei-w__body' ) );
+
+/*
  * Configuration printed for the script.
  */
 wp_set_current_user( 0 );
@@ -328,7 +419,7 @@ kdna_ei_te( 'Sample data has five top products', 5 === count( $sample['products'
  * No em dashes in any widget text.
  */
 $dash = array();
-foreach ( glob( KDNA_EI_PATH . 'elementor/{,widgets/}*.php', GLOB_BRACE ) as $file ) {
+foreach ( array_merge( glob( KDNA_EI_PATH . 'elementor/{,widgets/}*.php', GLOB_BRACE ), array( KDNA_EI_PATH . 'assets/js/kdna-ei-widgets.js', KDNA_EI_PATH . 'assets/css/kdna-ei-widgets.css' ) ) as $file ) {
 	if ( false !== strpos( (string) file_get_contents( $file ), "\u{2014}" ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 		$dash[] = basename( $file );
 	}

@@ -616,6 +616,10 @@ class KDNA_EcommerceInsights_Widget_Controls {
 		self::style_section( $w, 'kdna_style_charts', __( 'Charts', 'kdna-ecommerce-insights' ) );
 		self::colour_var( $w, 'kdna_series_1', __( 'Main line colour', 'kdna-ecommerce-insights' ), '--kdna-ei-series-1' );
 		self::colour_var( $w, 'kdna_series_2', __( 'Comparison line colour', 'kdna-ecommerce-insights' ), '--kdna-ei-series-2' );
+		foreach ( array( 3, 4, 5 ) as $n ) {
+			/* translators: %d: series number. */
+			self::colour_var( $w, 'kdna_series_' . $n, sprintf( __( 'Series %d colour (several metrics together)', 'kdna-ecommerce-insights' ), $n ), '--kdna-ei-series-' . $n );
+		}
 		self::slider( $w, 'kdna_chart_line', __( 'Line width', 'kdna-ecommerce-insights' ), array( self::ROOT => '--kdna-ei-chart-line-width: {{SIZE}};' ), array( 'px' ), array( 'px' => array( 'min' => 0.5, 'max' => 8, 'step' => 0.5 ) ), false );
 		self::slider( $w, 'kdna_chart_compare_line', __( 'Comparison line width', 'kdna-ecommerce-insights' ), array( self::ROOT => '--kdna-ei-chart-compare-width: {{SIZE}};' ), array( 'px' ), array( 'px' => array( 'min' => 0.5, 'max' => 8, 'step' => 0.5 ) ), false );
 		self::slider( $w, 'kdna_chart_tension', __( 'Curve smoothing', 'kdna-ecommerce-insights' ), array( self::ROOT => '--kdna-ei-chart-tension: {{SIZE}};' ), array( 'px' ), array( 'px' => array( 'min' => 0, 'max' => 0.5, 'step' => 0.05 ) ), false );

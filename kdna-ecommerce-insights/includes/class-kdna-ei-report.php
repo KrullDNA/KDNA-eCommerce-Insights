@@ -386,6 +386,31 @@ class KDNA_EcommerceInsights_Report {
 	}
 
 	/**
+	 * Where the money went: each cost with its amount and its share of all
+	 * costs, for the cost breakdown donut and table.
+	 *
+	 * @param array $totals Totals from totals().
+	 * @return array[] key, label, amount, share (percent).
+	 */
+	public static function cost_breakdown( array $totals ): array {
+		$costs = array();
+		$all   = 0.0;
+		foreach ( array( 'cogs', 'payment_fees', 'shipping_costs', 'extra_costs', 'ad_spend', 'overheads' ) as $key ) {
+			$amount  = max( 0, (float) KDNA_EcommerceInsights_Metrics::value( $key, $totals ) );
+			$costs[] = array(
+				'key'    => $key,
+				'label'  => KDNA_EcommerceInsights_Metrics::get( $key )['label'],
+				'amount' => round( $amount, 2 ),
+			);
+			$all    += $amount;
+		}
+		foreach ( $costs as $i => $cost ) {
+			$costs[ $i ]['share'] = $all > 0 ? round( $cost['amount'] / $all * 100, 1 ) : 0;
+		}
+		return $costs;
+	}
+
+	/**
 	 * Profit and loss for a range: the waterfall, a statement by month and
 	 * a breakdown of where the money went.
 	 *
@@ -410,26 +435,10 @@ class KDNA_EcommerceInsights_Report {
 			);
 		}
 
-		$cost_keys = array( 'cogs', 'payment_fees', 'shipping_costs', 'extra_costs', 'ad_spend', 'overheads' );
-		$costs     = array();
-		$all       = 0.0;
-		foreach ( $cost_keys as $key ) {
-			$amount = max( 0, (float) KDNA_EcommerceInsights_Metrics::value( $key, $totals ) );
-			$costs[] = array(
-				'key'    => $key,
-				'label'  => KDNA_EcommerceInsights_Metrics::get( $key )['label'],
-				'amount' => round( $amount, 2 ),
-			);
-			$all += $amount;
-		}
-		foreach ( $costs as $i => $cost ) {
-			$costs[ $i ]['share'] = $all > 0 ? round( $cost['amount'] / $all * 100, 1 ) : 0;
-		}
-
 		return array(
 			'waterfall'      => self::waterfall( $totals ),
 			'months'         => $months,
-			'cost_breakdown' => $costs,
+			'cost_breakdown' => self::cost_breakdown( $totals ),
 			'margins'        => array(
 				'gross'        => KDNA_EcommerceInsights_Metrics::value( 'gross_margin', $totals ),
 				'net'          => KDNA_EcommerceInsights_Metrics::value( 'net_margin', $totals ),

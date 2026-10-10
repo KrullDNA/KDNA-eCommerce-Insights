@@ -42,7 +42,7 @@
 			return value || fallback;
 		};
 
-		return {
+		var t = {
 			accent: read( '--kdna-ei-accent', '#7188EE' ),
 			accent2: read( '--kdna-ei-accent-2', '#C9C2F8' ),
 			positive: read( '--kdna-ei-positive', '#B6F2D0' ),
@@ -59,6 +59,9 @@
 			// admin app uses the defaults.
 			series1: read( '--kdna-ei-series-1', '' ),
 			series2: read( '--kdna-ei-series-2', '' ),
+			series3: read( '--kdna-ei-series-3', '' ),
+			series4: read( '--kdna-ei-series-4', '' ),
+			series5: read( '--kdna-ei-series-5', '' ),
 			lineWidth: number( read( '--kdna-ei-chart-line-width', '' ), 2.5 ),
 			compareWidth: number( read( '--kdna-ei-chart-compare-width', '' ), 2 ),
 			tension: number( read( '--kdna-ei-chart-tension', '' ), 0.4 ),
@@ -81,6 +84,15 @@
 			donutCutout: read( '--kdna-ei-donut-cutout', '' ),
 			donutSpacing: number( read( '--kdna-ei-donut-spacing', '' ), 3 ),
 		};
+
+		// Colours for charts with several series (line1 to line5): a widget's
+		// series colour if set, otherwise the design colours in turn.
+		t.line1 = t.series1 || t.accent;
+		t.line2 = t.series2 || t.accent2;
+		t.line3 = t.series3 || t.positive;
+		t.line4 = t.series4 || t.warning;
+		t.line5 = t.series5 || t.negative;
+		return t;
 	}
 
 	/**
@@ -695,13 +707,16 @@
 	 * Turns series into bar datasets with their token colours. The top
 	 * series in a stack gets rounded corners.
 	 *
-	 * @param {Object}   t      Tokens.
-	 * @param {Object[]} series Series ({ label, data, colour }).
+	 * @param {Object}   t       Tokens.
+	 * @param {Object[]} series  Series ({ label, data, colour }).
+	 * @param {boolean}  stacked Whether the bars sit on top of each other
+	 *                           (only the top one rounded) or side by side
+	 *                           (every bar rounded).
 	 * @return {Object[]}
 	 */
-	function barDatasets( t, series ) {
+	function barDatasets( t, series, stacked ) {
 		return series.map( function ( item, index ) {
-			var colour = t[ item.colour ] || item.colour || ( index === 0 ? t.accent : t.accent2 );
+			var colour = t[ item.colour ] || item.colour || ( index === 0 ? t.line1 : t.line2 );
 			return {
 				label: item.label,
 				data: item.data,
@@ -709,7 +724,7 @@
 				backgroundColor: colour,
 				borderColor: colour,
 				borderWidth: 0,
-				borderRadius: index === series.length - 1 ? { topLeft: 5, topRight: 5 } : 0,
+				borderRadius: stacked === false || index === series.length - 1 ? { topLeft: 5, topRight: 5 } : 0,
 				borderSkipped: false,
 				maxBarThickness: 28,
 				categoryPercentage: 0.72,
@@ -731,7 +746,7 @@
 		var t = tokens( canvas );
 		var chart = new Chart( canvas, {
 			type: 'bar',
-			data: { labels: options.labels, datasets: barDatasets( t, options.series ) },
+			data: { labels: options.labels, datasets: barDatasets( t, options.series, options.stacked ) },
 			options: barOptions( t, options ),
 		} );
 		chart.$kdna = options;
@@ -750,7 +765,7 @@
 		var t = tokens( chart.canvas );
 		chart.$kdna = options;
 		chart.data.labels = options.labels;
-		chart.data.datasets = barDatasets( t, options.series );
+		chart.data.datasets = barDatasets( t, options.series, options.stacked );
 		chart.options = barOptions( t, options );
 		chart.update();
 	}
@@ -771,7 +786,7 @@
 				styleLineDatasets( chart, t );
 			} else if ( chart.$kdnaKind === 'bar' ) {
 				chart.options = barOptions( t, chart.$kdna );
-				chart.data.datasets = barDatasets( t, chart.$kdna.series );
+				chart.data.datasets = barDatasets( t, chart.$kdna.series, chart.$kdna.stacked );
 			} else if ( chart.$kdnaKind === 'waterfall' ) {
 				var colours = waterfallColours( t, chart.$kdna.steps );
 				chart.options = waterfallOptions( t, chart.$kdna );

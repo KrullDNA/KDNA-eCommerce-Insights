@@ -36,6 +36,11 @@ class KDNA_EcommerceInsights_Elementor {
 	const WIDGETS = array(
 		'kdna-ei-dashboard'  => 'KDNA_EcommerceInsights_Widget_Dashboard',
 		'kdna-ei-date-range' => 'KDNA_EcommerceInsights_Widget_Date_Range',
+		'kdna-ei-kpi-cards'  => 'KDNA_EcommerceInsights_Widget_Kpi_Cards',
+		'kdna-ei-chart'      => 'KDNA_EcommerceInsights_Widget_Chart',
+		'kdna-ei-breakdown'  => 'KDNA_EcommerceInsights_Widget_Breakdown',
+		'kdna-ei-table'      => 'KDNA_EcommerceInsights_Widget_Table',
+		'kdna-ei-hero-card'  => 'KDNA_EcommerceInsights_Widget_Hero_Card',
 	);
 
 	/**
@@ -246,6 +251,20 @@ class KDNA_EcommerceInsights_Elementor {
 			'switchToDark'   => __( 'Switch to dark mode', 'kdna-ecommerce-insights' ),
 			'sample'         => __( 'Sample data', 'kdna-ecommerce-insights' ),
 			'noOrders'       => __( 'No orders in these dates yet.', 'kdna-ecommerce-insights' ),
+			'noRows'         => __( 'Nothing to show for these dates.', 'kdna-ecommerce-insights' ),
+			'noBreakdown'    => __( 'Nothing to break down for these dates.', 'kdna-ecommerce-insights' ),
+			'exporting'      => __( 'Preparing the CSV', 'kdna-ecommerce-insights' ),
+			'exportFailed'   => __( 'The CSV could not be made. Please try again.', 'kdna-ecommerce-insights' ),
+			'exportEditor'   => __( 'The CSV downloads on the live page.', 'kdna-ecommerce-insights' ),
+			'total'          => __( 'Total', 'kdna-ecommerce-insights' ),
+			'line'           => __( 'Line', 'kdna-ecommerce-insights' ),
+			'netMargin'      => __( 'Net margin', 'kdna-ecommerce-insights' ),
+			'guest'          => __( 'Guest', 'kdna-ecommerce-insights' ),
+			'sortedAsc'      => __( 'Sorted lowest first', 'kdna-ecommerce-insights' ),
+			'sortedDesc'     => __( 'Sorted highest first', 'kdna-ecommerce-insights' ),
+			'newCustomers'   => __( 'New customers', 'kdna-ecommerce-insights' ),
+			'returning'      => __( 'Returning customers', 'kdna-ecommerce-insights' ),
+			'reorderNow'     => __( 'Reorder now', 'kdna-ecommerce-insights' ),
 		);
 	}
 
